@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Адмінка — #МитнийSklad</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; color: #fff; font-family: sans-serif; min-height: 100vh; }
+    
+    input, textarea, select {
+      background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff;
+      border-radius: 10px; padding: 10px 14px; font-size: 14px;
+      outline: none; width: 100%;
+    }
+    input:focus, textarea:focus { border-color: #c9a84c; }
+    
+    button { cursor: pointer; border: none; border-radius: 10px; font-weight: 700; transition: opacity 0.2s; }
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-gold { background: linear-gradient(135deg, #c9a84c, #b8860b); color: #000; padding: 12px 20px; font-size: 14px; }
+    .btn-dark { background: #1a1a1a; border: 1px solid #2a2a2a; color: #777; padding: 10px 16px; font-size: 13px; }
+    .btn-red { background: #f4433622; border: 1px solid #f4433644; color: #f44336; padding: 8px 14px; font-size: 12px; }
+    .btn-green { background: #4caf5022; border: 1px solid #4caf5044; color: #4caf50; padding: 8px 14px; font-size: 12px; }
+
+    .card { background: #111; border: 1px solid #1e1e1e; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+    .label { color: #555; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .gold { color: #c9a84c; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin: 2px; cursor: pointer; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px; }
+    .modal { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 20px; width: 100%; max-width: 500px; margin: auto; }
+    .modal-header { padding: 20px; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 16px 20px; border-top: 1px solid #1a1a1a; display: flex; gap: 10px; }
+
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .photo-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1; }
+    .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.7); color: #f44336; font-size: 14px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+    
+    .upload-zone { border: 2px dashed #2a2a2a; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .upload-zone:hover { border-color: #c9a84c; }
+    
+    .stat-box { background: #111; border: 1px solid #1a1a1a; border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-val { font-size: 28px; font-weight: 900; color: #c9a84c; }
+    .stat-label { color: #555; font-size: 11px; margin-top: 4px; }
+
+    .collection-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: #111; border: 1px solid #1e1e1e; border-radius: 12px; margin-bottom: 8px; }
+    .collection-thumb { width: 52px; height: 60px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #1a1a1a; }
+    
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: #2a2a2a; border-radius: 22px; transition: .3s; cursor: pointer; }
+    .slider:before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: #555; border-radius: 50%; transition: .3s; }
+    input:checked + .slider { background: #c9a84c22; border: 1px solid #c9a84c44; }
+    input:checked + .slider:before { transform: translateX(18px); background: #c9a84c; }
+
+    .nav-tabs { display: flex; gap: 4px; padding: 0 16px; margin-bottom: 20px; overflow-x: auto; }
+    .nav-tab { padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; border: 1px solid #1e1e1e; background: transparent; color: #555; transition: all 0.2s; }
+    .nav-tab.active { background: #c9a84c; color: #000; border-color: #c9a84c; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const SUPABASE_URL = "https://svbmamaqrtsknuztxiuq.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+
+const api = async (method, path, body) => {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    method,
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json",
+      "Prefer": method === "POST" ? "return=representation" : ""
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  return res.status === 204 ? null : res.json();
+};
+
+const uploadPhoto = async (file, collectionId) => {
+  const ext = file.name.split(".").pop();
+  const path = `collections/${collectionId}/${Date.now()}.${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${path}`, {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": file.type
+    },
+    body: file
+  });
+  if (!res.ok) throw new Error("Upload failed");
+  return `${SUPABASE_URL}/storage/v1/object/public/photos/${path}`;
+};
+
+const getNBURate = async () => {
+  try {
+    const res = await fetch("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json");
+    const data = await res.json();
+    const eur = data.find(x => x.cc === "EUR");
+    const usd = data.find(x => x.cc === "USD");
+    return { eur: eur?.rate || 43.5, usd: usd?.rate || 41.2 };
+  } catch { return { eur: 43.5, usd: 41.2 }; }
+};
+
+// STATE
+let state = {
+  page: "login",
+  tab: "collections",
+  collections: [],
+  loading: false,
+  modal: null,
+  editItem: null,
+  rates: { eur: 43.5, usd: 41.2 },
+  autoRate: true,
+};
+
+const ADMIN_PASSWORD = "mitnyisklad2024";
+
+// RENDER
+function render() {
+  document.getElementById("app").innerHTML = state.page === "login" ? renderLogin() : renderAdmin();
+  bindEvents();
+}
+
+function renderLogin() {
+  return `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div style="width:100%;max-width:340px;">
+        <div style="text-align:center;margin-bottom:32px;">
+          <div style="color:#c9a84c;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">Адмін панель</div>
+          <div style="font-size:26px;font-weight:900;font-family:serif;">#МитнийSklad</div>
+        </div>
+        <div class="card">
+          <div class="label" style="margin-bottom:12px;">Пароль</div>
+          <input type="password" id="pwd" placeholder="Введіть пароль" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="btn-gold" style="width:100%" onclick="doLogin()">Увійти →</button>
+          <div id="login-err" style="color:#f44336;font-size:12px;text-align:center;margin-top:10px;display:none;">Невірний пароль</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderAdmin() {
+  return `
+    <div style="max-width:600px;margin:0 auto;">
+      <!-- Header -->
+      <div style="padding:16px 20px;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#0a0a0aee;backdrop-filter:blur(20px);z-index:100;">
+        <div>
+          <div style="color:#c9a84c;font-size:10px;letter-spacing:2px;">АДМІН ПАНЕЛЬ</div>
+          <div style="font-size:18px;font-weight:900;font-family:serif;">#МитнийSklad</div>
+        </div>
+        <button class="btn-dark" onclick="state.page='login';render()">Вийти</button>
+      </div>
+
+      <!-- Stats -->
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="stat-box">
+          <div class="stat-val">${state.collections.filter(c=>!c.is_panno).length}</div>
+          <div class="stat-label">Колекцій</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">${state.collections.filter(c=>c.is_panno).length}</div>
+          <div class="stat-label">Панно</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="font-size:18px">${state.rates.eur.toFixed(1)}</div>
+          <div class="stat-label">EUR/UAH</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="nav-tabs">
+        <button class="nav-tab ${state.tab==='collections'?'active':''}" onclick="switchTab('collections')">🏷 Колекції</button>
+        <button class="nav-tab ${state.tab==='pannos'?'active':''}" onclick="switchTab('pannos')">🎨 Панно</button>
+        <button class="nav-tab ${state.tab==='rates'?'active':''}" onclick="switchTab('rates')">💱 Курс валют</button>
+        <button class="nav-tab ${state.tab==='orders'?'active':''}" onclick="switchTab('orders')">📋 Замовлення</button>
+      </div>
+
+      <!-- Content -->
+      <div style="padding:0 16px 40px;">
+        ${state.tab==='collections' ? renderCollections(false) : ''}
+        ${state.tab==='pannos' ? renderCollections(true) : ''}
+        ${state.tab==='rates' ? renderRates() : ''}
+        ${state.tab==='orders' ? renderOrders() : ''}
+      </div>
+
+      ${state.modal ? renderModal() : ''}
+    </div>`;
+}
+
+function renderCollections(isPanno) {
+  const items = state.collections.filter(c => c.is_panno === isPanno);
+  return `
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="color:#777;font-size:13px;">${items.length} позицій</div>
+        <button class="btn-gold" onclick="openAddModal(${isPanno})">+ Додати</button>
+      </div>
+      ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">Немає позицій</div>' : ''}
+      ${items.map(item => renderCollectionRow(item)).join('')}
+    </div>`;
+}
+
+function renderCollectionRow(item) {
+  const photos = item.photos || [];
+  const thumb = photos[0]?.url || "";
+  return `
+    <div class="collection-row">
+      ${thumb ? `<img class="collection-thumb" src="${thumb}" onerror="this.style.display='none'">` : `<div class="collection-thumb" style="display:flex;align-items:center;justify-content:center;color:#333;font-size:20px;">📷</div>`}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+        <div style="color:#555;font-size:11px;margin-top:2px;">${item.size || "—"} · ${item.article || ""}</div>
+        <div style="color:#c9a84c;font-size:12px;font-weight:700;margin-top:2px;">${item.price_uah ? item.price_uah.toLocaleString() + " грн" : "—"}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+        <label class="switch" title="${item.is_visible ? 'Видимий' : 'Прихований'}">
+          <input type="checkbox" ${item.is_visible ? 'checked' : ''} onchange="toggleVisible(${item.id}, this.checked)">
+          <span class="slider"></span>
+        </label>
+        <button class="btn-dark" style="padding:6px 10px;font-size:11px;" onclick="openEditModal(${item.id})">✏️</button>
+        <button class="btn-red" style="padding:6px 10px;font-size:11px;" onclick="deleteItem(${item.id})">🗑</button>
+      </div>
+    </div>`;
+}
+
+function renderRates() {
+  return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;">Курс валют</div>
+        <label class="switch">
+          <input type="checkbox" ${state.autoRate ? 'checked' : ''} onchange="toggleAutoRate(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div style="color:#555;font-size:12px;margin-bottom:16px;">${state.autoRate ? '✅ Автооновлення з НБУ' : '✏️ Вручну'}</div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="label">EUR/UAH</div>
+          <input type="number" id="rate-eur" value="${state.rates.eur.toFixed(2)}" ${state.autoRate ? 'disabled' : ''}>
+        </div>
+        <div>
+          <div class="label">USD/UAH</div>
+          <input type="number" id="rate-usd" value="${state.rates.usd.toFixed(2)}" ${state.autoRate ? 'disabled' : ''}>
+        </div>
+      </div>
+      
+      ${!state.autoRate ? `<button class="btn-gold" style="width:100%;margin-top:16px;" onclick="saveRates()">Зберегти курс</button>` : ''}
+      ${state.autoRate ? `<button class="btn-dark" style="width:100%;margin-top:16px;" onclick="refreshRates()">🔄 Оновити зараз</button>` : ''}
+    </div>`;
+}
+
+function renderOrders() {
+  return `<div style="text-align:center;padding:40px;color:#333;">
+    <div style="font-size:32px;margin-bottom:12px;">📋</div>
+    <div>Замовлення з'являться тут коли клієнти будуть замовляти через сайт</div>
+  </div>`;
+}
+
+function renderModal() {
+  const item = state.editItem || {};
+  const isEdit = !!item.id;
+  const photos = item.photos || [];
+
+  return `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <div style="color:#c9a84c;font-size:10px;letter-spacing:2px;text-transform:uppercase;">${isEdit ? 'Редагувати' : 'Додати'}</div>
+            <div style="font-size:17px;font-weight:700;font-family:serif;">${item.is_panno ? 'Панно' : 'Колекцію'}</div>
+          </div>
+          <button class="btn-dark" style="width:34px;height:34px;padding:0;" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+          
+          <!-- Фото -->
+          <div style="margin-bottom:20px;">
+            <div class="label">Фото</div>
+            <div class="photo-grid" id="photo-grid">
+              ${photos.map((p,i) => `
+                <div class="photo-item">
+                  <img src="${p.url}" alt="">
+                  <button class="photo-delete" onclick="removePhoto(${i})">×</button>
+                </div>`).join('')}
+              <label class="upload-zone" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+                <div style="font-size:24px;">📸</div>
+                <div style="font-size:11px;color:#555;">Додати фото</div>
+                <input type="file" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this)">
+              </label>
+            </div>
+          </div>
+
+          <!-- Назва -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Назва *</div>
+            <input type="text" id="f-name" value="${item.name || ''}" placeholder="Oro Nebula">
+          </div>
+
+          <!-- Артикул -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Артикул</div>
+            <input type="text" id="f-article" value="${item.article || ''}" placeholder="00-00021672">
+          </div>
+
+          <!-- Розмір -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Розмір</div>
+            <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см">
+          </div>
+
+          <!-- Ціни -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Ціна</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div>
+                <div style="color:#c9a84c;font-size:10px;margin-bottom:4px;">UAH</div>
+                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240">
+              </div>
+              <div>
+                <div style="color:#4caf50;font-size:10px;margin-bottom:4px;">EUR</div>
+                <input type="number" id="f-price-eur" value="${item.price_eur || ''}" placeholder="29" oninput="calcFromEur(this.value)">
+              </div>
+              <div>
+                <div style="color:#2196F3;font-size:10px;margin-bottom:4px;">USD</div>
+                <input type="number" id="f-price-usd" value="${item.price_usd || ''}" placeholder="31" oninput="calcFromUsd(this.value)">
+              </div>
+            </div>
+            <div style="color:#555;font-size:10px;margin-top:4px;">EUR/UAH: ${state.rates.eur.toFixed(2)} · USD/UAH: ${state.rates.usd.toFixed(2)}</div>
+          </div>
+
+          <!-- Гуртова ціна -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Гуртова ціна (UAH)</div>
+            <input type="number" id="f-price-wholesale" value="${item.price_wholesale || ''}" placeholder="980">
+          </div>
+
+          <!-- Опис -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Опис</div>
+            <textarea id="f-desc" rows="3" placeholder="Опис колекції...">${item.description || ''}</textarea>
+          </div>
+
+          <!-- Теги -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Теги</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+              ${['Преміум','Люкс','Золото','Мармур','Білий','Чорний','Великий формат','Синій'].map(tag => `
+                <span class="tag" onclick="toggleTag('${tag}')" style="background:${(item.tags||[]).includes(tag)?'#c9a84c22':'#1a1a1a'};border:1px solid ${(item.tags||[]).includes(tag)?'#c9a84c44':'#2a2a2a'};color:${(item.tags||[]).includes(tag)?'#c9a84c':'#555'}">${tag}</span>`).join('')}
+            </div>
+          </div>
+
+          <!-- Видимість -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#1a1a1a;border-radius:10px;">
+            <span style="font-size:13px;">Показувати клієнтам</span>
+            <label class="switch">
+              <input type="checkbox" id="f-visible" ${item.is_visible !== false ? 'checked' : ''}>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn-dark" onclick="closeModal()">Скасувати</button>
+          <button class="btn-gold" style="flex:1;" onclick="saveItem()" id="save-btn">
+            ${isEdit ? 'Зберегти зміни' : 'Додати'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// EVENTS
+function bindEvents() {}
+
+function doLogin() {
+  const pwd = document.getElementById("pwd")?.value;
+  if (pwd === ADMIN_PASSWORD) {
+    state.page = "admin";
+    loadData();
+    render();
+  } else {
+    const err = document.getElementById("login-err");
+    if (err) err.style.display = "block";
+  }
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  render();
+}
+
+async function loadData() {
+  state.loading = true;
+  try {
+    const [collections, photos, settings] = await Promise.all([
+      api("GET", "collections?select=*&order=sort_order,created_at"),
+      api("GET", "collection_photos?select=*&order=sort_order"),
+      api("GET", "settings?select=*")
+    ]);
+    
+    // Attach photos to collections
+    state.collections = (collections || []).map(c => ({
+      ...c,
+      photos: (photos || []).filter(p => p.collection_id === c.id)
+    }));
+
+    // Load rates
+    const eurSetting = (settings || []).find(s => s.key === "eur_rate");
+    const usdSetting = (settings || []).find(s => s.key === "usd_rate");
+    const autoSetting = (settings || []).find(s => s.key === "auto_rate");
+    
+    state.autoRate = autoSetting?.value === "true";
+    if (state.autoRate) {
+      const rates = await getNBURate();
+      state.rates = rates;
+    } else {
+      state.rates = {
+        eur: parseFloat(eurSetting?.value || "43.5"),
+        usd: parseFloat(usdSetting?.value || "41.2")
+      };
+    }
+  } catch(e) {
+    console.error(e);
+    alert("Помилка завантаження: " + e.message);
+  }
+  state.loading = false;
+  render();
+}
+
+function openAddModal(isPanno) {
+  state.editItem = { is_panno: isPanno, is_visible: true, tags: [], photos: [] };
+  state.modal = "edit";
+  render();
+}
+
+function openEditModal(id) {
+  state.editItem = JSON.parse(JSON.stringify(state.collections.find(c => c.id === id)));
+  state.modal = "edit";
+  render();
+}
+
+function closeModal() {
+  state.modal = null;
+  state.editItem = null;
+  render();
+}
+
+async function handlePhotoUpload(input) {
+  const files = Array.from(input.files);
+  const collId = state.editItem?.id || "new";
+  
+  for (const file of files) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (!state.editItem.photos) state.editItem.photos = [];
+      state.editItem.photos.push({ url: e.target.result, file, isNew: true });
+      render();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removePhoto(index) {
+  state.editItem.photos.splice(index, 1);
+  render();
+}
+
+function toggleTag(tag) {
+  if (!state.editItem.tags) state.editItem.tags = [];
+  const idx = state.editItem.tags.indexOf(tag);
+  if (idx > -1) state.editItem.tags.splice(idx, 1);
+  else state.editItem.tags.push(tag);
+  render();
+}
+
+function calcFromEur(val) {
+  const eur = parseFloat(val);
+  if (!isNaN(eur) && eur > 0) {
+    const uah = Math.round(eur * state.rates.eur);
+    document.getElementById("f-price-uah").value = uah;
+  }
+}
+
+function calcFromUsd(val) {
+  const usd = parseFloat(val);
+  if (!isNaN(usd) && usd > 0) {
+    const uah = Math.round(usd * state.rates.usd);
+    document.getElementById("f-price-uah").value = uah;
+  }
+}
+
+async function saveItem() {
+  const btn = document.getElementById("save-btn");
+  btn.disabled = true;
+  btn.textContent = "Збереження...";
+
+  try {
+    const item = state.editItem;
+    const data = {
+      name: document.getElementById("f-name").value.trim(),
+      article: document.getElementById("f-article").value.trim(),
+      size: document.getElementById("f-size").value.trim(),
+      price_uah: parseFloat(document.getElementById("f-price-uah").value) || 0,
+      price_eur: parseFloat(document.getElementById("f-price-eur").value) || 0,
+      price_usd: parseFloat(document.getElementById("f-price-usd").value) || 0,
+      price_wholesale: parseFloat(document.getElementById("f-price-wholesale").value) || 0,
+      description: document.getElementById("f-desc").value.trim(),
+      tags: item.tags || [],
+      is_visible: document.getElementById("f-visible").checked,
+      is_panno: item.is_panno || false,
+      updated_at: new Date().toISOString()
+    };
+
+    if (!data.name) { alert("Введіть назву!"); btn.disabled = false; btn.textContent = "Зберегти"; return; }
+
+    let collectionId = item.id;
+
+    if (item.id) {
+      await api("PATCH", `collections?id=eq.${item.id}`, data);
+    } else {
+      const result = await api("POST", "collections", data);
+      collectionId = result[0].id;
+    }
+
+    // Upload new photos
+    const newPhotos = (item.photos || []).filter(p => p.isNew && p.file);
+    for (const photo of newPhotos) {
+      const url = await uploadPhoto(photo.file, collectionId);
+      await api("POST", "collection_photos", {
+        collection_id: collectionId,
+        url,
+        sort_order: (item.photos || []).indexOf(photo)
+      });
+    }
+
+    await loadData();
+    closeModal();
+  } catch(e) {
+    alert("Помилка: " + e.message);
+    btn.disabled = false;
+    btn.textContent = "Зберегти";
+  }
+}
+
+async function deleteItem(id) {
+  if (!confirm("Видалити цю позицію?")) return;
+  try {
+    await api("DELETE", `collections?id=eq.${id}`);
+    await loadData();
+  } catch(e) {
+    alert("Помилка: " + e.message);
+  }
+}
+
+async function toggleVisible(id, visible) {
+  try {
+    await api("PATCH", `collections?id=eq.${id}`, { is_visible: visible, updated_at: new Date().toISOString() });
+    const item = state.collections.find(c => c.id === id);
+    if (item) item.is_visible = visible;
+  } catch(e) {
+    alert("Помилка: " + e.message);
+  }
+}
+
+async function toggleAutoRate(auto) {
+  state.autoRate = auto;
+  await api("PATCH", "settings?key=eq.auto_rate", { value: auto.toString(), updated_at: new Date().toISOString() });
+  if (auto) await refreshRates();
+  else render();
+}
+
+async function refreshRates() {
+  const rates = await getNBURate();
+  state.rates = rates;
+  await Promise.all([
+    api("PATCH", "settings?key=eq.eur_rate", { value: rates.eur.toString() }),
+    api("PATCH", "settings?key=eq.usd_rate", { value: rates.usd.toString() })
+  ]);
+  render();
+}
+
+async function saveRates() {
+  const eur = parseFloat(document.getElementById("rate-eur").value);
+  const usd = parseFloat(document.getElementById("rate-usd").value);
+  state.rates = { eur, usd };
+  await Promise.all([
+    api("PATCH", "settings?key=eq.eur_rate", { value: eur.toString() }),
+    api("PATCH", "settings?key=eq.usd_rate", { value: usd.toString() })
+  ]);
+  alert("Курс збережено!");
+  render();
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
