@@ -702,6 +702,22 @@ async function saveItem() {
       collectionId = result[0].id;
     }
 
+    // Видаляємо фото які були прибрані
+    const existingPhotos = (item.photos || []).filter(p => !p.isNew && p.url);
+    const existingUrls = existingPhotos.map(p => p.url);
+    
+    // Отримуємо всі фото з бази
+    const dbPhotos = await api("GET", `collection_photos?collection_id=eq.${collectionId}&select=id,url`);
+    if (dbPhotos && dbPhotos.length > 0) {
+      for (const dbPhoto of dbPhotos) {
+        if (!existingUrls.includes(dbPhoto.url)) {
+          // Видаляємо з бази
+          await api("DELETE", `collection_photos?id=eq.${dbPhoto.id}`);
+          console.log("Deleted photo:", dbPhoto.url);
+        }
+      }
+    }
+
     // Upload new photos
     const newPhotos = (item.photos || []).filter(p => p.isNew && p.file);
     console.log("Uploading photos:", newPhotos.length, "collectionId:", collectionId);
@@ -709,12 +725,11 @@ async function saveItem() {
       const photo = newPhotos[i];
       const url = await uploadPhoto(photo.file, collectionId);
       console.log("Uploaded photo URL:", url);
-      const result = await api("POST", "collection_photos", {
+      await api("POST", "collection_photos", {
         collection_id: parseInt(collectionId),
         url,
         sort_order: i
       });
-      console.log("Saved to DB:", result);
     }
 
     await loadData();
