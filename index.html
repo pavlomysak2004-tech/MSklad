@@ -865,6 +865,20 @@ function RoomCalculator({ tile, onClose }) {
 }
 
 
+
+const tagColors = {
+  "Преміум": "#c9a84c",
+  "Люкс": "#b8860b",
+  "Золото": "#c9a84c",
+  "Мармур": "#8a8a8a",
+  "Білий": "#ccc",
+  "Чорний": "#555",
+  "Великий формат": "#7a9e7e",
+  "Контраст": "#c9a84c",
+  "Панно": "#7b68ee",
+  "Синій": "#4169e1",
+};
+
 function StockBar({ stock, reserve, totalStock, unit }) {
   const total = totalStock || (stock + reserve);
   if (!total) return null;
@@ -892,6 +906,115 @@ function StockBar({ stock, reserve, totalStock, unit }) {
             <span style={{ color: "#555" }}>Резерв: <span style={{ color: "#fff", fontWeight: 700 }}>{reserve.toLocaleString()} {unit}</span></span>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function PannoModal({ panno, collections, onClose }) {
+  const [selectedTile, setSelectedTile] = useState(collections[0]);
+  const [search, setSearch] = useState("");
+
+  const filtered = collections.filter(t =>
+    t.name.toLowerCase().includes(search.toLowerCase()) && !t.isPanno
+  );
+
+  const total = panno.price + (selectedTile ? selectedTile.price * 20 : 0);
+
+  const order = () => {
+    const text = encodeURIComponent(
+      "🏷 Замовлення комплекту #МитнийSklad\n\n" +
+      "🎨 Панно: " + panno.name + " — " + panno.price.toLocaleString() + " грн\n" +
+      "🔲 Плитка: " + selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²\n" +
+      "Площа: ~20 м²"
+    );
+    window.open("https://t.me/" + TELEGRAM_USERNAME + "?text=" + text, "_blank");
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 2000,
+      display: "flex", flexDirection: "column", overflowY: "auto",
+      animation: "fadeIn 0.25s ease",
+    }} onClick={onClose}>
+      <div style={{ maxWidth: 720, width: "100%", margin: "0 auto", padding: "0 0 40px" }}
+        onClick={e => e.stopPropagation()}>
+
+        <div style={{
+          position: "sticky", top: 0, zIndex: 10,
+          background: "#0f0f0f", borderBottom: "1px solid #1a1a1a",
+          padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <div>
+            <div style={{ color: "#7b68ee", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 2 }}>🎨 Панно</div>
+            <div style={{ color: "#fff", fontSize: 18, fontFamily: "serif", fontWeight: 700 }}>{panno.name}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#555", cursor: "pointer", width: 36, height: 36, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, background: "#000", marginBottom: 16 }}>
+          <img src={panno.image} alt={panno.name} style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }} />
+          <img src={selectedTile ? selectedTile.image : ""} alt={selectedTile?.name} style={{ width: "100%", height: 280, objectFit: "cover", display: "block", transition: "opacity 0.3s" }} />
+        </div>
+
+        <div style={{ padding: "0 16px" }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            <div style={{ flex: 1, background: "#111", borderRadius: 10, padding: "10px 14px", border: "1px solid #7b68ee44" }}>
+              <div style={{ color: "#7b68ee", fontSize: 10, marginBottom: 3 }}>Панно</div>
+              <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{panno.name}</div>
+              <div style={{ color: "#c9a84c", fontSize: 12, marginTop: 2 }}>{panno.price.toLocaleString()} грн</div>
+            </div>
+            <div style={{ flex: 1, background: "#111", borderRadius: 10, padding: "10px 14px", border: "1px solid #c9a84c44" }}>
+              <div style={{ color: "#c9a84c", fontSize: 10, marginBottom: 3 }}>Плитка</div>
+              <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{selectedTile?.name || "—"}</div>
+              <div style={{ color: "#c9a84c", fontSize: 12, marginTop: 2 }}>{selectedTile ? selectedTile.price.toLocaleString() + " грн/м²" : "—"}</div>
+            </div>
+          </div>
+
+          <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", border: "1px solid #c9a84c22", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ color: "#555", fontSize: 12 }}>Орієнтовна сума</div>
+              <div style={{ color: "#444", fontSize: 10, marginTop: 2 }}>Панно + плитка ~20 м²</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ color: "#fff", fontSize: 24, fontWeight: 900 }}>{total.toLocaleString()} <span style={{ color: "#c9a84c", fontSize: 14 }}>грн</span></div>
+            </div>
+          </div>
+
+          <button onClick={order} style={{
+            width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: "pointer",
+            background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+            color: "#000", fontSize: 14, fontWeight: 800, marginBottom: 20,
+          }}>🛒 Замовити комплект</button>
+
+          <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
+            ✦ Підібрати плитку ({filtered.length} варіантів)
+          </div>
+
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Пошук плитки..."
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#111", border: "1px solid #2a2a2a", color: "#fff", fontSize: 13, outline: "none", marginBottom: 12 }} />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {filtered.map(tile => (
+              <div key={tile.id} onClick={() => setSelectedTile(tile)} style={{
+                display: "flex", alignItems: "center", gap: 12,
+                background: selectedTile?.id === tile.id ? "#c9a84c11" : "#111",
+                borderRadius: 12, padding: "10px 14px",
+                border: "1px solid " + (selectedTile?.id === tile.id ? "#c9a84c" : "#1e1e1e"),
+                cursor: "pointer", transition: "all 0.2s",
+              }}>
+                <img src={tile.image} alt={tile.name} style={{ width: 52, height: 60, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: selectedTile?.id === tile.id ? "#c9a84c" : "#fff", fontSize: 14, fontWeight: 700 }}>{tile.name}</div>
+                  <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{tile.size}</div>
+                  <div style={{ color: "#c9a84c", fontSize: 12, marginTop: 2 }}>{tile.price.toLocaleString()} грн/м²</div>
+                </div>
+                {selectedTile?.id === tile.id && <div style={{ color: "#c9a84c", fontSize: 18 }}>✓</div>}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
