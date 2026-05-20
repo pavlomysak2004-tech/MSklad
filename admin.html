@@ -536,41 +536,33 @@ function toggleTag(tag) {
   render();
 }
 
-function calcFromEur(val) {
-  const eur = parseFloat(val);
-  if (!isNaN(eur) && eur >= 0) {
-    const uah = Math.round(eur * state.rates.eur);
-    const usd = Math.round((eur * state.rates.eur / state.rates.usd) * 100) / 100;
-    const uahEl = document.getElementById("f-price-uah");
-    const usdEl = document.getElementById("f-price-usd");
-    if (uahEl) uahEl.value = uah;
-    if (usdEl) usdEl.value = usd;
-  }
+function recalcPrices(source, val) {
+  const v = parseFloat(val);
+  if (isNaN(v) || v < 0) return;
+  const eur_rate = state.rates.eur || 43.5;
+  const usd_rate = state.rates.usd || 41.2;
+
+  let uah = 0;
+  if (source === "uah") uah = v;
+  else if (source === "eur") uah = v * eur_rate;
+  else if (source === "usd") uah = v * usd_rate;
+
+  const eur = Math.round((uah / eur_rate) * 100) / 100;
+  const usd = Math.round((uah / usd_rate) * 100) / 100;
+  const uahR = Math.round(uah);
+
+  const uahEl = document.getElementById("f-price-uah");
+  const eurEl = document.getElementById("f-price-eur");
+  const usdEl = document.getElementById("f-price-usd");
+
+  if (source !== "uah" && uahEl) uahEl.value = uahR;
+  if (source !== "eur" && eurEl) eurEl.value = eur;
+  if (source !== "usd" && usdEl) usdEl.value = usd;
 }
 
-function calcFromUsd(val) {
-  const usd = parseFloat(val);
-  if (!isNaN(usd) && usd >= 0) {
-    const uah = Math.round(usd * state.rates.usd);
-    const eur = Math.round((usd * state.rates.usd / state.rates.eur) * 100) / 100;
-    const uahEl = document.getElementById("f-price-uah");
-    const eurEl = document.getElementById("f-price-eur");
-    if (uahEl) uahEl.value = uah;
-    if (eurEl) eurEl.value = eur;
-  }
-}
-
-function calcFromUah(val) {
-  const uah = parseFloat(val);
-  if (!isNaN(uah) && uah >= 0) {
-    const eur = Math.round((uah / state.rates.eur) * 100) / 100;
-    const usd = Math.round((uah / state.rates.usd) * 100) / 100;
-    const eurEl = document.getElementById("f-price-eur");
-    const usdEl = document.getElementById("f-price-usd");
-    if (eurEl) eurEl.value = eur;
-    if (usdEl) usdEl.value = usd;
-  }
-}
+function calcFromEur(val) { recalcPrices("eur", val); }
+function calcFromUsd(val) { recalcPrices("usd", val); }
+function calcFromUah(val) { recalcPrices("uah", val); }
 
 async function saveItem() {
   const btn = document.getElementById("save-btn");
