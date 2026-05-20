@@ -269,6 +269,7 @@ const pannos = [
 
 function useCollections() {
   const [collections, setCollections] = useState(staticCollections);
+  const [pannos, setPannos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -315,6 +316,41 @@ function useCollections() {
         });
 
         setCollections(parsed);
+
+        // Завантажуємо панно
+        const resP = await fetch(
+          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.true&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at",
+          {
+            headers: {
+              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+              "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+            }
+          }
+        );
+        const pannosData = await resP.json();
+        if (Array.isArray(pannosData)) {
+          const parsedPannos = pannosData.map((item, i) => {
+            const photos = (item.collection_photos || [])
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map(p => p.url);
+            return {
+              id: item.id,
+              name: item.name || "",
+              subtitle: item.article || "Декоративне панно",
+              size: item.size || "",
+              price: item.price_uah || 0,
+              stock: item.stock || 0,
+              unit: item.unit || "шт",
+              description: item.description || "",
+              tags: item.tags || ["Панно"],
+              image: photos[0] || "",
+              images: photos.length > 0 ? photos : [""],
+              isPanno: true,
+            };
+          });
+          setPannos(parsedPannos);
+        }
+
       } catch(e) {
         console.log("Supabase error, using static data:", e);
       } finally {
@@ -323,12 +359,11 @@ function useCollections() {
     };
 
     fetchFromSupabase();
-    // Оновлення кожні 5 хвилин
     const interval = setInterval(fetchFromSupabase, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  return { collections, loading };
+  return { collections, pannos, loading };
 }
 
 
@@ -1223,7 +1258,7 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno }) {
 }
 
 function TileCatalog() {
-  const { collections, loading } = useCollections();
+  const { collections, pannos, loading } = useCollections();
   const [activeFilter, setActiveFilter] = useState("Всі");
   const [visualizing, setVisualizing] = useState(null);
   const [ordering, setOrdering] = useState(null);
