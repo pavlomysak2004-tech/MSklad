@@ -528,11 +528,24 @@ function removePhoto(index) {
   render();
 }
 
-function toggleTag(tag) {
+function addTag() {
+  const input = document.getElementById("tag-input");
+  if (!input) return;
+  const tag = input.value.trim();
+  if (!tag) return;
   if (!state.editItem.tags) state.editItem.tags = [];
-  const idx = state.editItem.tags.indexOf(tag);
-  if (idx > -1) state.editItem.tags.splice(idx, 1);
-  else state.editItem.tags.push(tag);
+  if (!state.editItem.tags.includes(tag)) {
+    state.editItem.tags.push(tag);
+    render();
+  } else {
+    input.value = "";
+    input.focus();
+  }
+}
+
+function removeTag(tag) {
+  if (!state.editItem.tags) return;
+  state.editItem.tags = state.editItem.tags.filter(t => t !== tag);
   render();
 }
 
