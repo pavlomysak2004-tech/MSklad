@@ -394,9 +394,7 @@ function renderModal() {
           <div style="margin-bottom:14px;">
             <div class="label">Теги</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
-              ${['Преміум','Люкс','Золото','Мармур','Білий','Чорний','Великий формат','Синій'].map(tag => `
-                <span class="tag" onclick="toggleTag('${tag}')" style="background:${(item.tags||[]).includes(tag)?'#c9a84c22':'#1a1a1a'};border:1px solid ${(item.tags||[]).includes(tag)?'#c9a84c44':'#2a2a2a'};color:${(item.tags||[]).includes(tag)?'#c9a84c':'#555'}">${tag}</span>`).join('')}
-            </div>
+              </div>
           </div>
 
           <!-- Видимість -->
