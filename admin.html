@@ -426,6 +426,30 @@ function renderModal() {
             </div>
           </div>
 
+          <!-- Покриття -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Покриття</div>
+            <div id="finish-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" onclick="handleFinishClick(event)">
+              ${(item.finish_tags||[]).map(tag => `
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+                  ${tag}
+                  <span data-remove-finish="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+                </span>`).join('')}
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              ${getExistingFinishTags(item.finish_tags||[]).length > 0 ? `
+              <div style="display:flex;flex-wrap:wrap;gap:6px;" onclick="handleExistingFinishClick(event)">
+                ${getExistingFinishTags(item.finish_tags||[]).map(tag => `
+                  <span data-add-finish="${tag}" style="cursor:pointer;padding:4px 10px;border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#555;font-size:12px;font-weight:700;">+ ${tag}</span>`).join('')}
+              </div>` : ''}
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="finish-input" placeholder="Нове покриття (напр. Полірована)..." style="flex:1;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addFinishTag();}">
+              <button onclick="addFinishTag()" style="padding:10px 16px;border-radius:10px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+
           <!-- Видимість -->
           <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#1a1a1a;border-radius:10px;">
             <span style="font-size:13px;">Показувати клієнтам</span>
@@ -594,6 +618,47 @@ function removePhoto(index) {
   render();
 }
 
+function handleFinishClick(e) {
+  const tag = e.target.getAttribute("data-remove-finish");
+  if (tag) {
+    state.editItem.finish_tags = (state.editItem.finish_tags || []).filter(t => t !== tag);
+    render();
+  }
+}
+
+function handleExistingFinishClick(e) {
+  const tag = e.target.getAttribute("data-add-finish");
+  if (tag) {
+    if (!state.editItem.finish_tags) state.editItem.finish_tags = [];
+    if (!state.editItem.finish_tags.includes(tag)) {
+      state.editItem.finish_tags.push(tag);
+      render();
+    }
+  }
+}
+
+function addFinishTag() {
+  const input = document.getElementById("finish-input");
+  if (!input) return;
+  const tag = input.value.trim();
+  if (!tag) return;
+  if (!state.editItem.finish_tags) state.editItem.finish_tags = [];
+  if (!state.editItem.finish_tags.includes(tag)) {
+    state.editItem.finish_tags.push(tag);
+    render();
+  }
+  input.value = "";
+  input.focus();
+}
+
+function getExistingFinishTags(currentTags) {
+  const allTags = new Set();
+  state.collections.forEach(c => {
+    (c.finish_tags || []).forEach(t => allTags.add(t));
+  });
+  return Array.from(allTags).filter(t => !currentTags.includes(t)).sort();
+}
+
 function handleTagClick(e) {
   const tag = e.target.getAttribute("data-remove");
   if (tag) removeTag(tag);
@@ -688,6 +753,7 @@ async function saveItem() {
       tags: item.tags || [],
       is_visible: document.getElementById("f-visible").checked,
       is_panno: item.is_panno || false,
+      finish_tags: item.finish_tags || [],
       updated_at: new Date().toISOString()
     };
 
