@@ -1243,11 +1243,11 @@ function TileCatalog() {
       setActiveCard(id);
     }
   };
-  // Динамічні фільтри з усіх тегів колекцій
-  const allTags = ["Всі", "Панно", ...Array.from(new Set(
-    [...collections, ...pannos].flatMap(c => c.tags || [])
-  )).sort()];
-  const filters = allTags;
+  // Динамічні фільтри з усіх тегів колекцій (без дублів)
+  const allTags = Array.from(new Set(
+    collections.flatMap(c => c.tags || [])
+  )).filter(t => t).sort();
+  const filters = ["Всі", ...allTags];
   const allItems = [...collections, ...pannos];
   const allPrices = allItems.map(t => t.price);
   const minPrice = Math.min(...allPrices);
