@@ -73,11 +73,16 @@
     .toast.show { opacity: 1; }
     .toast.error { border-color: #f4433644; color: #f44336; }
     .toast.success { border-color: #4caf5044; color: #4caf50; }
-    .modal input, .modal textarea, .modal select {
+    .modal-body input, .modal-body textarea, .modal-body select {
       -webkit-user-select: text !important;
       user-select: text !important;
       pointer-events: auto !important;
+      touch-action: manipulation !important;
+      cursor: text !important;
+      opacity: 1 !important;
+      -webkit-appearance: none;
     }
+    .modal-overlay { touch-action: pan-y; }
     ::-webkit-scrollbar-track { background: #0a0a0a; }
     ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
   </style>
@@ -338,19 +343,19 @@ function renderModal() {
           <!-- Назва -->
           <div style="margin-bottom:14px;">
             <div class="label">Назва *</div>
-            <input type="text" id="f-name" value="${item.name || ''}" placeholder="Oro Nebula">
+            <input type="text" id="f-name" value="${item.name || ''}" placeholder="Oro Nebula" autocomplete="off">
           </div>
 
           <!-- Артикул -->
           <div style="margin-bottom:14px;">
             <div class="label">Артикул</div>
-            <input type="text" id="f-article" value="${item.article || ''}" placeholder="00-00021672">
+            <input type="text" id="f-article" value="${item.article || ''}" placeholder="00-00021672" autocomplete="off">
           </div>
 
           <!-- Розмір -->
           <div style="margin-bottom:14px;">
             <div class="label">Розмір</div>
-            <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см" style="pointer-events:auto;-webkit-user-select:text;user-select:text;background:#1a1a1a;color:#fff;">
+            <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см" autocomplete="off" inputmode="text">
           </div>
 
           <!-- Ціни -->
@@ -359,15 +364,15 @@ function renderModal() {
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
               <div>
                 <div style="color:#c9a84c;font-size:10px;margin-bottom:4px;">UAH</div>
-                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240" min="0" step="1" style="pointer-events:auto;-webkit-user-select:text;user-select:text;" onchange="this.value=Math.max(0,parseFloat(this.value)||0)">
+                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240" min="0" step="1" inputmode="numeric" autocomplete="off" readonly="false">
               </div>
               <div>
                 <div style="color:#4caf50;font-size:10px;margin-bottom:4px;">EUR</div>
-                <input type="number" id="f-price-eur" value="${item.price_eur || ''}" placeholder="29" min="0" step="0.01" style="pointer-events:auto;-webkit-user-select:text;user-select:text;" oninput="if(this.value<0)this.value=0;calcFromEur(this.value)">
+                <input type="number" id="f-price-eur" value="${item.price_eur || ''}" placeholder="29" min="0" step="0.01" inputmode="numeric" autocomplete="off" oninput="if(parseFloat(this.value)<0)this.value=0;calcFromEur(this.value)">
               </div>
               <div>
                 <div style="color:#2196F3;font-size:10px;margin-bottom:4px;">USD</div>
-                <input type="number" id="f-price-usd" value="${item.price_usd || ''}" placeholder="31" min="0" step="0.01" style="pointer-events:auto;-webkit-user-select:text;user-select:text;" oninput="if(this.value<0)this.value=0;calcFromUsd(this.value)">
+                <input type="number" id="f-price-usd" value="${item.price_usd || ''}" placeholder="31" min="0" step="0.01" inputmode="numeric" autocomplete="off" oninput="if(parseFloat(this.value)<0)this.value=0;calcFromUsd(this.value)">
               </div>
             </div>
             <div style="color:#555;font-size:10px;margin-top:4px;">EUR/UAH: ${state.rates.eur.toFixed(2)} · USD/UAH: ${state.rates.usd.toFixed(2)}</div>
@@ -376,7 +381,7 @@ function renderModal() {
           <!-- Гуртова ціна -->
           <div style="margin-bottom:14px;">
             <div class="label">Гуртова ціна (UAH)</div>
-            <input type="number" id="f-price-wholesale" value="${item.price_wholesale || ''}" placeholder="980" min="0" step="1" style="pointer-events:auto;-webkit-user-select:text;user-select:text;" onchange="this.value=Math.max(0,parseFloat(this.value)||0)">
+            <input type="number" id="f-price-wholesale" value="${item.price_wholesale || ''}" placeholder="980" min="0" step="1" inputmode="numeric" autocomplete="off" readonly="false">
           </div>
 
           <!-- Опис -->
@@ -415,7 +420,20 @@ function renderModal() {
 }
 
 // EVENTS
-function bindEvents() {}
+function bindEvents() {
+  // Ensure all inputs in modal are editable
+  setTimeout(() => {
+    document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(el => {
+      el.removeAttribute('disabled');
+      el.removeAttribute('readonly');
+      el.style.pointerEvents = 'auto';
+      el.style.userSelect = 'text';
+      el.style.webkitUserSelect = 'text';
+      el.style.opacity = '1';
+      el.style.cursor = 'text';
+    });
+  }, 100);
+}
 
 function doLogin() {
   const pwd = document.getElementById("pwd")?.value;
