@@ -393,8 +393,18 @@ function renderModal() {
           <!-- Теги -->
           <div style="margin-bottom:14px;">
             <div class="label">Теги</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
-              </div>
+            <div id="tags-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" onclick="handleTagClick(event)">
+              ${(item.tags||[]).map(tag => `
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#c9a84c22;border:1px solid #c9a84c44;color:#c9a84c;font-size:12px;font-weight:700;">
+                  ${tag}
+                  <span data-remove="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+                </span>`).join('')}
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="tag-input" placeholder="Введи тег і натисни +" style="flex:1;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addTag();}">
+              <button onclick="addTag()" style="padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#c9a84c,#b8860b);border:none;color:#000;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
+            </div>
           </div>
 
           <!-- Видимість -->
