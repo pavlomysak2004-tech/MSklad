@@ -393,6 +393,8 @@ function renderModal() {
           <!-- Теги -->
           <div style="margin-bottom:14px;">
             <div class="label">Теги</div>
+
+            <!-- Активні теги колекції -->
             <div id="tags-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" onclick="handleTagClick(event)">
               ${(item.tags||[]).map(tag => `
                 <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#c9a84c22;border:1px solid #c9a84c44;color:#c9a84c;font-size:12px;font-weight:700;">
@@ -400,8 +402,22 @@ function renderModal() {
                   <span data-remove="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
                 </span>`).join('')}
             </div>
+
+            <!-- Існуючі теги з інших колекцій -->
+            ${getExistingTags(item.tags||[]).length > 0 ? `
+            <div style="margin-bottom:10px;">
+              <div style="color:#444;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Існуючі теги</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;" onclick="handleExistingTagClick(event)">
+                ${getExistingTags(item.tags||[]).map(tag => `
+                  <span data-add="${tag}" style="cursor:pointer;padding:4px 10px;border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#555;font-size:12px;font-weight:700;transition:all 0.2s;">
+                    + ${tag}
+                  </span>`).join('')}
+              </div>
+            </div>` : ''}
+
+            <!-- Новий тег -->
             <div style="display:flex;gap:8px;">
-              <input type="text" id="tag-input" placeholder="Введи тег і натисни +" style="flex:1;"
+              <input type="text" id="tag-input" placeholder="Новий тег..." style="flex:1;"
                 onkeydown="if(event.key==='Enter'){event.preventDefault();addTag();}">
               <button onclick="addTag()" style="padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#c9a84c,#b8860b);border:none;color:#000;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
             </div>
@@ -539,6 +555,27 @@ function removePhoto(index) {
 function handleTagClick(e) {
   const tag = e.target.getAttribute("data-remove");
   if (tag) removeTag(tag);
+}
+
+function handleExistingTagClick(e) {
+  const tag = e.target.getAttribute("data-add");
+  if (tag) {
+    if (!state.editItem.tags) state.editItem.tags = [];
+    if (!state.editItem.tags.includes(tag)) {
+      state.editItem.tags.push(tag);
+      render();
+    }
+  }
+}
+
+function getExistingTags(currentTags) {
+  // Збираємо всі унікальні теги з усіх колекцій
+  const allTags = new Set();
+  state.collections.forEach(c => {
+    (c.tags || []).forEach(t => allTags.add(t));
+  });
+  // Повертаємо лише ті що ще не додані до поточної колекції
+  return Array.from(allTags).filter(t => !currentTags.includes(t)).sort();
 }
 
 function addTag() {
