@@ -312,6 +312,7 @@ function useCollections() {
           }
         );
         const pannosData = await resP.json();
+        console.log("Pannos from Supabase:", pannosData);
         if (Array.isArray(pannosData)) {
           const parsedPannos = pannosData.map((item, i) => {
             const photos = (item.collection_photos || [])
