@@ -646,15 +646,28 @@ function OrderModal({ tile, onClose }) {
     setOrderNum(num);
     await saveOrder(num);
 
-    const text = encodeURIComponent(
-      "🛒 НОВЕ ЗАМОВЛЕННЯ " + num + "\n\n" +
+    const text = "🛒 НОВЕ ЗАМОВЛЕННЯ " + num + "\n\n" +
       "📦 " + tile.name + "\n" +
       "📐 " + (tile.size || "") + "\n" +
       "📏 " + area.toFixed(2) + " м²" + (tileCount ? " (" + tileCount + " шт)" : "") + "\n" +
       "💰 " + total.toLocaleString() + " грн\n" +
-      "📞 " + phone
-    );
-    window.open("https://t.me/" + TELEGRAM_USERNAME + "?text=" + text, "_blank");
+      "📞 " + phone;
+
+    // Відправляємо через Telegram бота прямо вам
+    try {
+      await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: OWNER_CHAT_ID,
+          text: text,
+          parse_mode: "HTML"
+        })
+      });
+    } catch(e) {
+      console.log("Telegram error:", e);
+    }
+
     setSending(false);
     setSent(true);
   };
