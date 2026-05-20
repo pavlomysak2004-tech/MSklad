@@ -364,7 +364,7 @@ function renderModal() {
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
               <div>
                 <div style="color:#c9a84c;font-size:10px;margin-bottom:4px;">UAH</div>
-                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240" min="0" step="1" inputmode="numeric" autocomplete="off" readonly="false">
+                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240" min="0" step="1" inputmode="numeric" autocomplete="off" oninput="if(parseFloat(this.value)<0)this.value=0;calcFromUah(this.value)">
               </div>
               <div>
                 <div style="color:#4caf50;font-size:10px;margin-bottom:4px;">EUR</div>
@@ -538,17 +538,37 @@ function toggleTag(tag) {
 
 function calcFromEur(val) {
   const eur = parseFloat(val);
-  if (!isNaN(eur) && eur > 0) {
+  if (!isNaN(eur) && eur >= 0) {
     const uah = Math.round(eur * state.rates.eur);
-    document.getElementById("f-price-uah").value = uah;
+    const usd = Math.round((eur * state.rates.eur / state.rates.usd) * 100) / 100;
+    const uahEl = document.getElementById("f-price-uah");
+    const usdEl = document.getElementById("f-price-usd");
+    if (uahEl) uahEl.value = uah;
+    if (usdEl) usdEl.value = usd;
   }
 }
 
 function calcFromUsd(val) {
   const usd = parseFloat(val);
-  if (!isNaN(usd) && usd > 0) {
+  if (!isNaN(usd) && usd >= 0) {
     const uah = Math.round(usd * state.rates.usd);
-    document.getElementById("f-price-uah").value = uah;
+    const eur = Math.round((usd * state.rates.usd / state.rates.eur) * 100) / 100;
+    const uahEl = document.getElementById("f-price-uah");
+    const eurEl = document.getElementById("f-price-eur");
+    if (uahEl) uahEl.value = uah;
+    if (eurEl) eurEl.value = eur;
+  }
+}
+
+function calcFromUah(val) {
+  const uah = parseFloat(val);
+  if (!isNaN(uah) && uah >= 0) {
+    const eur = Math.round((uah / state.rates.eur) * 100) / 100;
+    const usd = Math.round((uah / state.rates.usd) * 100) / 100;
+    const eurEl = document.getElementById("f-price-eur");
+    const usdEl = document.getElementById("f-price-usd");
+    if (eurEl) eurEl.value = eur;
+    if (usdEl) usdEl.value = usd;
   }
 }
 
