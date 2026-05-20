@@ -293,6 +293,7 @@ function useCollections() {
             description: item.description || existing.description,
             tags: item.tags || existing.tags || [],
             finish: item.finish || existing.finish || "",
+            finishTags: item.finish_tags || [],
             image: photos[0] || existing.image,
             images: photos.length > 0 ? photos : existing.images || [existing.image],
             isPanno: false,
@@ -1294,9 +1295,11 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno }) {
       <div style={{ padding: "16px 18px 18px" }}>
         <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{tile.subtitle}</div>
         <div style={{ color: "#fff", fontSize: 19, fontFamily: "serif", fontWeight: 700, marginBottom: 8 }}>{tile.name}</div>
-        <div style={{ display: "flex", gap: 16, marginBottom: 14 }}>
-          <div style={{ color: "#555", fontSize: 11 }}>📐 {tile.size}</div>
-          <div style={{ color: "#555", fontSize: 11 }}>✦ {tile.finish}</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
+          {tile.size ? <div style={{ color: "#555", fontSize: 11 }}>📐 {tile.size}</div> : null}
+          {(tile.finishTags || []).map(f => (
+            <span key={f} style={{ padding: "2px 8px", borderRadius: 20, background: "#7b68ee22", border: "1px solid #7b68ee44", color: "#7b68ee", fontSize: 10, fontWeight: 700 }}>{f}</span>
+          ))}
         </div>
         <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} />
         {tile.description ? <ExpandableDesc text={tile.description} /> : null}
