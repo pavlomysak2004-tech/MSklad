@@ -1243,7 +1243,11 @@ function TileCatalog() {
       setActiveCard(id);
     }
   };
-  const filters = ["Всі", "Панно", "Преміум", "Люкс", "Золото", "Великий формат"];
+  // Динамічні фільтри з усіх тегів колекцій
+  const allTags = ["Всі", "Панно", ...Array.from(new Set(
+    [...collections, ...pannos].flatMap(c => c.tags || [])
+  )).sort()];
+  const filters = allTags;
   const allItems = [...collections, ...pannos];
   const allPrices = allItems.map(t => t.price);
   const minPrice = Math.min(...allPrices);
