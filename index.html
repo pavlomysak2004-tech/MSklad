@@ -495,8 +495,8 @@ function AIVisualization({ tile, onClose }) {
 
   const rooms = ["Ванна кімната", "Кухня", "Коридор", "Вітальня"];
 
-  const generateImage = async () => {
-    if (generatedImages[activeRoom]) return;
+  const generateImage = async (room) => {
+    if (generatedImages[room]) return;
     setLoading(true);
     try {
       const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-interior", {
@@ -505,25 +505,29 @@ function AIVisualization({ tile, onClose }) {
           "Content-Type": "application/json",
           "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
         },
-        body: JSON.stringify({
-          tileName: tile.name,
-          tileImage: tile.image,
-          room: activeRoom
-        })
+        body: JSON.stringify({ tileName: tile.name, tileImage: tile.image, room })
       });
       const data = await res.json();
       if (data.imageUrl) {
-        setGeneratedImages(prev => ({ ...prev, [activeRoom]: data.imageUrl }));
+        setGeneratedImages(prev => ({ ...prev, [room]: data.imageUrl }));
+      } else {
+        console.log("Error:", data.error);
       }
     } catch(e) {
-      console.log("Error:", e);
+      console.log("Error:", e.message);
     }
     setLoading(false);
   };
 
+  // Генеруємо одразу при відкритті
   useEffect(() => {
-    generateImage();
-  }, [activeRoom]);
+    generateImage("Ванна кімната");
+  }, []);
+
+  const handleRoomChange = (room) => {
+    setActiveRoom(room);
+    generateImage(room);
+  };
 
   const currentImage = generatedImages[activeRoom];
 
@@ -538,7 +542,6 @@ function AIVisualization({ tile, onClose }) {
         boxShadow: "0 40px 80px rgba(0,0,0,0.8)",
       }} onClick={e => e.stopPropagation()}>
 
-        {/* Header */}
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>✦ AI Візуалізація інтер'єру</div>
@@ -547,50 +550,40 @@ function AIVisualization({ tile, onClose }) {
           <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#666", cursor: "pointer", width: 36, height: 36, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         </div>
 
-        {/* Room selector */}
         <div style={{ display: "flex", gap: 8, padding: "16px 24px 0", flexWrap: "wrap" }}>
           {rooms.map(room => (
-            <button key={room} onClick={() => setActiveRoom(room)} style={{
+            <button key={room} onClick={() => handleRoomChange(room)} style={{
               padding: "7px 16px", borderRadius: 20, border: "1px solid",
               borderColor: activeRoom === room ? "#c9a84c" : "#2a2a2a",
               background: activeRoom === room ? "#c9a84c11" : "transparent",
               color: activeRoom === room ? "#c9a84c" : "#666",
               cursor: "pointer", fontSize: 12, fontWeight: 600,
             }}>
-              {room}
-              {generatedImages[room] && <span style={{ marginLeft: 4 }}>✓</span>}
+              {room} {generatedImages[room] ? "✓" : ""}
             </button>
           ))}
         </div>
 
-        {/* Image */}
         <div style={{ position: "relative", margin: "16px 24px", borderRadius: 12, overflow: "hidden", height: 300, background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {loading && (
+          {loading && !currentImage && (
             <div style={{ textAlign: "center" }}>
               <div style={{ color: "#c9a84c", fontSize: 13, marginBottom: 8, animation: "pulse 1.5s infinite" }}>✦ AI генерує інтер'єр...</div>
               <div style={{ color: "#444", fontSize: 11 }}>~10-15 секунд</div>
             </div>
           )}
-          {!loading && currentImage && (
+          {currentImage && (
             <>
-              <img src={currentImage} alt={activeRoom} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-              <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+              <img src={currentImage} alt={activeRoom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>{activeRoom}</span>
                 <span style={{ color: "#c9a84c", fontSize: 11, fontWeight: 700 }}>DALL-E 3</span>
               </div>
             </>
           )}
-          {!loading && !currentImage && (
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "#333", fontSize: 13 }}>Оберіть кімнату для генерації</div>
-            </div>
-          )}
         </div>
 
-        <div style={{ padding: "0 24px 20px" }}>
-          <div style={{ color: "#444", fontSize: 11, textAlign: "center" }}>
-            Згенеровані зображення зберігаються для цієї сесії
-          </div>
+        <div style={{ padding: "0 24px 20px", textAlign: "center" }}>
+          <div style={{ color: "#444", fontSize: 11 }}>Натисніть на кімнату щоб згенерувати новий варіант</div>
         </div>
       </div>
     </div>
