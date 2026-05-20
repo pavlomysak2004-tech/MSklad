@@ -1412,7 +1412,7 @@ function TileCatalog() {
         )}
         {filtered.map((tile, i) => (
           <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: `${i * 0.08}s` }}>
-            <TileCard tile={tile} onVisualize={setVisualizing} onOrder={setOrdering} onView3D={tile.isPanno ? null : setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} />
+            <TileCard tile={tile} onVisualize={setVisualizing} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} />
           </div>
         ))}
       </div>

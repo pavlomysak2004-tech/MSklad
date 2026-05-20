@@ -704,13 +704,17 @@ async function saveItem() {
 
     // Upload new photos
     const newPhotos = (item.photos || []).filter(p => p.isNew && p.file);
-    for (const photo of newPhotos) {
+    console.log("Uploading photos:", newPhotos.length, "collectionId:", collectionId);
+    for (let i = 0; i < newPhotos.length; i++) {
+      const photo = newPhotos[i];
       const url = await uploadPhoto(photo.file, collectionId);
-      await api("POST", "collection_photos", {
-        collection_id: collectionId,
+      console.log("Uploaded photo URL:", url);
+      const result = await api("POST", "collection_photos", {
+        collection_id: parseInt(collectionId),
         url,
-        sort_order: (item.photos || []).indexOf(photo)
+        sort_order: i
       });
+      console.log("Saved to DB:", result);
     }
 
     await loadData();
