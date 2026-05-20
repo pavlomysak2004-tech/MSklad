@@ -452,7 +452,9 @@ async function generateDesc() {
   const desc = document.getElementById("f-desc");
   const name = document.getElementById("f-name")?.value || state.editItem?.name || "";
   const size = document.getElementById("f-size")?.value || state.editItem?.size || "";
-  const tags = (state.editItem?.tags || []).join(", ");
+  const tags = state.editItem?.tags || [];
+  const photos = state.editItem?.photos || [];
+  const imageUrl = photos[0]?.url || "";
 
   if (!name) { showToast("Спочатку введіть назву!", "error"); return; }
 
@@ -460,24 +462,24 @@ async function generateDesc() {
   btn.disabled = true;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-desc", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 200,
-        messages: [{
-          role: "user",
-          content: "Напиши короткий опис керамічної плитки (2-3 речення) українською мовою для каталогу. Назва: " + name + ". Розмір: " + size + ". Теги: " + tags + ". Опис має бути привабливим для гуртових клієнтів. Не починай з слова 'Ця'."
-        }]
-      })
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+      },
+      body: JSON.stringify({ name, size, tags, imageUrl })
     });
+
     const data = await res.json();
-    const text = data.content?.[0]?.text || "";
-    if (desc && text) desc.value = text;
-    showToast("Опис згенеровано! ✅", "success");
+    if (data.description) {
+      if (desc) desc.value = data.description;
+      showToast("Опис згенеровано! ✅", "success");
+    } else {
+      showToast("Помилка: " + (data.error || "невідома"), "error");
+    }
   } catch(e) {
-    showToast("Помилка генерації: " + e.message, "error");
+    showToast("Помилка: " + e.message, "error");
   }
 
   btn.textContent = "✨ AI опис";
