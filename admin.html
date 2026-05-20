@@ -62,6 +62,22 @@
     .nav-tab.active { background: #c9a84c; color: #000; border-color: #c9a84c; }
 
     ::-webkit-scrollbar { width: 4px; }
+    .toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff;
+      padding: 12px 20px; border-radius: 12px; font-size: 13px;
+      z-index: 9999; opacity: 0; transition: opacity 0.3s;
+      max-width: 90vw; text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { border-color: #f4433644; color: #f44336; }
+    .toast.success { border-color: #4caf5044; color: #4caf50; }
+    .modal input, .modal textarea, .modal select {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      pointer-events: auto !important;
+    }
     ::-webkit-scrollbar-track { background: #0a0a0a; }
     ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
   </style>
@@ -101,7 +117,7 @@ const uploadPhoto = async (file, collectionId) => {
     },
     body: file
   });
-  if (!res.ok) throw new Error("Upload failed");
+  if (!res.ok) { const err = await res.text(); throw new Error('Upload: ' + err); }
   return `${SUPABASE_URL}/storage/v1/object/public/photos/${path}`;
 };
 
@@ -115,6 +131,20 @@ const getNBURate = async () => {
   } catch { return { eur: 43.5, usd: 41.2 }; }
 };
 
+
+function showToast(msg, type) {
+  let t = document.getElementById("toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = "toast " + (type || "");
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
 // STATE
 let state = {
   page: "login",
@@ -286,7 +316,7 @@ function renderModal() {
           </div>
           <button class="btn-dark" style="width:34px;height:34px;padding:0;" onclick="closeModal()">×</button>
         </div>
-        <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+        <div class="modal-body" style="max-height:65vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
           
           <!-- Фото -->
           <div style="margin-bottom:20px;">
@@ -320,7 +350,7 @@ function renderModal() {
           <!-- Розмір -->
           <div style="margin-bottom:14px;">
             <div class="label">Розмір</div>
-            <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см">
+            <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см" style="pointer-events:auto;-webkit-user-select:text;user-select:text;">
           </div>
 
           <!-- Ціни -->
@@ -329,15 +359,15 @@ function renderModal() {
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
               <div>
                 <div style="color:#c9a84c;font-size:10px;margin-bottom:4px;">UAH</div>
-                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240">
+                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240" style="pointer-events:auto;-webkit-user-select:text;user-select:text;">
               </div>
               <div>
                 <div style="color:#4caf50;font-size:10px;margin-bottom:4px;">EUR</div>
-                <input type="number" id="f-price-eur" value="${item.price_eur || ''}" placeholder="29" oninput="calcFromEur(this.value)">
+                <input type="number" id="f-price-eur" value="${item.price_eur || ''}" placeholder="29" oninput="calcFromEur(this.value)" style="pointer-events:auto;-webkit-user-select:text;user-select:text;">
               </div>
               <div>
                 <div style="color:#2196F3;font-size:10px;margin-bottom:4px;">USD</div>
-                <input type="number" id="f-price-usd" value="${item.price_usd || ''}" placeholder="31" oninput="calcFromUsd(this.value)">
+                <input type="number" id="f-price-usd" value="${item.price_usd || ''}" placeholder="31" oninput="calcFromUsd(this.value)" style="pointer-events:auto;-webkit-user-select:text;user-select:text;">
               </div>
             </div>
             <div style="color:#555;font-size:10px;margin-top:4px;">EUR/UAH: ${state.rates.eur.toFixed(2)} · USD/UAH: ${state.rates.usd.toFixed(2)}</div>
@@ -346,7 +376,7 @@ function renderModal() {
           <!-- Гуртова ціна -->
           <div style="margin-bottom:14px;">
             <div class="label">Гуртова ціна (UAH)</div>
-            <input type="number" id="f-price-wholesale" value="${item.price_wholesale || ''}" placeholder="980">
+            <input type="number" id="f-price-wholesale" value="${item.price_wholesale || ''}" placeholder="980" style="pointer-events:auto;-webkit-user-select:text;user-select:text;">
           </div>
 
           <!-- Опис -->
@@ -436,7 +466,7 @@ async function loadData() {
     }
   } catch(e) {
     console.error(e);
-    alert("Помилка завантаження: " + e.message);
+    showToast('Помилка: ' + e.message, 'error');
   }
   state.loading = false;
   render();
@@ -526,7 +556,7 @@ async function saveItem() {
       updated_at: new Date().toISOString()
     };
 
-    if (!data.name) { alert("Введіть назву!"); btn.disabled = false; btn.textContent = "Зберегти"; return; }
+    if (!data.name) { showToast('Введіть назву!', 'error'); btn.disabled = false; btn.textContent = "Зберегти"; return; }
 
     let collectionId = item.id;
 
@@ -551,19 +581,19 @@ async function saveItem() {
     await loadData();
     closeModal();
   } catch(e) {
-    alert("Помилка: " + e.message);
+    showToast('Помилка: ' + e.message, 'error');
     btn.disabled = false;
     btn.textContent = "Зберегти";
   }
 }
 
 async function deleteItem(id) {
-  if (!confirm("Видалити цю позицію?")) return;
+  if (!window._confirmDelete) { showToast('Натисни ще раз щоб видалити', 'error'); window._confirmDelete = setTimeout(() => window._confirmDelete = null, 3000); return; } clearTimeout(window._confirmDelete); window._confirmDelete = null;
   try {
     await api("DELETE", `collections?id=eq.${id}`);
     await loadData();
   } catch(e) {
-    alert("Помилка: " + e.message);
+    showToast('Помилка: ' + e.message, 'error');
   }
 }
 
@@ -573,7 +603,7 @@ async function toggleVisible(id, visible) {
     const item = state.collections.find(c => c.id === id);
     if (item) item.is_visible = visible;
   } catch(e) {
-    alert("Помилка: " + e.message);
+    showToast('Помилка: ' + e.message, 'error');
   }
 }
 
@@ -602,7 +632,7 @@ async function saveRates() {
     api("PATCH", "settings?key=eq.eur_rate", { value: eur.toString() }),
     api("PATCH", "settings?key=eq.usd_rate", { value: usd.toString() })
   ]);
-  alert("Курс збережено!");
+  showToast('Курс збережено! ✅', 'success');
   render();
 }
 
