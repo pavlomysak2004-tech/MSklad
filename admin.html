@@ -528,6 +528,11 @@ function removePhoto(index) {
   render();
 }
 
+function handleTagClick(e) {
+  const tag = e.target.getAttribute("data-remove");
+  if (tag) removeTag(tag);
+}
+
 function addTag() {
   const input = document.getElementById("tag-input");
   if (!input) return;
