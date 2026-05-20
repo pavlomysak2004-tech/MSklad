@@ -108,7 +108,7 @@ const api = async (method, path, body) => {
 const uploadPhoto = async (file, collectionId) => {
   const ext = file.name.split(".").pop();
   const path = `collections/${collectionId}/${Date.now()}.${ext}`;
-  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${path}`, {
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/Photos/${path}`, {
     method: "POST",
     headers: {
       "apikey": SUPABASE_KEY,
@@ -118,7 +118,7 @@ const uploadPhoto = async (file, collectionId) => {
     body: file
   });
   if (!res.ok) { const err = await res.text(); throw new Error('Upload: ' + err); }
-  return `${SUPABASE_URL}/storage/v1/object/public/photos/${path}`;
+  return `${SUPABASE_URL}/storage/v1/object/public/Photos/${path}`;
 };
 
 const getNBURate = async () => {
