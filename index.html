@@ -1253,7 +1253,7 @@ function TileCatalog() {
   const [navOpen, setNavOpen] = useState(false);
   const [calcTile, setCalcTile] = useState(null);
   const [pannoModal, setPannoModal] = useState(null);
-  const [priceRange, setPriceRange] = useState([800, 2000]);
+  const [priceRange, setPriceRange] = useState([0, 999999]);
   const cardRefs = useRef({});
 
   const scrollToCard = (id) => {
@@ -1330,7 +1330,7 @@ function TileCatalog() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <span style={{ color: "#777", fontSize: 12 }}>💰 Ціна за м²</span>
             <span style={{ color: "#c9a84c", fontSize: 13, fontWeight: 700 }}>
-              {priceRange[0].toLocaleString()} — {priceRange[1].toLocaleString()} грн
+              {priceRange[0].toLocaleString()} — {priceRange[1] >= 999999 ? "∞" : priceRange[1].toLocaleString()} грн
             </span>
           </div>
           {/* Від */}
@@ -1340,7 +1340,7 @@ function TileCatalog() {
               <span style={{ color: "#666", fontSize: 10 }}>{priceRange[0].toLocaleString()} грн</span>
             </div>
             <input type="range"
-              min={800} max={2000} step={50}
+              min={0} max={maxPrice || 99999} step={50}
               value={priceRange[0]}
               onChange={e => {
                 const val = Number(e.target.value);
@@ -1356,7 +1356,7 @@ function TileCatalog() {
               <span style={{ color: "#666", fontSize: 10 }}>{priceRange[1].toLocaleString()} грн</span>
             </div>
             <input type="range"
-              min={800} max={2000} step={50}
+              min={0} max={maxPrice || 99999} step={50}
               value={priceRange[1]}
               onChange={e => {
                 const val = Number(e.target.value);
@@ -1366,8 +1366,8 @@ function TileCatalog() {
             />
           </div>
           {/* Скинути */}
-          {(priceRange[0] !== 800 || priceRange[1] !== 2000) && (
-            <button onClick={() => setPriceRange([800, 2000])} style={{
+          {(priceRange[0] !== 0 || priceRange[1] !== 999999) && (
+            <button onClick={() => setPriceRange([0, 999999])} style={{
               marginTop: 10, padding: "5px 12px", borderRadius: 8,
               background: "transparent", border: "1px solid #2a2a2a",
               color: "#555", cursor: "pointer", fontSize: 11,
