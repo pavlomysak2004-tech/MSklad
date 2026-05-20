@@ -386,7 +386,10 @@ function renderModal() {
 
           <!-- Опис -->
           <div style="margin-bottom:14px;">
-            <div class="label">Опис</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div class="label" style="margin-bottom:0;">Опис</div>
+              <button onclick="generateDesc()" id="gen-btn" style="padding:5px 12px;border-radius:8px;background:#c9a84c22;border:1px solid #c9a84c44;color:#c9a84c;font-size:11px;font-weight:700;cursor:pointer;">✨ AI опис</button>
+            </div>
             <textarea id="f-desc" rows="3" placeholder="Опис колекції...">${item.description || ''}</textarea>
           </div>
 
@@ -444,6 +447,43 @@ function renderModal() {
 }
 
 // EVENTS
+async function generateDesc() {
+  const btn = document.getElementById("gen-btn");
+  const desc = document.getElementById("f-desc");
+  const name = document.getElementById("f-name")?.value || state.editItem?.name || "";
+  const size = document.getElementById("f-size")?.value || state.editItem?.size || "";
+  const tags = (state.editItem?.tags || []).join(", ");
+
+  if (!name) { showToast("Спочатку введіть назву!", "error"); return; }
+
+  btn.textContent = "⏳ Генерую...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 200,
+        messages: [{
+          role: "user",
+          content: "Напиши короткий опис керамічної плитки (2-3 речення) українською мовою для каталогу. Назва: " + name + ". Розмір: " + size + ". Теги: " + tags + ". Опис має бути привабливим для гуртових клієнтів. Не починай з слова 'Ця'."
+        }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || "";
+    if (desc && text) desc.value = text;
+    showToast("Опис згенеровано! ✅", "success");
+  } catch(e) {
+    showToast("Помилка генерації: " + e.message, "error");
+  }
+
+  btn.textContent = "✨ AI опис";
+  btn.disabled = false;
+}
+
 function bindEvents() {
   // Ensure all inputs in modal are editable
   setTimeout(() => {
