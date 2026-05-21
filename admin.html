@@ -998,7 +998,8 @@ async function saveItem() {
     }
 
     // Видаляємо фото які були прибрані
-    const existingPhotos = (item.photos || []).filter(p => !p.isNew && p.url);
+    const allPhotos = item.photos || [];
+    const existingPhotos = allPhotos.filter(p => !p.isNew && p.url);
     const existingUrls = existingPhotos.map(p => p.url);
     
     // Отримуємо всі фото з бази
@@ -1006,24 +1007,32 @@ async function saveItem() {
     if (dbPhotos && dbPhotos.length > 0) {
       for (const dbPhoto of dbPhotos) {
         if (!existingUrls.includes(dbPhoto.url)) {
-          // Видаляємо з бази
           await api("DELETE", `collection_photos?id=eq.${dbPhoto.id}`);
-          console.log("Deleted photo:", dbPhoto.url);
+        }
+      }
+    }
+
+    // Оновлюємо sort_order для існуючих фото (з урахуванням нового порядку)
+    for (let i = 0; i < allPhotos.length; i++) {
+      const photo = allPhotos[i];
+      if (!photo.isNew && photo.url && dbPhotos) {
+        const dbPhoto = dbPhotos.find(p => p.url === photo.url);
+        if (dbPhoto) {
+          await api("PATCH", `collection_photos?id=eq.${dbPhoto.id}`, { sort_order: i });
         }
       }
     }
 
     // Upload new photos
-    const newPhotos = (item.photos || []).filter(p => p.isNew && p.file);
-    console.log("Uploading photos:", newPhotos.length, "collectionId:", collectionId);
+    const newPhotos = allPhotos.filter(p => p.isNew && p.file);
     for (let i = 0; i < newPhotos.length; i++) {
       const photo = newPhotos[i];
       const url = await uploadPhoto(photo.file, collectionId);
-      console.log("Uploaded photo URL:", url);
+      const globalIndex = allPhotos.indexOf(photo);
       await api("POST", "collection_photos", {
         collection_id: parseInt(collectionId),
         url,
-        sort_order: i
+        sort_order: globalIndex
       });
     }
 
