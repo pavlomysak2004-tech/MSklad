@@ -328,8 +328,14 @@ function renderModal() {
             <div class="label">Фото</div>
             <div class="photo-grid" id="photo-grid">
               ${photos.map((p,i) => `
-                <div class="photo-item">
-                  <img src="${p.url}" alt="">
+                <div class="photo-item" draggable="true"
+                  ondragstart="dragStart(event,${i})"
+                  ondragover="dragOver(event)"
+                  ondrop="dragDrop(event,${i})"
+                  ondragend="dragEnd(event)"
+                  style="cursor:grab;position:relative;">
+                  <img src="${p.url}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                  <div style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:2px 5px;border-radius:4px;pointer-events:none;">${i === 0 ? '★ Головне' : (i+1)}</div>
                   <button class="photo-delete" onclick="removePhoto(${i})">×</button>
                 </div>`).join('')}
               <label class="upload-zone" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
@@ -338,6 +344,7 @@ function renderModal() {
                 <input type="file" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this)">
               </label>
             </div>
+            <div style="color:#444;font-size:10px;margin-top:6px;text-align:center;">☰ Перетягуй фото щоб змінити порядок · Перше фото — головне</div>
           </div>
 
           <!-- Назва -->
@@ -426,6 +433,31 @@ function renderModal() {
             </div>
           </div>
 
+          <!-- Відгуки -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="label" style="margin-bottom:0;">⭐ Відгуки</div>
+              <button onclick="generateReviews()" id="gen-reviews-btn" style="padding:5px 12px;border-radius:8px;background:#f4433611;border:1px solid #f4433644;color:#f44336;font-size:11px;font-weight:700;cursor:pointer;">✨ Згенерувати AI</button>
+            </div>
+            <div id="reviews-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">
+              ${(item.reviews||[]).map((r,i) => `
+                <div style="background:#1a1a1a;border-radius:10px;padding:10px 12px;border:1px solid #2a2a2a;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <input value="${r.author}" onchange="updateReview(${i},'author',this.value)"
+                      style="background:transparent;border:none;color:#c9a84c;font-size:12px;font-weight:700;outline:none;width:120px;">
+                    <div style="display:flex;gap:2px;">
+                      ${[1,2,3,4,5].map(s => `<span onclick="updateReview(${i},'rating',${s})" style="cursor:pointer;font-size:14px;color:${s<=r.rating?'#f4b942':'#333'}">${s<=r.rating?'★':'☆'}</span>`).join('')}
+                    </div>
+                    <span onclick="removeReview(${i})" style="cursor:pointer;color:#444;font-size:16px;padding:0 4px;">×</span>
+                  </div>
+                  <textarea onchange="updateReview(${i},'text',this.value)" rows="2"
+                    style="width:100%;background:transparent;border:none;color:#777;font-size:12px;outline:none;resize:none;line-height:1.5;">${r.text}</textarea>
+                  <div style="color:#333;font-size:10px;margin-top:4px;">${r.created_at ? new Date(r.created_at).toLocaleDateString('uk-UA') : ''}</div>
+                </div>`).join('')}
+            </div>
+            <button onclick="addEmptyReview()" style="width:100%;padding:8px;border-radius:8px;background:transparent;border:1px dashed #2a2a2a;color:#555;cursor:pointer;font-size:12px;">+ Додати відгук вручну</button>
+          </div>
+
           <!-- Покриття -->
           <div style="margin-bottom:14px;">
             <div class="label">Покриття</div>
@@ -447,6 +479,42 @@ function renderModal() {
               <input type="text" id="finish-input" placeholder="Нове покриття (напр. Полірована)..." style="flex:1;"
                 onkeydown="if(event.key==='Enter'){event.preventDefault();addFinishTag();}">
               <button onclick="addFinishTag()" style="padding:10px 16px;border-radius:10px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+
+          <!-- Акція -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="label" style="margin-bottom:0;">🔥 Акція</div>
+              <label class="switch">
+                <input type="checkbox" id="f-sale-active" ${item.sale_price > 0 || item.sale_percent > 0 ? 'checked' : ''}
+                  onchange="toggleSaleSection(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div id="sale-section" style="display:${item.sale_price > 0 || item.sale_percent > 0 ? 'block' : 'none'}">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <div>
+                  <div style="color:#f44336;font-size:10px;margin-bottom:4px;">Акційна ціна (UAH)</div>
+                  <input type="number" id="f-sale-price" value="${item.sale_price || ''}" placeholder="990" min="0"
+                    oninput="calcSalePercent(this.value)"
+                    style="background:#f4433611;border:1px solid #f4433633;color:#fff;border-radius:10px;padding:10px;width:100%;outline:none;font-size:14px;">
+                </div>
+                <div>
+                  <div style="color:#f44336;font-size:10px;margin-bottom:4px;">Або знижка %</div>
+                  <input type="number" id="f-sale-percent" value="${item.sale_percent || ''}" placeholder="20" min="0" max="99"
+                    oninput="calcSalePrice(this.value)"
+                    style="background:#f4433611;border:1px solid #f4433633;color:#fff;border-radius:10px;padding:10px;width:100%;outline:none;font-size:14px;">
+                </div>
+              </div>
+              <div style="margin-bottom:10px;">
+                <div style="color:#f44336;font-size:10px;margin-bottom:4px;">⏰ Діє до</div>
+                <input type="date" id="f-sale-until" value="${item.sale_until ? item.sale_until.split('T')[0] : ''}"
+                  style="width:100%;background:#f4433611;border:1px solid #f4433633;color:#fff;border-radius:10px;padding:10px;outline:none;font-size:14px;">
+              </div>
+              <div id="sale-preview" style="background:#f4433611;border:1px solid #f4433633;border-radius:10px;padding:10px;font-size:12px;color:#f44336;text-align:center;">
+                ${item.sale_price > 0 ? '🔥 Акція: ' + item.sale_price.toLocaleString() + ' грн (було ' + item.price_uah.toLocaleString() + ' грн)' : ''}
+              </div>
             </div>
           </div>
 
@@ -508,6 +576,128 @@ async function generateDesc() {
 
   btn.textContent = "✨ AI опис";
   btn.disabled = false;
+}
+
+async function generateReviews() {
+  const btn = document.getElementById("gen-reviews-btn");
+  const name = document.getElementById("f-name")?.value || state.editItem?.name || "";
+  const size = document.getElementById("f-size")?.value || state.editItem?.size || "";
+  const tags = (state.editItem?.tags || []).join(", ");
+
+  if (!name) { showToast("Спочатку введіть назву!", "error"); return; }
+
+  btn.textContent = "⏳ Генерую...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-desc", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+      },
+      body: JSON.stringify({
+        name, size, tags,
+        prompt: "Згенеруй 5 реалістичних відгуків українською мовою про керамічну плитку " + name + " розміром " + size + ". Відгуки мають бути від різних людей з різними іменами (Олена К., Михайло В. тощо), різними оцінками від 4 до 5 зірок, короткими (1-2 речення). Відповідь ТІЛЬКИ у форматі JSON масиву: [{author,rating,text}]. Без пояснень."
+      })
+    });
+    const data = await res.json();
+    let reviews = [];
+    try {
+      const text = data.description || "";
+      const jsonMatch = text.match(/\[.*\]/s);
+      if (jsonMatch) reviews = JSON.parse(jsonMatch[0]);
+    } catch(e) { console.log("Parse error:", e); }
+
+    if (reviews.length > 0) {
+      const now = new Date().toISOString();
+      state.editItem.reviews = reviews.map(r => ({ ...r, created_at: now }));
+      showToast("✅ Згенеровано " + reviews.length + " відгуків!", "success");
+      render();
+    } else {
+      showToast("Помилка генерації відгуків", "error");
+    }
+  } catch(e) {
+    showToast("Помилка: " + e.message, "error");
+  }
+  btn.textContent = "✨ Згенерувати AI";
+  btn.disabled = false;
+}
+
+function updateReview(index, field, value) {
+  if (!state.editItem.reviews) return;
+  state.editItem.reviews[index][field] = field === "rating" ? parseInt(value) : value;
+  if (field === "rating") render();
+}
+
+function removeReview(index) {
+  if (!state.editItem.reviews) return;
+  state.editItem.reviews.splice(index, 1);
+  render();
+}
+
+function addEmptyReview() {
+  if (!state.editItem.reviews) state.editItem.reviews = [];
+  state.editItem.reviews.push({
+    author: "Клієнт",
+    rating: 5,
+    text: "",
+    created_at: new Date().toISOString()
+  });
+  render();
+}
+
+function toggleSaleSection(active) {
+  const section = document.getElementById("sale-section");
+  if (section) section.style.display = active ? "block" : "none";
+  if (!active) {
+    const sp = document.getElementById("f-sale-price");
+    const spc = document.getElementById("f-sale-percent");
+    const su = document.getElementById("f-sale-until");
+    if (sp) sp.value = "";
+    if (spc) spc.value = "";
+    if (su) su.value = "";
+  }
+}
+
+function calcSalePercent(priceVal) {
+  const price = parseFloat(priceVal);
+  const uah = parseFloat(document.getElementById("f-price-uah")?.value || "0");
+  if (!isNaN(price) && price > 0 && uah > 0) {
+    const percent = Math.round((1 - price / uah) * 100);
+    const percentEl = document.getElementById("f-sale-percent");
+    if (percentEl) percentEl.value = percent > 0 ? percent : "";
+  }
+  updateSalePreview();
+}
+
+function calcSalePrice(percentVal) {
+  const percent = parseFloat(percentVal);
+  const uah = parseFloat(document.getElementById("f-price-uah")?.value || "0");
+  if (!isNaN(percent) && percent > 0 && uah > 0) {
+    const salePrice = Math.round(uah * (1 - percent / 100));
+    const priceEl = document.getElementById("f-sale-price");
+    if (priceEl) priceEl.value = salePrice;
+  }
+  updateSalePreview();
+}
+
+function updateSalePreview() {
+  const preview = document.getElementById("sale-preview");
+  if (!preview) return;
+  const salePrice = parseFloat(document.getElementById("f-sale-price")?.value || "0");
+  const uah = parseFloat(document.getElementById("f-price-uah")?.value || "0");
+  const until = document.getElementById("f-sale-until")?.value;
+  if (salePrice > 0 && uah > 0) {
+    const savings = Math.round(uah - salePrice);
+    const percent = Math.round((1 - salePrice / uah) * 100);
+    preview.innerHTML = "🔥 " + salePrice.toLocaleString() + " грн " +
+      "(було " + uah.toLocaleString() + " грн, економія " + savings.toLocaleString() + " грн · -" + percent + "%)" +
+      (until ? "<br>⏰ до " + new Date(until).toLocaleDateString("uk-UA") : "");
+    preview.style.display = "block";
+  } else {
+    preview.style.display = "none";
+  }
 }
 
 function bindEvents() {
@@ -685,6 +875,41 @@ function getExistingTags(currentTags) {
   return Array.from(allTags).filter(t => !currentTags.includes(t)).sort();
 }
 
+// Drag & Drop для фото
+let dragSrcIndex = null;
+
+function dragStart(e, index) {
+  dragSrcIndex = index;
+  e.dataTransfer.effectAllowed = "move";
+  e.target.closest(".photo-item").style.opacity = "0.4";
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  return false;
+}
+
+function dragDrop(e, targetIndex) {
+  e.preventDefault();
+  if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
+  
+  const photos = state.editItem.photos || [];
+  const dragged = photos[dragSrcIndex];
+  photos.splice(dragSrcIndex, 1);
+  photos.splice(targetIndex, 0, dragged);
+  state.editItem.photos = [...photos];
+  dragSrcIndex = null;
+  render();
+  return false;
+}
+
+function dragEnd(e) {
+  dragSrcIndex = null;
+  // Reset opacity for all items
+  document.querySelectorAll(".photo-item").forEach(el => el.style.opacity = "1");
+}
+
 function addTag() {
   const input = document.getElementById("tag-input");
   if (!input) return;
@@ -754,6 +979,10 @@ async function saveItem() {
       is_visible: document.getElementById("f-visible").checked,
       is_panno: item.is_panno || false,
       finish_tags: item.finish_tags || [],
+      reviews: state.editItem.reviews || [],
+      sale_price: Math.max(0, parseFloat(document.getElementById("f-sale-price")?.value || "0") || 0),
+      sale_percent: Math.max(0, parseInt(document.getElementById("f-sale-percent")?.value || "0") || 0),
+      sale_until: document.getElementById("f-sale-until")?.value || null,
       updated_at: new Date().toISOString()
     };
 
