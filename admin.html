@@ -365,6 +365,24 @@ function renderModal() {
             <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см" autocomplete="off" inputmode="text">
           </div>
 
+          <!-- Комплект -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Артикули комплекту (якщо є)</div>
+            <div style="color:#444;font-size:10px;margin-bottom:8px;">Залишки по всіх артикулах будуть сумуватись. Основний артикул вище.</div>
+            <div id="bundle-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" onclick="handleBundleClick(event)">
+              ${(item.bundle_articles||[]).map(art => `
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+                  ${art}
+                  <span data-remove-bundle="${art}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+                </span>`).join('')}
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="bundle-input" placeholder="Введи артикул і натисни +" style="flex:1;" autocomplete="off"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addBundleArticle();}">
+              <button onclick="addBundleArticle()" style="padding:10px 16px;border-radius:10px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+
           <!-- Ціни -->
           <div style="margin-bottom:14px;">
             <div class="label">Ціна</div>
@@ -808,6 +826,28 @@ function removePhoto(index) {
   render();
 }
 
+function handleBundleClick(e) {
+  const art = e.target.getAttribute("data-remove-bundle");
+  if (art) {
+    state.editItem.bundle_articles = (state.editItem.bundle_articles || []).filter(a => a !== art);
+    render();
+  }
+}
+
+function addBundleArticle() {
+  const input = document.getElementById("bundle-input");
+  if (!input) return;
+  const art = input.value.trim();
+  if (!art) return;
+  if (!state.editItem.bundle_articles) state.editItem.bundle_articles = [];
+  if (!state.editItem.bundle_articles.includes(art)) {
+    state.editItem.bundle_articles.push(art);
+    render();
+  }
+  input.value = "";
+  input.focus();
+}
+
 function handleFinishClick(e) {
   const tag = e.target.getAttribute("data-remove-finish");
   if (tag) {
@@ -979,6 +1019,7 @@ async function saveItem() {
       is_visible: document.getElementById("f-visible").checked,
       is_panno: item.is_panno || false,
       finish_tags: item.finish_tags || [],
+      bundle_articles: item.bundle_articles || [],
       reviews: state.editItem.reviews || [],
       sale_price: Math.max(0, parseFloat(document.getElementById("f-sale-price")?.value || "0") || 0),
       sale_percent: Math.max(0, parseInt(document.getElementById("f-sale-percent")?.value || "0") || 0),
