@@ -260,7 +260,7 @@ function useCollections() {
     const fetchFromSupabase = async () => {
       try {
         const res = await fetch(
-          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.false&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at",
+          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.false&is_visible=eq.true&select=*,collection_photos(url,sort_order),reviews(id,author,rating,text,created_at)&order=sort_order,created_at",
           {
             headers: {
               "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
@@ -294,6 +294,11 @@ function useCollections() {
             tags: item.tags || existing.tags || [],
             finish: item.finish || existing.finish || "",
             finishTags: item.finish_tags || [],
+            salePrice: item.sale_price || 0,
+            salePercent: item.sale_percent || 0,
+            saleUntil: item.sale_until || null,
+            reviews: item.reviews || [],
+            bundleArticles: item.bundle_articles || [],
             image: photos[0] || existing.image,
             images: photos.length > 0 ? photos : existing.images || [existing.image],
             isPanno: false,
@@ -1109,6 +1114,66 @@ function ExpandableDesc({ text }) {
           fontSize: 11, cursor: "pointer", padding: "2px 0", marginTop: 2,
         }}>{expanded ? "↑ Згорнути" : "↓ Читати більше"}</button>
       )}
+    </div>
+  );
+}
+
+function getSaleInfo(tile) {
+  if (!tile.salePrice && !tile.salePercent) return null;
+  const now = new Date();
+  if (tile.saleUntil) {
+    const until = new Date(tile.saleUntil);
+    until.setHours(23, 59, 59);
+    if (now > until) return null; // акція закінчилась
+  }
+  const salePrice = tile.salePrice || Math.round(tile.price * (1 - tile.salePercent / 100));
+  const percent = tile.salePercent || Math.round((1 - salePrice / tile.price) * 100);
+  const daysLeft = tile.saleUntil ? Math.ceil((new Date(tile.saleUntil) - now) / (1000 * 60 * 60 * 24)) : null;
+  return { salePrice, percent, daysLeft };
+}
+
+function StarRating({ rating, count, size = 13 }) {
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ display: "flex", gap: 1 }}>
+        {[1,2,3,4,5].map(i => (
+          <span key={i} style={{ color: i <= full ? "#f4b942" : (i === full+1 && half ? "#f4b942" : "#333"), fontSize: size }}>
+            {i <= full ? "★" : (i === full+1 && half ? "⭐" : "☆")}
+          </span>
+        ))}
+      </div>
+      <span style={{ color: "#f4b942", fontSize: size, fontWeight: 700 }}>{rating.toFixed(1)}</span>
+      {count > 0 && <span style={{ color: "#444", fontSize: size - 2 }}>({count})</span>}
+    </div>
+  );
+}
+
+function ReviewsSection({ reviews }) {
+  if (!reviews || reviews.length === 0) return null;
+  const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+  return (
+    <div style={{ padding: "20px 0 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #1a1a1a" }}>
+        <StarRating rating={avg} count={reviews.length} size={16} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {reviews.map((r, i) => (
+          <div key={i} style={{ background: "#1a1a1a", borderRadius: 12, padding: "12px 14px", border: "1px solid #2a2a2a" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ color: "#c9a84c", fontSize: 13, fontWeight: 700 }}>{r.author}</span>
+              <StarRating rating={r.rating} count={0} size={12} />
+            </div>
+            <p style={{ color: "#777", fontSize: 13, lineHeight: 1.6 }}>{r.text}</p>
+            {r.created_at && (
+              <div style={{ color: "#333", fontSize: 10, marginTop: 6 }}>
+                {new Date(r.created_at).toLocaleDateString("uk-UA")}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
