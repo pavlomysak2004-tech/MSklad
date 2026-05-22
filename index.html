@@ -197,7 +197,6 @@ const staticCollections = [
     price: 1240,
     unit: "м²",
     stock: 387,
-    minOrder: 50,
     tags: ["Преміум", "Золото", "Мармур"],
     description: "Білий мармур з золотими прожилками та сірими хмарними переходами. Ефект глибини та розкоші.",
     image: TILE_IMAGE,
@@ -217,7 +216,6 @@ const staticCollections = [
     price: 1680,
     unit: "м²",
     stock: 214,
-    minOrder: 40,
     tags: ["Люкс", "Білий", "Великий формат"],
     description: "Класичний білий з тонкими бежевими прожилками. Ідеально для великих просторів.",
     image: "https://images.unsplash.com/photo-1571005892-49f8f8a39f17?w=800&q=80",
@@ -236,7 +234,6 @@ const staticCollections = [
     price: 1420,
     unit: "м²",
     stock: 156,
-    minOrder: 30,
     tags: ["Преміум", "Чорний", "Контраст"],
     description: "Глибокий антрацит із золотими вкрапленнями. Максимальний контраст та драматичність.",
     image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80",
@@ -1409,10 +1406,6 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno }) {
                 </>
               );
             })()}
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ color: "#444", fontSize: 10 }}>Мін. замовлення</div>
-            <div style={{ color: "#777", fontSize: 13, fontWeight: 600 }}>{tile.minOrder} м²</div>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
