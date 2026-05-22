@@ -319,6 +319,120 @@ function renderRates() {
     </div>`;
 }
 
+function renderReports() {
+  return `
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="color:#777;font-size:13px;">Залишки по складах</div>
+        <button class="btn-gold" onclick="loadWarehouseReport()">🔄 Оновити</button>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <input type="text" id="report-search" placeholder="🔍 Пошук за назвою або артикулом..."
+          oninput="filterReport(this.value)"
+          style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+      </div>
+
+      <div id="report-container" style="overflow-x:auto;">
+        <div style="text-align:center;padding:40px;color:#555;">
+          Натисніть "Оновити" щоб завантажити звіт
+        </div>
+      </div>
+    </div>`;
+}
+
+let reportData = [];
+let reportHeaders = [];
+
+async function loadWarehouseReport() {
+  const container = document.getElementById("report-container");
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:#c9a84c;animation:pulse 1.5s infinite;">⟳ Завантаження...</div>';
+
+  try {
+    const res = await fetch("https://script.google.com/macros/s/AKfycbymfDIx4fu4j_nROvQ5PTgPPz6QPRUNzu1iu8WSGQed74XUDIZA2OAc0i7x0Rb-X-Ed/exec");
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    reportHeaders = data.headers || [];
+    reportData = data.rows || [];
+    renderReportTable(reportData);
+
+    const updated = data.updated ? new Date(data.updated).toLocaleString("uk-UA") : "";
+    if (updated) {
+      const info = document.createElement("div");
+      info.style = "color:#444;font-size:11px;margin-bottom:8px;";
+      info.textContent = "Оновлено: " + updated;
+      container.prepend(info);
+    }
+  } catch(e) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">❌ ' + e.message + '</div>';
+  }
+}
+
+function filterReport(query) {
+  if (!query) { renderReportTable(reportData); return; }
+  const q = query.toLowerCase();
+  const filtered = reportData.filter(row =>
+    String(row["Артикул"]||"").toLowerCase().includes(q) ||
+    String(row["Назва"]||"").toLowerCase().includes(q)
+  );
+  renderReportTable(filtered);
+}
+
+function renderReportTable(rows) {
+  const container = document.getElementById("report-container");
+  if (!container) return;
+  if (!rows || rows.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#555;">Нічого не знайдено</div>';
+    return;
+  }
+
+  // Warehouse columns only (skip Артикул, Назва, Од.вим., Всього for coloring)
+  const whCols = reportHeaders.filter(h => h.startsWith("Склад"));
+
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+
+  // Header
+  html += '<thead><tr>';
+  reportHeaders.forEach(h => {
+    const isWh = h.startsWith("Склад");
+    const shortName = isWh ? h.replace("Склад ", "") : h;
+    html += '<th style="padding:8px 10px;text-align:left;border-bottom:1px solid #2a2a2a;color:' +
+      (h === "Всього" ? "#c9a84c" : isWh ? "#7b68ee" : "#777") +
+      ';white-space:nowrap;font-size:11px;">' + shortName + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  // Rows
+  rows.forEach((row, ri) => {
+    html += '<tr style="background:' + (ri % 2 === 0 ? "#111" : "#0f0f0f") + ';">';
+    reportHeaders.forEach(h => {
+      const val = row[h];
+      const isWh = h.startsWith("Склад");
+      const isTotal = h === "Всього";
+      const isNum = isWh || isTotal;
+      const numVal = parseFloat(val) || 0;
+      let color = "#777";
+      if (isNum) {
+        color = numVal > 0 ? (isTotal ? "#c9a84c" : "#fff") : "#2a2a2a";
+      } else if (h === "Артикул") {
+        color = "#c9a84c";
+      } else if (h === "Назва") {
+        color = "#fff";
+      }
+      html += '<td style="padding:7px 10px;border-bottom:1px solid #1a1a1a;color:' + color +
+        ';white-space:nowrap;">' +
+        (isNum && numVal > 0 ? numVal.toFixed(2) : isNum ? "—" : val) +
+        '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
 function renderOrders() {
   return `<div style="text-align:center;padding:40px;color:#333;">
     <div style="font-size:32px;margin-bottom:12px;">📋</div>
@@ -665,13 +779,13 @@ async function generateReviews() {
 function updateReview(index, field, value) {
   if (!state.editItem.reviews) return;
   state.editItem.reviews[index][field] = field === "rating" ? parseInt(value) : value;
-  if (field === "rating") render();
+  if (field === "rating") renderReviewsOnly();
 }
 
 function removeReview(index) {
   if (!state.editItem.reviews) return;
   state.editItem.reviews.splice(index, 1);
-  render();
+  renderReviewsOnly();
 }
 
 function addEmptyReview() {
@@ -682,7 +796,27 @@ function addEmptyReview() {
     text: "",
     created_at: new Date().toISOString()
   });
-  render();
+  renderReviewsOnly();
+}
+
+function renderReviewsOnly() {
+  const list = document.getElementById("reviews-list");
+  if (!list || !state.editItem.reviews) return;
+  list.innerHTML = state.editItem.reviews.map((r, i) =>
+    `<div style="background:#1a1a1a;border-radius:10px;padding:10px 12px;border:1px solid #2a2a2a;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <input value="${r.author}" onchange="updateReview(${i},'author',this.value)"
+          style="background:transparent;border:none;color:#c9a84c;font-size:12px;font-weight:700;outline:none;width:120px;">
+        <div style="display:flex;gap:2px;">
+          ${[1,2,3,4,5].map(s => `<span onclick="updateReview(${i},'rating',${s})" style="cursor:pointer;font-size:14px;color:${s<=r.rating?'#f4b942':'#333'}">${s<=r.rating?'★':'☆'}</span>`).join('')}
+        </div>
+        <span onclick="removeReview(${i})" style="cursor:pointer;color:#444;font-size:16px;padding:0 4px;">×</span>
+      </div>
+      <textarea onchange="updateReview(${i},'text',this.value)" rows="2"
+        style="width:100%;background:transparent;border:none;color:#777;font-size:12px;outline:none;resize:none;line-height:1.5;">${r.text}</textarea>
+      <div style="color:#333;font-size:10px;margin-top:4px;">${r.created_at ? new Date(r.created_at).toLocaleDateString('uk-UA') : ''}</div>
+    </div>`
+  ).join('');
 }
 
 function toggleSaleSection(active) {
@@ -899,7 +1033,7 @@ function handleBundleClick(e) {
   const art = e.target.getAttribute("data-remove-bundle");
   if (art) {
     state.editItem.bundle_articles = (state.editItem.bundle_articles || []).filter(a => a !== art);
-    render();
+    renderBundleOnly();
   }
 }
 
@@ -911,10 +1045,21 @@ function addBundleArticle() {
   if (!state.editItem.bundle_articles) state.editItem.bundle_articles = [];
   if (!state.editItem.bundle_articles.includes(art)) {
     state.editItem.bundle_articles.push(art);
-    render();
+    renderBundleOnly();
   }
   input.value = "";
   input.focus();
+}
+
+function renderBundleOnly() {
+  const list = document.getElementById("bundle-list");
+  if (!list) return;
+  list.innerHTML = (state.editItem.bundle_articles || []).map(art =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+      ${art}
+      <span data-remove-bundle="${art}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+    </span>`
+  ).join('');
 }
 
 function handleFinishClick(e) {
