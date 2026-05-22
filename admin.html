@@ -160,6 +160,7 @@ let state = {
   editItem: null,
   rates: { eur: 43.5, usd: 41.2 },
   autoRate: true,
+  collectionSearch: "",
 };
 
 const ADMIN_PASSWORD = "mitnyisklad2024";
@@ -237,14 +238,31 @@ function renderAdmin() {
 }
 
 function renderCollections(isPanno) {
-  const items = state.collections.filter(c => c.is_panno === isPanno);
+  const searchVal = state.collectionSearch || "";
+  const items = state.collections.filter(c => {
+    if (c.is_panno !== isPanno) return false;
+    if (!searchVal) return true;
+    const q = searchVal.toLowerCase();
+    return (c.name || "").toLowerCase().includes(q) ||
+           (c.article || "").toLowerCase().includes(q) ||
+           (c.size || "").toLowerCase().includes(q);
+  });
+
   return `
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div style="color:#777;font-size:13px;">${items.length} позицій</div>
         <button class="btn-gold" onclick="openAddModal(${isPanno})">+ Додати</button>
       </div>
-      ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">Немає позицій</div>' : ''}
+      <div style="margin-bottom:12px;position:relative;">
+        <input type="text" value="${searchVal}"
+          oninput="state.collectionSearch=this.value;render();"
+          placeholder="🔍 Пошук за назвою, артикулом, розміром..."
+          style="width:100%;padding:10px 36px 10px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+        ${searchVal ? `<span onclick="state.collectionSearch='';render();"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#555;font-size:18px;">×</span>` : ''}
+      </div>
+      ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal ? 'Нічого не знайдено' : 'Немає позицій') + '</div>' : ''}
       ${items.map(item => renderCollectionRow(item)).join('')}
     </div>`;
 }
@@ -747,6 +765,7 @@ function doLogin() {
 
 function switchTab(tab) {
   state.tab = tab;
+  state.collectionSearch = "";
   render();
 }
 
