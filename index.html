@@ -548,19 +548,17 @@ function AIVisualization({ tile, onClose }) {
     "Вітальня": "modern living room beautiful ceramic tiles floor stylish furniture bright natural lighting photorealistic 4k",
   };
 
-  const generateImage = async (room, force = false) => {
-    if (generatedImages[room] && !force) return;
-    setLoading(true);
-    try {
-      const prompt = roomPrompts[room] || roomPrompts["Ванна кімната"];
-      const encoded = encodeURIComponent(prompt);
-      const seed = force ? Date.now() : room.length * 12345;
-      const imageUrl = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=768&nologo=true&seed=" + seed;
-      setGeneratedImages(prev => ({ ...prev, [room]: imageUrl }));
-    } catch(e) {
-      console.log("Error:", e.message);
+  const generateImage = (room, force = false) => {
+    if (generatedImages[room] && !force) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    setLoading(true);
+    const prompt = roomPrompts[room] || roomPrompts["Ванна кімната"];
+    const encoded = encodeURIComponent(prompt);
+    const seed = force ? Date.now() : room.length * 12345;
+    const imageUrl = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=768&nologo=true&seed=" + seed;
+    setGeneratedImages(prev => ({ ...prev, [room]: imageUrl }));
   };
 
   // Генеруємо одразу при відкритті
@@ -609,20 +607,30 @@ function AIVisualization({ tile, onClose }) {
         </div>
 
         <div style={{ position: "relative", margin: "16px 24px", borderRadius: 12, overflow: "hidden", height: 300, background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {loading && !currentImage && (
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "#c9a84c", fontSize: 13, marginBottom: 8, animation: "pulse 1.5s infinite" }}>✦ AI генерує інтер'єр...</div>
-              <div style={{ color: "#444", fontSize: 11 }}>~10-15 секунд</div>
-            </div>
-          )}
-          {currentImage && (
+          {currentImage ? (
             <>
-              <img src={currentImage} alt={activeRoom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img
+                src={currentImage}
+                alt={activeRoom}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onLoad={() => setLoading(false)}
+                onError={() => setLoading(false)}
+              />
+              {loading && (
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}>
+                  <div style={{ color: "#c9a84c", fontSize: 13, animation: "pulse 1.5s infinite" }}>✦ Завантаження...</div>
+                </div>
+              )}
               <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>{activeRoom}</span>
                 <span style={{ color: "#c9a84c", fontSize: 11, fontWeight: 700 }}>AI Візуалізація</span>
               </div>
             </>
+          ) : (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ color: "#c9a84c", fontSize: 13, marginBottom: 8, animation: "pulse 1.5s infinite" }}>✦ AI генерує інтер'єр...</div>
+              <div style={{ color: "#444", fontSize: 11 }}>~10-20 секунд</div>
+            </div>
           )}
         </div>
 
