@@ -385,52 +385,62 @@ function filterReport(query) {
 }
 
 function renderReportTable(rows) {
-  const container = document.getElementById("report-container");
+  var container = document.getElementById("report-container");
   if (!container) return;
   if (!rows || rows.length === 0) {
     container.innerHTML = '<div style="text-align:center;padding:40px;color:#555;">Нічого не знайдено</div>';
     return;
   }
 
-  // Warehouse columns only (skip Артикул, Назва, Од.вим., Всього for coloring)
-  const whCols = reportHeaders.filter(h => h.startsWith("Склад"));
+  var table = document.createElement("div");
+  table.style.overflowX = "auto";
 
-  let html = '<div style="min-width:900px;">';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  var t = document.createElement("table");
+  t.style.cssText = "width:100%;border-collapse:collapse;font-size:12px;min-width:900px;";
 
   // Header
-  html += '<thead><tr style="position:sticky;top:0;background:#0a0a0a;">';
+  var thead = document.createElement("thead");
+  var htr = document.createElement("tr");
+  htr.style.background = "#0a0a0a";
   reportHeaders.forEach(function(h) {
+    var th = document.createElement("th");
     var isWh = h.indexOf("Склад") === 0;
     var shortName = isWh ? h.replace("Склад ", "") : h;
-    var color = h === "Всього" ? "#c9a84c" : isWh ? "#7b68ee" : "#777";
-    html += "<th style=\"padding:8px 10px;text-align:right;border-bottom:2px solid #2a2a2a;color:" + color + ";white-space:nowrap;font-size:11px;\">" + shortName + "</th>";
+    th.textContent = shortName;
+    th.style.cssText = "padding:8px 10px;text-align:" + (isWh || h==="Всього" ? "right" : "left") + ";border-bottom:2px solid #2a2a2a;white-space:nowrap;font-size:11px;color:" + (h==="Всього" ? "#c9a84c" : isWh ? "#7b68ee" : "#777") + ";";
+    htr.appendChild(th);
   });
-  html += "</tr></thead><tbody>";
+  thead.appendChild(htr);
+  t.appendChild(thead);
 
-  // Rows
+  // Body
+  var tbody = document.createElement("tbody");
   rows.forEach(function(row, ri) {
-    html += "<tr style=\"background:" + (ri % 2 === 0 ? "#111" : "#0f0f0f") + ";\">"; 
+    var tr = document.createElement("tr");
+    tr.style.background = ri % 2 === 0 ? "#111" : "#0f0f0f";
     reportHeaders.forEach(function(h) {
+      var td = document.createElement("td");
       var val = row[h];
       var isWh = h.indexOf("Склад") === 0;
       var isTotal = h === "Всього";
-      var isNum = isWh || isTotal;
       var numVal = parseFloat(val) || 0;
-      var color, display, align;
-      if (h === "Артикул") { color = "#c9a84c"; display = val; align = "left"; }
-      else if (h === "Назва") { color = "#fff"; display = val; align = "left"; }
-      else if (h === "Од. вим.") { color = "#555"; display = val; align = "left"; }
+      var color, display, align = "left";
+      if (h === "Артикул") { color = "#c9a84c"; display = String(val); }
+      else if (h === "Назва") { color = "#fff"; display = String(val); }
+      else if (h === "Од. вим.") { color = "#555"; display = String(val); }
       else if (isTotal) { color = "#c9a84c"; display = numVal > 0 ? numVal.toFixed(2) : "—"; align = "right"; }
       else if (isWh) { color = numVal > 0 ? "#4caf50" : "#333"; display = numVal > 0 ? numVal.toFixed(2) : "—"; align = "right"; }
-      else { color = "#777"; display = val; align = "left"; }
-      html += "<td style=\"padding:7px 10px;border-bottom:1px solid #1a1a1a;color:" + color + ";white-space:nowrap;text-align:" + align + ";\">"+display+"</td>";
+      else { color = "#777"; display = String(val); }
+      td.textContent = display;
+      td.style.cssText = "padding:7px 10px;border-bottom:1px solid #1a1a1a;color:" + color + ";white-space:nowrap;text-align:" + align + ";";
+      tr.appendChild(td);
     });
-    html += "</tr>";
+    tbody.appendChild(tr);
   });
-
-  html += "</tbody></table></div>";
-  container.innerHTML = html;
+  t.appendChild(tbody);
+  table.appendChild(t);
+  container.innerHTML = "";
+  container.appendChild(table);
 }
 
 function renderOrders() {
