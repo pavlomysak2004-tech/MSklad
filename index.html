@@ -526,8 +526,8 @@ function TileViewer({ tile, onClose, hideInfo }) {
         background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)",
         pointerEvents: "none",
       }}>
-        <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}><span style={{color: hideInfo ? "#0a0a0a" : "inherit"}}>{tile.subtitle}</span></div>
-        <div style={{ color: hideInfo ? "#0a0a0a" : "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
+        {!hideInfo && <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{tile.subtitle}</div>}
+        {!hideInfo && <div style={{ color: "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>}
         <div style={{ color: "#aaa", fontSize: 13, marginTop: 4 }}>{tile.size} · {tile.finish} · {current + 1}/{total}</div>
       </div>
     </div>
