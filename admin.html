@@ -455,7 +455,7 @@ function renderModal() {
             ${getExistingTags(item.tags||[]).length > 0 ? `
             <div style="margin-bottom:10px;">
               <div style="color:#444;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Існуючі теги</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;" onclick="handleExistingTagClick(event)">
+              <div id="existing-tags-container" style="display:flex;flex-wrap:wrap;gap:6px;" onclick="handleExistingTagClick(event)">
                 ${getExistingTags(item.tags||[]).map(tag => `
                   <span data-add="${tag}" style="cursor:pointer;padding:4px 10px;border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#555;font-size:12px;font-weight:700;transition:all 0.2s;">
                     + ${tag}
@@ -921,7 +921,7 @@ function handleFinishClick(e) {
   const tag = e.target.getAttribute("data-remove-finish");
   if (tag) {
     state.editItem.finish_tags = (state.editItem.finish_tags || []).filter(t => t !== tag);
-    render();
+    renderFinishTagsOnly();
   }
 }
 
@@ -931,7 +931,7 @@ function handleExistingFinishClick(e) {
     if (!state.editItem.finish_tags) state.editItem.finish_tags = [];
     if (!state.editItem.finish_tags.includes(tag)) {
       state.editItem.finish_tags.push(tag);
-      render();
+      renderFinishTagsOnly();
     }
   }
 }
@@ -944,10 +944,21 @@ function addFinishTag() {
   if (!state.editItem.finish_tags) state.editItem.finish_tags = [];
   if (!state.editItem.finish_tags.includes(tag)) {
     state.editItem.finish_tags.push(tag);
-    render();
+    renderFinishTagsOnly();
   }
   input.value = "";
   input.focus();
+}
+
+function renderFinishTagsOnly() {
+  const list = document.getElementById("finish-list");
+  if (!list) return;
+  list.innerHTML = (state.editItem.finish_tags || []).map(tag =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+      ${tag}
+      <span data-remove-finish="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+    </span>`
+  ).join('');
 }
 
 function getExistingFinishTags(currentTags) {
@@ -969,7 +980,7 @@ function handleExistingTagClick(e) {
     if (!state.editItem.tags) state.editItem.tags = [];
     if (!state.editItem.tags.includes(tag)) {
       state.editItem.tags.push(tag);
-      render();
+      renderTagsOnly();
     }
   }
 }
@@ -1027,17 +1038,36 @@ function addTag() {
   if (!state.editItem.tags) state.editItem.tags = [];
   if (!state.editItem.tags.includes(tag)) {
     state.editItem.tags.push(tag);
-    render();
-  } else {
-    input.value = "";
-    input.focus();
+    renderTagsOnly();
   }
+  input.value = "";
+  input.focus();
 }
 
 function removeTag(tag) {
   if (!state.editItem.tags) return;
   state.editItem.tags = state.editItem.tags.filter(t => t !== tag);
-  render();
+  renderTagsOnly();
+}
+
+function renderTagsOnly() {
+  const list = document.getElementById("tags-list");
+  if (!list) return;
+  list.innerHTML = (state.editItem.tags || []).map(tag =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#c9a84c22;border:1px solid #c9a84c44;color:#c9a84c;font-size:12px;font-weight:700;">
+      ${tag}
+      <span data-remove="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+    </span>`
+  ).join('');
+
+  // Оновлюємо існуючі теги
+  const existingContainer = document.getElementById("existing-tags-container");
+  if (existingContainer) {
+    const existing = getExistingTags(state.editItem.tags || []);
+    existingContainer.innerHTML = existing.map(tag =>
+      `<span data-add="${tag}" style="cursor:pointer;padding:4px 10px;border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#555;font-size:12px;font-weight:700;">+ ${tag}</span>`
+    ).join('');
+  }
 }
 
 function recalcPrices(source, val) {
