@@ -358,6 +358,8 @@ async function loadWarehouseReport() {
 
     reportHeaders = data.headers || [];
     reportData = data.rows || [];
+    console.log("Headers:", reportHeaders);
+    console.log("First row:", reportData[0]);
     renderReportTable(reportData);
 
     const updated = data.updated ? new Date(data.updated).toLocaleString("uk-UA") : "";
