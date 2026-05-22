@@ -1179,16 +1179,20 @@ function ReviewsSection({ reviews }) {
 
 function StockBar({ stock, reserve, totalStock, unit }) {
   const total = totalStock || (stock + reserve);
-  if (!total && !stock) return null;
+  if (!total && !stock && !reserve) return null;
 
   const LIMIT = 200;
 
   // Визначаємо статус і колір по вільному залишку
   let statusColor, statusLabel, displayStock;
-  if (stock <= 0) {
+  if (stock <= 0 && reserve <= 0) {
     statusColor = "#555";
     statusLabel = "Немає";
     displayStock = null;
+  } else if (stock <= 0 && reserve > 0) {
+    statusColor = "#ff9800";
+    statusLabel = "В резерві";
+    displayStock = reserve.toLocaleString() + " " + unit;
   } else if (stock > LIMIT) {
     statusColor = "#4caf50";
     statusLabel = "Багато";
@@ -1380,7 +1384,7 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno }) {
           ))}
         </div>
         <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} />
-        {tile.description ? <ExpandableDesc text={tile.description} /> : null}
+        {tile.description ? <ExpandableDesc text={tile.description.replace(/^#+\s*/gm, "").trim()} /> : null}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
             {(() => {
