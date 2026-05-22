@@ -362,53 +362,27 @@ function buildReportTableHtml(rows) {
 
   var whCols = reportHeaders.filter(function(h) { return h.indexOf("Склад") === 0; });
 
-  var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
-
-  filtered.forEach(function(row) {
+  var lines = filtered.map(function(row) {
     var article = String(row["Артикул"]||"");
     var name = String(row["Назва"]||"");
     var unit = String(row["Од. вим."]||"м²");
     var total = parseFloat(row["Всього"]) || 0;
-
-    // Склади з ненульовими залишками
-    var whItems = whCols.map(function(wh) {
+    var whParts = whCols.map(function(wh) {
       var val = parseFloat(row[wh]) || 0;
-      return { name: wh.replace("Склад ",""), val: val };
-    }).filter(function(w) { return w.val > 0; });
+      return val > 0 ? wh.replace("Склад ","") + ": " + val.toFixed(2) : null;
+    }).filter(Boolean).join(" · ");
 
-    html += '<div style="background:#111;border-radius:12px;padding:12px 14px;border:1px solid #1e1e1e;">';
+    return "<div style='padding:10px 14px;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;gap:12px;'>" +
+      "<div style='flex:1;min-width:0;'>" +
+        "<span style='color:#c9a84c;font-size:10px;margin-right:8px;'>" + article + "</span>" +
+        "<span style='color:#fff;font-size:12px;'>" + name + "</span>" +
+        (whParts ? "<div style='color:#555;font-size:11px;margin-top:3px;'>" + whParts + "</div>" : "") +
+      "</div>" +
+      "<div style='color:#c9a84c;font-size:14px;font-weight:700;flex-shrink:0;'>" + total.toFixed(2) + " " + unit + "</div>" +
+    "</div>";
+  }).join("");
 
-    // Заголовок
-    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
-    html += '<div>';
-    html += '<div style="color:#c9a84c;font-size:10px;letter-spacing:1px;margin-bottom:2px;">'+article+'</div>';
-    html += '<div style="color:#fff;font-size:13px;font-weight:600;">'+name+'</div>';
-    html += '</div>';
-    html += '<div style="text-align:right;flex-shrink:0;margin-left:12px;">';
-    html += '<div style="color:#c9a84c;font-size:16px;font-weight:800;">'+total.toFixed(2)+'</div>';
-    html += '<div style="color:#555;font-size:10px;">'+unit+' всього</div>';
-    html += '</div>';
-    html += '</div>';
-
-    // Склади
-    if (whItems.length > 0) {
-      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
-      whItems.forEach(function(w) {
-        html += '<div style="background:#1a1a1a;border-radius:8px;padding:4px 10px;border:1px solid #2a2a2a;">';
-        html += '<span style="color:#555;font-size:10px;">'+w.name+': </span>';
-        html += '<span style="color:#4caf50;font-size:12px;font-weight:700;">'+w.val.toFixed(2)+'</span>';
-        html += '</div>';
-      });
-      html += '</div>';
-    } else {
-      html += '<div style="color:#333;font-size:11px;">Немає залишків</div>';
-    }
-
-    html += '</div>';
-  });
-
-  html += '</div>';
-  return html;
+  return "<div style='background:#111;border-radius:12px;border:1px solid #1e1e1e;overflow:hidden;'>" + lines + "</div>";
 }
 
 let reportData = [];
