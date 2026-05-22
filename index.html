@@ -375,7 +375,7 @@ function StockBadge({ stock }) {
 }
 
 // Fullscreen свайп-галерея
-function TileViewer({ tile, onClose }) {
+function TileViewer({ tile, onClose, hideInfo }) {
   const [current, setCurrent] = useState(0);
   const images = tile.images || [tile.image];
   const total = images.length;
@@ -526,8 +526,8 @@ function TileViewer({ tile, onClose }) {
         background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)",
         pointerEvents: "none",
       }}>
-        <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{tile.subtitle}</div>
-        <div style={{ color: "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
+        <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}><span style={{color: hideInfo ? "#0a0a0a" : "inherit"}}>{tile.subtitle}</span></div>
+        <div style={{ color: hideInfo ? "#0a0a0a" : "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
         <div style={{ color: "#aaa", fontSize: 13, marginTop: 4 }}>{tile.size} · {tile.finish} · {current + 1}/{total}</div>
       </div>
     </div>
@@ -1702,7 +1702,7 @@ function TileCatalog() {
         </>
       )}
 
-      {viewing3D && <TileViewer tile={viewing3D} onClose={() => setViewing3D(null)} warehouseMode={warehouseMode} />}
+      {viewing3D && <TileViewer tile={viewing3D} onClose={() => setViewing3D(null)} hideInfo={warehouseMode} />}
       {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
       {pannoModal && <PannoModal panno={pannoModal} collections={collections} onClose={() => setPannoModal(null)} />}
       <LiveChat />
