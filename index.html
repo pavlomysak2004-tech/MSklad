@@ -1193,8 +1193,8 @@ function StockBar({ stock, reserve, totalStock, unit }) {
     displayStock = null;
   } else if (stock <= 0 && reserve > 0) {
     statusColor = "#ff9800";
-    statusLabel = "В резерві";
-    displayStock = reserve.toLocaleString() + " " + unit;
+    statusLabel = "Є";
+    displayStock = "0 " + unit;
   } else if (stock > LIMIT && unit !== "к-т") {
     statusColor = "#4caf50";
     statusLabel = "Багато";
