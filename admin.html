@@ -251,19 +251,21 @@ function renderCollections(isPanno) {
   return `
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div style="color:#777;font-size:13px;">${items.length} позицій</div>
+        <div id="collections-count" style="color:#777;font-size:13px;">${items.length} позицій</div>
         <button class="btn-gold" onclick="openAddModal(${isPanno})">+ Додати</button>
       </div>
       <div style="margin-bottom:12px;position:relative;">
-        <input type="text" value="${searchVal}"
-          oninput="state.collectionSearch=this.value;render();"
+        <input type="text" id="collection-search-input"
+          oninput="handleSearchInput(this.value)"
           placeholder="🔍 Пошук за назвою, артикулом, розміром..."
           style="width:100%;padding:10px 36px 10px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
-        ${searchVal ? `<span onclick="state.collectionSearch='';render();"
+        ${searchVal ? `<span id="search-clear-btn" onclick="clearSearch()"
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#555;font-size:18px;">×</span>` : ''}
       </div>
-      ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal ? 'Нічого не знайдено' : 'Немає позицій') + '</div>' : ''}
-      ${items.map(item => renderCollectionRow(item)).join('')}
+      <div id="collections-list-container">
+        ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal ? 'Нічого не знайдено' : 'Немає позицій') + '</div>' : ''}
+        ${items.map(item => renderCollectionRow(item)).join('')}
+      </div>
     </div>`;
 }
 
@@ -736,7 +738,55 @@ function updateSalePreview() {
   }
 }
 
+let searchTimeout = null;
+
+function handleSearchInput(val) {
+  state.collectionSearch = val;
+  // Оновлюємо список без перерендеру поля пошуку
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(function() {
+    renderCollectionsList();
+  }, 150);
+}
+
+function clearSearch() {
+  state.collectionSearch = "";
+  const input = document.getElementById("collection-search-input");
+  if (input) input.value = "";
+  renderCollectionsList();
+}
+
+function renderCollectionsList() {
+  const isPanno = state.tab === "pannos";
+  const container = document.getElementById("collections-list-container");
+  if (container) {
+    const searchVal = state.collectionSearch || "";
+    const items = state.collections.filter(c => {
+      if (c.is_panno !== isPanno) return false;
+      if (!searchVal) return true;
+      const q = searchVal.toLowerCase();
+      return (c.name || "").toLowerCase().includes(q) ||
+             (c.article || "").toLowerCase().includes(q) ||
+             (c.size || "").toLowerCase().includes(q);
+    });
+    const clearBtn = document.getElementById("search-clear-btn");
+    if (clearBtn) clearBtn.style.display = searchVal ? "block" : "none";
+    const countEl = document.getElementById("collections-count");
+    if (countEl) countEl.textContent = items.length + " позицій";
+    container.innerHTML = items.length === 0
+      ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal ? "Нічого не знайдено" : "Немає позицій") + "</div>"
+      : items.map(item => renderCollectionRow(item)).join("");
+  }
+}
+
 function bindEvents() {
+  // Restore search input value after render
+  const input = document.getElementById("collection-search-input");
+  if (input && state.collectionSearch) {
+    input.value = state.collectionSearch;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
   // Ensure all inputs in modal are editable
   setTimeout(() => {
     document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(el => {
