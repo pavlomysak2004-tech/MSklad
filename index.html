@@ -1503,6 +1503,15 @@ function TileCatalog() {
           <div style={{ color: "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 900 }}><span style={{ color: "#fff" }}>#МитнийSklad</span></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={() => setWarehouseMode(v => !v)} style={{
+            padding: "6px 12px", borderRadius: 20, border: "1px solid",
+            borderColor: warehouseMode ? "#7b68ee" : "#2a2a2a",
+            background: warehouseMode ? "#7b68ee22" : "transparent",
+            color: warehouseMode ? "#7b68ee" : "#555",
+            cursor: "pointer", fontSize: 11, fontWeight: 700,
+          }}>
+            {warehouseMode ? "📦 Склад" : "👁 Повний"}
+          </button>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4caf50" }} />
           <span style={{ color: "#555", fontSize: 11 }}>{collections.length} колекції</span>
         </div>
