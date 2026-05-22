@@ -548,6 +548,8 @@ function AIVisualization({ tile, onClose }) {
     "Вітальня": "modern living room beautiful ceramic tiles floor stylish furniture bright natural lighting photorealistic 4k",
   };
 
+  const sessionSeed = useRef(Math.floor(Math.random() * 99999));
+
   const generateImage = (room, force = false) => {
     if (generatedImages[room] && !force) {
       setLoading(false);
@@ -556,8 +558,8 @@ function AIVisualization({ tile, onClose }) {
     setLoading(true);
     const prompt = roomPrompts[room] || roomPrompts["Ванна кімната"];
     const encoded = encodeURIComponent(prompt);
-    const seed = force ? Date.now() : room.length * 12345;
-    const imageUrl = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=768&nologo=true&seed=" + seed;
+    const seed = sessionSeed.current + room.length + (force ? Date.now() % 9999 : 0);
+    const imageUrl = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=768&nologo=true&seed=" + seed + "&t=" + Date.now();
     setGeneratedImages(prev => ({ ...prev, [room]: imageUrl }));
   };
 
