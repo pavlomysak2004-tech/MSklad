@@ -541,8 +541,8 @@ function AIVisualization({ tile, onClose }) {
 
   const rooms = ["Ванна кімната", "Кухня", "Коридор", "Вітальня"];
 
-  const generateImage = async (room) => {
-    if (generatedImages[room]) return;
+  const generateImage = async (room, force = false) => {
+    if (generatedImages[room] && !force) return;
     setLoading(true);
     try {
       const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-interior", {
@@ -622,14 +622,20 @@ function AIVisualization({ tile, onClose }) {
               <img src={currentImage} alt={activeRoom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>{activeRoom}</span>
-                <span style={{ color: "#c9a84c", fontSize: 11, fontWeight: 700 }}>DALL-E 3</span>
+                <span style={{ color: "#c9a84c", fontSize: 11, fontWeight: 700 }}>AI Візуалізація</span>
               </div>
             </>
           )}
         </div>
 
-        <div style={{ padding: "0 24px 20px", textAlign: "center" }}>
-          <div style={{ color: "#444", fontSize: 11 }}>Натисніть на кімнату щоб згенерувати новий варіант</div>
+        <div style={{ padding: "0 24px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ color: "#444", fontSize: 11 }}>Натисніть на кімнату для генерації</div>
+          {currentImage && (
+            <button onClick={() => generateImage(activeRoom, true)} style={{
+              padding: "6px 14px", borderRadius: 20, border: "1px solid #2a2a2a",
+              background: "transparent", color: "#666", cursor: "pointer", fontSize: 11,
+            }}>🔄 Перегенерувати</button>
+          )}
         </div>
       </div>
     </div>
