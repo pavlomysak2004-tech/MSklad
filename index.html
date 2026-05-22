@@ -526,9 +526,8 @@ function TileViewer({ tile, onClose }) {
         background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)",
         pointerEvents: "none",
       }}>
-        <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{!warehouseMode && tile.subtitle}</div>
-        {!warehouseMode && <div style={{ color: "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>}
-        {warehouseMode && <div style={{ color: "#333", fontSize: 13 }}>{tile.size}</div>}
+        <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{tile.subtitle}</div>
+        <div style={{ color: "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
         <div style={{ color: "#aaa", fontSize: 13, marginTop: 4 }}>{tile.size} · {tile.finish} · {current + 1}/{total}</div>
       </div>
     </div>
@@ -1703,7 +1702,7 @@ function TileCatalog() {
         </>
       )}
 
-      {viewing3D && <TileViewer tile={viewing3D} onClose={() => setViewing3D(null)} />}
+      {viewing3D && <TileViewer tile={viewing3D} onClose={() => setViewing3D(null)} warehouseMode={warehouseMode} />}
       {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
       {pannoModal && <PannoModal panno={pannoModal} collections={collections} onClose={() => setPannoModal(null)} />}
       <LiveChat />
