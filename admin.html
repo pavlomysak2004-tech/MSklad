@@ -223,6 +223,7 @@ function renderAdmin() {
         <button class="nav-tab ${state.tab==='pannos'?'active':''}" onclick="switchTab('pannos')">🎨 Панно</button>
         <button class="nav-tab ${state.tab==='rates'?'active':''}" onclick="switchTab('rates')">💱 Курс валют</button>
         <button class="nav-tab ${state.tab==='orders'?'active':''}" onclick="switchTab('orders')">📋 Замовлення</button>
+        <button class="nav-tab ${state.tab==='reports'?'active':''}" onclick="switchTab('reports')">📊 Звіти</button>
       </div>
 
       <!-- Content -->
@@ -231,6 +232,7 @@ function renderAdmin() {
         ${state.tab==='pannos' ? renderCollections(true) : ''}
         ${state.tab==='rates' ? renderRates() : ''}
         ${state.tab==='orders' ? renderOrders() : ''}
+        ${state.tab==='reports' ? renderReports() : ''}
       </div>
 
       ${state.modal ? renderModal() : ''}
