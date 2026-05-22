@@ -415,13 +415,15 @@ function renderReportTable(rows) {
       const isTotal = h === "Всього";
       const isNum = isWh || isTotal;
       const numVal = parseFloat(val) || 0;
-      let color = "#777";
+      let color = "#aaa";
       if (isNum) {
-        color = numVal > 0 ? (isTotal ? "#c9a84c" : "#fff") : "#2a2a2a";
+        color = numVal > 0 ? (isTotal ? "#c9a84c" : "#4caf50") : "#444";
       } else if (h === "Артикул") {
         color = "#c9a84c";
       } else if (h === "Назва") {
         color = "#fff";
+      } else if (h === "Од. вим.") {
+        color = "#777";
       }
       html += '<td style="padding:7px 10px;border-bottom:1px solid #1a1a1a;color:' + color +
         ';white-space:nowrap;">' +
