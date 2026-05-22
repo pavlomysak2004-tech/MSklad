@@ -347,9 +347,9 @@ let reportData = [];
 let reportHeaders = [];
 
 async function loadWarehouseReport() {
-  const container = document.getElementById("report-container");
-  if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:#c9a84c;animation:pulse 1.5s infinite;">⟳ Завантаження...</div>';
+  // Спочатку показуємо індикатор
+  var container = document.getElementById("report-container");
+  if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#c9a84c;">⟳ Завантаження...</div>';
 
   try {
     const res = await fetch("https://script.google.com/macros/s/AKfycbymfDIx4fu4j_nROvQ5PTgPPz6QPRUNzu1iu8WSGQed74XUDIZA2OAc0i7x0Rb-X-Ed/exec");
@@ -358,19 +358,23 @@ async function loadWarehouseReport() {
 
     reportHeaders = data.headers || [];
     reportData = data.rows || [];
-    console.log("Headers:", reportHeaders);
-    console.log("First row:", reportData[0]);
-    renderReportTable(reportData);
 
-    const updated = data.updated ? new Date(data.updated).toLocaleString("uk-UA") : "";
-    if (updated) {
-      const info = document.createElement("div");
-      info.style = "color:#444;font-size:11px;margin-bottom:8px;";
-      info.textContent = "Оновлено: " + updated;
-      container.prepend(info);
-    }
+    // Чекаємо щоб DOM оновився
+    setTimeout(function() {
+      var c = document.getElementById("report-container");
+      if (!c) return;
+      renderReportTable(reportData);
+      if (data.updated) {
+        var info = document.createElement("div");
+        info.style.cssText = "color:#444;font-size:11px;margin-bottom:8px;padding:0 0 8px;border-bottom:1px solid #1a1a1a;";
+        info.textContent = "Оновлено: " + new Date(data.updated).toLocaleString("uk-UA");
+        c.prepend(info);
+      }
+    }, 100);
+
   } catch(e) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">❌ ' + e.message + '</div>';
+    var c = document.getElementById("report-container");
+    if (c) c.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">❌ ' + e.message + '</div>';
   }
 }
 
