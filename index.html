@@ -1187,7 +1187,9 @@ function StockBar({ stock, reserve, totalStock, unit }) {
     <div style={{ padding: "10px 0 4px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 5 }}>
         <span style={{ color: "#555" }}>Склад</span>
-        <span style={{ color: "#fff", fontWeight: 700 }}>{total.toLocaleString()} {unit}</span>
+        <span style={{ color: "#fff", fontWeight: 700 }}>
+          {total > 250 ? "250+ " + unit : total.toLocaleString() + " " + unit}
+        </span>
       </div>
       <div style={{ height: 6, background: "#1a1a1a", borderRadius: 3, overflow: "hidden", marginBottom: 6, display: "flex" }}>
         <div style={{ height: "100%", width: freePercent + "%", background: "#4caf50", borderRadius: 3, flexShrink: 0 }} />
