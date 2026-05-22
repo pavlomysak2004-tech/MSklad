@@ -1336,7 +1336,7 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno }) {
     }}>
       {/* Фото — клік відкриває 3D-перегляд */}
       <div style={{ position: "relative", height: 220, overflow: "hidden" }} onClick={() => { const imgs = tile.images || [tile.image]; if (imgs[0] && onView3D) onView3D(tile); }}>
-        <img src={tile.image} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s", transform: hovered ? "scale(1.05)" : "scale(1)" }} />
+        <img src={tile.image} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", background: "#111", display: "block" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #111 0%, transparent 60%)" }} />
         {/* Підказка 3D */}
         <div style={{
