@@ -395,47 +395,41 @@ function renderReportTable(rows) {
   // Warehouse columns only (skip Артикул, Назва, Од.вим., Всього for coloring)
   const whCols = reportHeaders.filter(h => h.startsWith("Склад"));
 
-  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  let html = '<div style="min-width:900px;">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
 
   // Header
-  html += '<thead><tr>';
-  reportHeaders.forEach(h => {
-    const isWh = h.startsWith("Склад");
-    const shortName = isWh ? h.replace("Склад ", "") : h;
-    html += '<th style="padding:8px 10px;text-align:left;border-bottom:1px solid #2a2a2a;color:' +
-      (h === "Всього" ? "#c9a84c" : isWh ? "#7b68ee" : "#777") +
-      ';white-space:nowrap;font-size:11px;">' + shortName + '</th>';
+  html += '<thead><tr style="position:sticky;top:0;background:#0a0a0a;">';
+  reportHeaders.forEach(function(h) {
+    var isWh = h.indexOf("Склад") === 0;
+    var shortName = isWh ? h.replace("Склад ", "") : h;
+    var color = h === "Всього" ? "#c9a84c" : isWh ? "#7b68ee" : "#777";
+    html += "<th style=\"padding:8px 10px;text-align:right;border-bottom:2px solid #2a2a2a;color:" + color + ";white-space:nowrap;font-size:11px;\">" + shortName + "</th>";
   });
-  html += '</tr></thead><tbody>';
+  html += "</tr></thead><tbody>";
 
   // Rows
-  rows.forEach((row, ri) => {
-    html += '<tr style="background:' + (ri % 2 === 0 ? "#111" : "#0f0f0f") + ';">';
-    reportHeaders.forEach(h => {
-      const val = row[h];
-      const isWh = h.startsWith("Склад");
-      const isTotal = h === "Всього";
-      const isNum = isWh || isTotal;
-      const numVal = parseFloat(val) || 0;
-      let color = "#aaa";
-      if (isNum) {
-        color = numVal > 0 ? (isTotal ? "#c9a84c" : "#4caf50") : "#444";
-      } else if (h === "Артикул") {
-        color = "#c9a84c";
-      } else if (h === "Назва") {
-        color = "#fff";
-      } else if (h === "Од. вим.") {
-        color = "#777";
-      }
-      html += '<td style="padding:7px 10px;border-bottom:1px solid #1a1a1a;color:' + color +
-        ';white-space:nowrap;">' +
-        (isNum && numVal > 0 ? numVal.toFixed(2) : isNum ? "—" : val) +
-        '</td>';
+  rows.forEach(function(row, ri) {
+    html += "<tr style=\"background:" + (ri % 2 === 0 ? "#111" : "#0f0f0f") + ";\">"; 
+    reportHeaders.forEach(function(h) {
+      var val = row[h];
+      var isWh = h.indexOf("Склад") === 0;
+      var isTotal = h === "Всього";
+      var isNum = isWh || isTotal;
+      var numVal = parseFloat(val) || 0;
+      var color, display, align;
+      if (h === "Артикул") { color = "#c9a84c"; display = val; align = "left"; }
+      else if (h === "Назва") { color = "#fff"; display = val; align = "left"; }
+      else if (h === "Од. вим.") { color = "#555"; display = val; align = "left"; }
+      else if (isTotal) { color = "#c9a84c"; display = numVal > 0 ? numVal.toFixed(2) : "—"; align = "right"; }
+      else if (isWh) { color = numVal > 0 ? "#4caf50" : "#333"; display = numVal > 0 ? numVal.toFixed(2) : "—"; align = "right"; }
+      else { color = "#777"; display = val; align = "left"; }
+      html += "<td style=\"padding:7px 10px;border-bottom:1px solid #1a1a1a;color:" + color + ";white-space:nowrap;text-align:" + align + ";\">"+display+"</td>";
     });
-    html += '</tr>';
+    html += "</tr>";
   });
 
-  html += '</tbody></table>';
+  html += "</tbody></table></div>";
   container.innerHTML = html;
 }
 
