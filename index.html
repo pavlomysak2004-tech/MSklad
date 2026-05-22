@@ -1193,12 +1193,12 @@ function StockBar({ stock, reserve, totalStock, unit }) {
     statusColor = "#ff9800";
     statusLabel = "В резерві";
     displayStock = reserve.toLocaleString() + " " + unit;
-  } else if (stock > LIMIT) {
+  } else if (stock > LIMIT && unit !== "к-т") {
     statusColor = "#4caf50";
     statusLabel = "Багато";
     displayStock = LIMIT + "+ " + unit;
-  } else if (stock > 10) {
-    statusColor = "#ff9800";
+  } else if (stock > 10 || unit === "к-т") {
+    statusColor = "#4caf50";
     statusLabel = "Є";
     displayStock = stock.toLocaleString() + " " + unit;
   } else {
