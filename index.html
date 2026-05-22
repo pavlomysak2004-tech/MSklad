@@ -330,6 +330,8 @@ function useCollections() {
               size: item.size || "",
               price: item.price_uah || 0,
               stock: item.stock || 0,
+              reserve: item.reserve || 0,
+              totalStock: (item.stock || 0) + (item.reserve || 0),
               unit: item.unit || "шт",
               description: item.description || "",
               tags: item.tags || ["Панно"],
