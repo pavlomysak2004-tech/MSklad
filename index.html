@@ -1180,16 +1180,21 @@ function ReviewsSection({ reviews }) {
 function StockBar({ stock, reserve, totalStock, unit }) {
   const total = totalStock || (stock + reserve);
   if (!total) return null;
+  const LIMIT = 250;
+  const hideExact = total > LIMIT;
   const freePercent = Math.round((stock / total) * 100);
   const reservePercent = Math.round((reserve / total) * 100);
   const hasReserve = reserve > 0;
+
+  const displayTotal = total > LIMIT ? (LIMIT + "+ " + unit) : (total.toLocaleString() + " " + unit);
+  const displayStock = stock > LIMIT ? (LIMIT + "+ " + unit) : (stock.toLocaleString() + " " + unit);
+  const displayReserve = reserve.toLocaleString() + " " + unit;
+
   return (
     <div style={{ padding: "10px 0 4px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 5 }}>
         <span style={{ color: "#555" }}>Склад</span>
-        <span style={{ color: "#fff", fontWeight: 700 }}>
-          {total > 250 ? "250+ " + unit : total.toLocaleString() + " " + unit}
-        </span>
+        <span style={{ color: "#fff", fontWeight: 700 }}>{displayTotal}</span>
       </div>
       <div style={{ height: 6, background: "#1a1a1a", borderRadius: 3, overflow: "hidden", marginBottom: 6, display: "flex" }}>
         <div style={{ height: "100%", width: freePercent + "%", background: "#4caf50", borderRadius: 3, flexShrink: 0 }} />
@@ -1198,12 +1203,12 @@ function StockBar({ stock, reserve, totalStock, unit }) {
       <div style={{ display: "flex", gap: 12, fontSize: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ width: 8, height: 8, borderRadius: 2, background: "#4caf50", display: "inline-block" }} />
-          <span style={{ color: "#555" }}>Вільно: <span style={{ color: "#fff", fontWeight: 700 }}>{stock.toLocaleString()} {unit}</span></span>
+          <span style={{ color: "#555" }}>Вільно: <span style={{ color: "#fff", fontWeight: 700 }}>{displayStock}</span></span>
         </div>
         {hasReserve && (
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 8, height: 8, borderRadius: 2, background: "#ff9800", display: "inline-block" }} />
-            <span style={{ color: "#555" }}>Резерв: <span style={{ color: "#fff", fontWeight: 700 }}>{reserve.toLocaleString()} {unit}</span></span>
+            <span style={{ color: "#555" }}>Резерв: <span style={{ color: "#fff", fontWeight: 700 }}>{displayReserve}</span></span>
           </div>
         )}
       </div>
