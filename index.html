@@ -1369,8 +1369,26 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno }) {
         {tile.description ? <ExpandableDesc text={tile.description} /> : null}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
-            <span style={{ color: "#fff", fontSize: 24, fontWeight: 800 }}>{tile.price.toLocaleString()}</span>
-            <span style={{ color: "#c9a84c", fontSize: 13, marginLeft: 4 }}>грн/{tile.unit}</span>
+            {(() => {
+              const sale = getSaleInfo(tile);
+              return sale ? (
+                <>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <span style={{ color: "#f44336", fontSize: 24, fontWeight: 800 }}>{sale.salePrice.toLocaleString()}</span>
+                    <span style={{ color: "#f44336", fontSize: 13 }}>грн/{tile.unit}</span>
+                  </div>
+                  <div style={{ color: "#555", fontSize: 12, textDecoration: "line-through" }}>{tile.price.toLocaleString()} грн/{tile.unit}</div>
+                  {sale.daysLeft !== null && sale.daysLeft <= 7 && (
+                    <div style={{ color: "#f44336", fontSize: 10, marginTop: 2 }}>⏰ {sale.daysLeft <= 0 ? "останній день" : "ще " + sale.daysLeft + " дн."}</div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "#fff", fontSize: 24, fontWeight: 800 }}>{tile.price.toLocaleString()}</span>
+                  <span style={{ color: "#c9a84c", fontSize: 13, marginLeft: 4 }}>грн/{tile.unit}</span>
+                </>
+              );
+            })()}
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ color: "#444", fontSize: 10 }}>Мін. замовлення</div>
