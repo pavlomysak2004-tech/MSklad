@@ -541,24 +541,22 @@ function AIVisualization({ tile, onClose }) {
 
   const rooms = ["Ванна кімната", "Кухня", "Коридор", "Вітальня"];
 
+  const roomPrompts = {
+    "Ванна кімната": "modern luxury bathroom marble tiles walls floor glass shower bright lighting minimalist photorealistic 4k interior design",
+    "Кухня": "modern kitchen elegant ceramic tiles floor backsplash white cabinets bright natural light photorealistic 4k interior",
+    "Коридор": "elegant hallway decorative ceramic tiles floor modern interior bright lighting photorealistic 4k design",
+    "Вітальня": "modern living room beautiful ceramic tiles floor stylish furniture bright natural lighting photorealistic 4k",
+  };
+
   const generateImage = async (room, force = false) => {
     if (generatedImages[room] && !force) return;
     setLoading(true);
     try {
-      const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-interior", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
-        },
-        body: JSON.stringify({ tileName: tile.name, tileImage: tile.image, room })
-      });
-      const data = await res.json();
-      if (data.imageUrl) {
-        setGeneratedImages(prev => ({ ...prev, [room]: data.imageUrl }));
-      } else {
-        console.log("Error:", data.error);
-      }
+      const prompt = roomPrompts[room] || roomPrompts["Ванна кімната"];
+      const encoded = encodeURIComponent(prompt);
+      const seed = force ? Date.now() : room.length * 12345;
+      const imageUrl = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=768&nologo=true&seed=" + seed;
+      setGeneratedImages(prev => ({ ...prev, [room]: imageUrl }));
     } catch(e) {
       console.log("Error:", e.message);
     }
