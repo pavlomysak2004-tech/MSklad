@@ -1349,7 +1349,7 @@ function PannoModal({ panno, collections, onClose }) {
   );
 }
 
-function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno }) {
+function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
   const handleShare = (e) => {
     e.stopPropagation();
     const text = encodeURIComponent(tile.name + " - " + tile.subtitle + " | " + tile.size + " | " + tile.price.toLocaleString() + " грн/м² | #МитнийSklad");
@@ -1453,6 +1453,7 @@ function TileCatalog() {
   const [activeCard, setActiveCard] = useState(0);
   const [navOpen, setNavOpen] = useState(false);
   const [calcTile, setCalcTile] = useState(null);
+  const [warehouseMode, setWarehouseMode] = useState(false);
   const [pannoModal, setPannoModal] = useState(null);
   const [priceRange, setPriceRange] = useState([0, 999999]);
   const cardRefs = useRef({});
@@ -1592,7 +1593,7 @@ function TileCatalog() {
         )}
         {filtered.map((tile, i) => (
           <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: `${i * 0.08}s` }}>
-            <TileCard tile={tile} onVisualize={setVisualizing} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} />
+            <TileCard tile={tile} onVisualize={setVisualizing} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} />
           </div>
         ))}
       </div>
