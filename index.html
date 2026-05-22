@@ -1466,7 +1466,8 @@ function TileCatalog() {
       (activeFilter === "Панно" ? t.isPanno : (t.tags || []).includes(activeFilter));
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
       (t.subtitle || "").toLowerCase().includes(search.toLowerCase());
-    const matchPrice = t.price >= priceRange[0] && t.price <= priceRange[1];
+    const effectivePrice = (() => { const s = getSaleInfo(t); return s ? s.salePrice : t.price; })();
+    const matchPrice = effectivePrice >= priceRange[0] && effectivePrice <= priceRange[1];
     return matchFilter && matchSearch && matchPrice;
   });
 
