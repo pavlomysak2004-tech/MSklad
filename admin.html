@@ -242,7 +242,7 @@ function renderAdmin() {
             ondragend="tabDragEnd(event)"
             ontouchstart="tabLongPressStart(event,'${tab}')"
             ontouchend="tabLongPressEnd(event,'${tab}')"
-            style="cursor:grab;"
+            style="cursor:grab;user-select:none;"
           >${labels[tab]}</button>`;
         }).join('')}
       </div>
@@ -1105,40 +1105,37 @@ function reorderTab(fromTab, toTab) {
   render();
 }
 
-// Touch support for mobile
-function tabTouchStart(e, tab) {
-  tabTouchSrc = tab;
-  tabTouchStartX = e.touches[0].clientX;
-  tabTouchStartY = e.touches[0].clientY;
-  e.currentTarget.style.opacity = "0.4";
+// Long press для мобільного
+var longPressTimer = null;
+var longPressSrc = null;
+
+function tabLongPressStart(e, tab) {
+  longPressTimer = setTimeout(function() {
+    longPressSrc = tab;
+    if (navigator.vibrate) navigator.vibrate(50);
+    document.querySelectorAll(".nav-tab").forEach(function(t) {
+      if (t.getAttribute("data-tab") === tab) {
+        t.style.outline = "2px solid #c9a84c";
+      }
+    });
+    showToast("✦ Натисніть іншу вкладку для переміщення", "success");
+  }, 600);
 }
 
-function tabTouchMove(e) {
-  var dx = Math.abs(e.touches[0].clientX - tabTouchStartX);
-  var dy = Math.abs(e.touches[0].clientY - (tabTouchStartY || e.touches[0].clientY));
-  // Блокуємо скрол тільки якщо рух більше горизонтальний
-  if (dx > dy && dx > 10) {
-    e.preventDefault();
-    var x = e.touches[0].clientX;
-    var el = document.elementFromPoint(x, e.touches[0].clientY);
-    document.querySelectorAll(".nav-tab").forEach(function(t) { t.style.background = ""; });
-    if (el && el.classList.contains("nav-tab")) {
-      el.style.background = "#c9a84c33";
+function tabLongPressEnd(e, tab) {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+}
+
+function handleTabClick(e, tab) {
+  if (longPressSrc) {
+    if (longPressSrc !== tab) {
+      reorderTab(longPressSrc, tab);
     }
+    longPressSrc = null;
+    document.querySelectorAll(".nav-tab").forEach(function(t) { t.style.outline = ""; });
+  } else {
+    switchTab(tab);
   }
-}
-
-function tabTouchEnd(e, tab) {
-  e.currentTarget.style.opacity = "1";
-  document.querySelectorAll(".nav-tab").forEach(function(t) { t.style.background = ""; });
-  var x = e.changedTouches[0].clientX;
-  var y = e.changedTouches[0].clientY;
-  var el = document.elementFromPoint(x, y);
-  if (el && el.classList.contains("nav-tab") && el !== e.currentTarget) {
-    var targetTab = el.getAttribute("data-tab");
-    if (targetTab && targetTab !== tab) reorderTab(tab, targetTab);
-  }
-  tabTouchSrc = null;
 }
 
 async function loadData() {
