@@ -448,14 +448,14 @@ function startCollectionVoice() {
 }
 
 function filterByWarehouse(val) {
-  console.log("filterByWarehouse:", val);
   state.reportWarehouse = val;
-  var container = document.getElementById("report-table-container");
-  console.log("container:", container);
-  console.log("reportData:", reportData.length);
-  if (container && reportData.length > 0) {
-    container.innerHTML = buildReportTableHtml(reportData);
-  }
+  setTimeout(function() {
+    var container = document.getElementById("report-table-container");
+    if (container && reportData.length > 0) {
+      var html = buildReportTableHtml(reportData);
+      container.innerHTML = html;
+    }
+  }, 10);
 }
 
 let reportSearchTimeout = null;
@@ -485,7 +485,6 @@ function buildReportTableHtml(rows) {
   var search = (state.reportSearch||"").toLowerCase();
   var selectedWh = state.reportWarehouse || "";
 
-  console.log("selectedWh:", selectedWh, "search:", search);
   var filtered = rows.filter(function(r) {
     var matchSearch = !search ||
       String(r["Артикул"]||"").toLowerCase().includes(search) ||
@@ -494,7 +493,6 @@ function buildReportTableHtml(rows) {
     var matchWh = !selectedWh || whVal > 0;
     return matchSearch && matchWh;
   });
-  console.log("filtered:", filtered.length);
 
   // Сортуємо по залишках вибраного складу або по загальній сумі
   filtered.sort(function(a, b) {
