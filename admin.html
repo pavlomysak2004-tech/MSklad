@@ -396,7 +396,7 @@ function renderReports() {
           style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:14px;">
-        <select onchange="state.reportWarehouse=this.value;render();"
+        <select id="wh-select" onchange="filterByWarehouse(this.value)"
           style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;cursor:pointer;">
           ${whFilterOptions}
         </select>
@@ -445,6 +445,14 @@ function startCollectionVoice() {
     var input = document.getElementById("collection-search-input");
     if (input) { input.value = text; handleSearchInput(text); }
   });
+}
+
+function filterByWarehouse(val) {
+  state.reportWarehouse = val;
+  var container = document.querySelector('[style*="overflow-x:auto"]');
+  if (container && reportData.length > 0) {
+    container.innerHTML = buildReportTableHtml(reportData);
+  }
 }
 
 let reportSearchTimeout = null;
@@ -1122,10 +1130,8 @@ function bindEvents() {
     }
   }
   // Відновлюємо вибраний склад у select
-  var whSelect = document.querySelector("select[onchange*='reportWarehouse']");
-  if (whSelect && state.reportWarehouse) {
-    whSelect.value = state.reportWarehouse;
-  }
+  var whSelect = document.getElementById("wh-select");
+  if (whSelect) whSelect.value = state.reportWarehouse || "";
   // Restore search input value after render
   const input = document.getElementById("collection-search-input");
   if (input && state.collectionSearch) {
