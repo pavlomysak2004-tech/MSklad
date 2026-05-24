@@ -376,11 +376,11 @@ function renderReports() {
   }
 
   var warehouses = getVisibleWarehouses();
-  var whFilterOptions = '<option value="">Всі склади</option>' +
+  var whFilterOptions = '<option value=""' + (!state.reportWarehouse ? " selected" : "") + '>Всі склади</option>' +
     warehouses.map(function(wh) {
       var name = wh.replace("Склад ","");
-      var selected = state.reportWarehouse === wh ? "selected" : "";
-      return '<option value="' + wh + '" ' + selected + '>' + name + '</option>';
+      var selected = state.reportWarehouse === wh ? " selected" : "";
+      return '<option value="' + wh + '"' + selected + '>' + name + '</option>';
     }).join('');
 
   return `
@@ -1120,6 +1120,11 @@ function bindEvents() {
       reportInput.focus();
       reportInput.setSelectionRange(reportInput.value.length, reportInput.value.length);
     }
+  }
+  // Відновлюємо вибраний склад у select
+  var whSelect = document.querySelector("select[onchange*='reportWarehouse']");
+  if (whSelect && state.reportWarehouse) {
+    whSelect.value = state.reportWarehouse;
   }
   // Restore search input value after render
   const input = document.getElementById("collection-search-input");
