@@ -449,13 +449,7 @@ function startCollectionVoice() {
 
 function filterByWarehouse(val) {
   state.reportWarehouse = val;
-  setTimeout(function() {
-    var container = document.getElementById("report-table-container");
-    if (container && reportData.length > 0) {
-      var html = buildReportTableHtml(reportData);
-      container.innerHTML = html;
-    }
-  }, 10);
+  render();
 }
 
 let reportSearchTimeout = null;
@@ -1135,7 +1129,9 @@ function bindEvents() {
   }
   // Відновлюємо вибраний склад у select
   var whSelect = document.getElementById("wh-select");
-  if (whSelect) whSelect.value = state.reportWarehouse || "";
+  if (whSelect) {
+    whSelect.value = state.reportWarehouse || "";
+  }
   // Restore search input value after render
   const input = document.getElementById("collection-search-input");
   if (input && state.collectionSearch) {
