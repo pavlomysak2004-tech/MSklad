@@ -240,9 +240,8 @@ function renderAdmin() {
             ondragover="tabDragOver(event)"
             ondrop="tabDrop(event,'${tab}')"
             ondragend="tabDragEnd(event)"
-            ontouchstart="tabTouchStart(event,'${tab}')"
-            ontouchmove="tabTouchMove(event)"
-            ontouchend="tabTouchEnd(event,'${tab}')"
+            ontouchstart="tabLongPressStart(event,'${tab}')"
+            ontouchend="tabLongPressEnd(event,'${tab}')"
             style="cursor:grab;"
           >${labels[tab]}</button>`;
         }).join('')}
@@ -1070,8 +1069,6 @@ function switchTab(tab) {
 }
 
 let tabDragSrc = null;
-let tabTouchSrc = null;
-let tabTouchStartX = 0;
 
 function tabDragStart(e, tab) {
   tabDragSrc = tab;
@@ -1109,8 +1106,6 @@ function reorderTab(fromTab, toTab) {
 }
 
 // Touch support for mobile
-let tabTouchStartY = 0;
-
 function tabTouchStart(e, tab) {
   tabTouchSrc = tab;
   tabTouchStartX = e.touches[0].clientX;
