@@ -1114,12 +1114,11 @@ var longPressSrc = null;
 var longPressTouchId = null;
 
 function tabLongPressStart(e, tab) {
-  e.preventDefault();
   var touch = e.touches[0];
   longPressTouchId = touch.identifier;
+  if (navigator.vibrate) navigator.vibrate(50);
   longPressTimer = setTimeout(function() {
     longPressSrc = tab;
-    if (navigator.vibrate) navigator.vibrate(50);
     document.querySelectorAll(".nav-tab").forEach(function(t) {
       t.style.outline = t.getAttribute("data-tab") === tab ? "2px solid #c9a84c" : "";
     });
@@ -1135,7 +1134,6 @@ function tabLongPressEnd(e, tab) {
 }
 
 function onTabDragMove(e) {
-  e.preventDefault();
   var touch = e.touches[0];
   var el = document.elementFromPoint(touch.clientX, touch.clientY);
   document.querySelectorAll(".nav-tab").forEach(function(t) {
