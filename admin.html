@@ -448,8 +448,11 @@ function startCollectionVoice() {
 }
 
 function filterByWarehouse(val) {
+  console.log("filterByWarehouse:", val);
   state.reportWarehouse = val;
   var container = document.getElementById("report-table-container");
+  console.log("container:", container);
+  console.log("reportData:", reportData.length);
   if (container && reportData.length > 0) {
     container.innerHTML = buildReportTableHtml(reportData);
   }
