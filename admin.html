@@ -170,7 +170,7 @@ let state = {
   reportLoading: false,
   reportError: null,
   reportSearch: "",
-  reportWarehouse: "",
+  reportWarehouse: (function() { try { return localStorage.getItem("msklad_report_wh") || ""; } catch(e) { return ""; } })(),
 };
 
 const ADMIN_PASSWORD = "mitnyisklad2024";
@@ -450,6 +450,7 @@ function startCollectionVoice() {
 
 function filterByWarehouse(val) {
   state.reportWarehouse = val;
+  try { localStorage.setItem("msklad_report_wh", val); } catch(e) {}
   render();
 }
 
@@ -1138,8 +1139,7 @@ function bindEvents() {
   if (whSelect) {
     whSelect.value = state.reportWarehouse || "";
     whSelect.onchange = function() {
-      state.reportWarehouse = this.value;
-      render();
+      filterByWarehouse(this.value);
     };
   }
   // Restore search input value after render
