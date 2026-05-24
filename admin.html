@@ -443,7 +443,6 @@ function startCollectionVoice() {
 }
 
 function updateReportFilter(val) {
-  console.log("updateReportFilter called:", val);
   state.reportWarehouse = val;
   try { localStorage.setItem("msklad_report_wh", val); } catch(e) {}
 
@@ -463,10 +462,8 @@ function updateReportFilter(val) {
 
   // Оновлюємо тільки таблицю
   var container = document.getElementById("report-table-container");
-  console.log("container:", !!container, "reportData:", reportData.length);
   if (container && reportData.length > 0) {
     container.innerHTML = buildReportTableHtml(reportData);
-    console.log("Table updated!");
   }
 }
 
