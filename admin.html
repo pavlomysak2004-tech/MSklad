@@ -366,6 +366,7 @@ function getVisibleWarehouses() {
 function renderReports() {
   var tableHtml = "";
   if (reportData.length > 0) {
+    console.log("renderReports state.reportWarehouse:", state.reportWarehouse);
     tableHtml = buildReportTableHtml(reportData);
   } else if (state.reportLoading) {
     tableHtml = '<div style="text-align:center;padding:40px;color:#c9a84c;">⟳ Завантаження...</div>';
