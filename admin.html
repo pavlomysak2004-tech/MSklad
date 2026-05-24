@@ -233,7 +233,7 @@ function renderAdmin() {
           };
           return `<button
             class="nav-tab ${state.tab===tab?'active':''}"
-            onclick="switchTab('${tab}')"
+            onclick="handleTabClick(event,'${tab}')"
             data-tab="${tab}"
             draggable="true"
             ondragstart="tabDragStart(event,'${tab}')"
