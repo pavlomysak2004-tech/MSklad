@@ -58,6 +58,8 @@
     input:checked + .slider:before { transform: translateX(18px); background: #c9a84c; }
 
     .nav-tabs { display: flex; gap: 4px; padding: 0 16px; margin-bottom: 20px; overflow-x: auto; }
+    .tab-arrows { display: none; }
+    @media (max-width: 768px) { .tab-arrows { display: inline-flex !important; } }
     .nav-tab {
       -webkit-user-select: none;
       user-select: none;
@@ -226,7 +228,7 @@ function renderAdmin() {
 
       <!-- Tabs -->
       <div class="nav-tabs" id="nav-tabs-container">
-        ${state.tabOrder.map(tab => {
+        ${(() => {
           const labels = {
             collections: '🏷 Колекції',
             pannos: '🎨 Панно',
@@ -234,20 +236,29 @@ function renderAdmin() {
             orders: '📋 Замовлення',
             reports: '📊 Звіти'
           };
-          return `<button
-            class="nav-tab ${state.tab===tab?'active':''}"
-            onclick="handleTabClick(event,'${tab}')"
-            data-tab="${tab}"
-            draggable="true"
-            ondragstart="tabDragStart(event,'${tab}')"
-            ondragover="tabDragOver(event)"
-            ondrop="tabDrop(event,'${tab}')"
-            ondragend="tabDragEnd(event)"
-            ontouchstart="tabLongPressStart(event,'${tab}')"
-            ontouchend="tabLongPressEnd(event,'${tab}')"
-            style="cursor:grab;user-select:none;"
-          >${labels[tab]}</button>`;
-        }).join('')}
+          return state.tabOrder.map((tab, idx) => {
+            const isActive = state.tab === tab;
+            const canLeft = idx > 0;
+            const canRight = idx < state.tabOrder.length - 1;
+            return `<div style="display:inline-flex;align-items:center;gap:2px;">
+              <button
+                class="nav-tab ${isActive ? 'active' : ''}"
+                onclick="switchTab('${tab}')"
+                data-tab="${tab}"
+                draggable="true"
+                ondragstart="tabDragStart(event,'${tab}')"
+                ondragover="tabDragOver(event)"
+                ondrop="tabDrop(event,'${tab}')"
+                ondragend="tabDragEnd(event)"
+                style="user-select:none;"
+              >${labels[tab]}</button>
+              <span class="tab-arrows" style="display:inline-flex;flex-direction:column;gap:1px;">
+                <button onclick="moveTab('${tab}',-1)" ${!canLeft?'disabled':''} style="background:${canLeft?'#2a2a2a':'transparent'};border:none;color:${canLeft?'#777':'#333'};cursor:${canLeft?'pointer':'default'};font-size:8px;padding:1px 3px;border-radius:3px;line-height:1;">▲</button>
+                <button onclick="moveTab('${tab}',1)" ${!canRight?'disabled':''} style="background:${canRight?'#2a2a2a':'transparent'};border:none;color:${canRight?'#777':'#333'};cursor:${canRight?'pointer':'default'};font-size:8px;padding:1px 3px;border-radius:3px;line-height:1;">▼</button>
+              </span>
+            </div>`;
+          }).join('');
+        })()}
       </div>
 
       <!-- Content -->
@@ -1094,6 +1105,18 @@ function tabDrop(e, targetTab) {
 function tabDragEnd(e) {
   tabDragSrc = null;
   document.querySelectorAll(".nav-tab").forEach(function(el) { el.style.opacity = "1"; });
+}
+
+function moveTab(tab, dir) {
+  var order = state.tabOrder.slice();
+  var idx = order.indexOf(tab);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  order.splice(idx, 1);
+  order.splice(newIdx, 0, tab);
+  state.tabOrder = order;
+  localStorage.setItem("msklad_tab_order", JSON.stringify(order));
+  render();
 }
 
 function reorderTab(fromTab, toTab) {
