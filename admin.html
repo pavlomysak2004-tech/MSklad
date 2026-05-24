@@ -401,7 +401,7 @@ function renderReports() {
           ${whFilterOptions}
         </select>
       </div>
-      <div style="overflow-x:auto;">${tableHtml}</div>
+      <div id="report-table-container" style="overflow-x:auto;">${tableHtml}</div>
     </div>`;
 }
 
@@ -449,7 +449,7 @@ function startCollectionVoice() {
 
 function filterByWarehouse(val) {
   state.reportWarehouse = val;
-  var container = document.querySelector('[style*="overflow-x:auto"]');
+  var container = document.getElementById("report-table-container");
   if (container && reportData.length > 0) {
     container.innerHTML = buildReportTableHtml(reportData);
   }
@@ -461,7 +461,7 @@ function handleReportSearch(val) {
   state.reportSearch = val;
   clearTimeout(reportSearchTimeout);
   reportSearchTimeout = setTimeout(function() {
-    var container = document.querySelector('[style*="overflow-x:auto"]');
+    var container = document.getElementById("report-table-container");
     if (container && reportData.length > 0) {
       container.innerHTML = buildReportTableHtml(reportData);
     }
