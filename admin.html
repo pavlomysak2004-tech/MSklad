@@ -480,6 +480,11 @@ function buildReportTableHtml(rows) {
   var search = (state.reportSearch||"").toLowerCase();
   var selectedWh = state.reportWarehouse || "";
 
+  if (selectedWh) {
+    console.log("Filtering by:", selectedWh);
+    console.log("First row keys:", Object.keys(rows[0]));
+    console.log("First row value for wh:", rows[0][selectedWh]);
+  }
   var filtered = rows.filter(function(r) {
     var matchSearch = !search ||
       String(r["Артикул"]||"").toLowerCase().includes(search) ||
