@@ -170,6 +170,7 @@ let state = {
   reportLoading: false,
   reportError: null,
   reportSearch: "",
+  reportWarehouse: "",
 };
 
 const ADMIN_PASSWORD = "mitnyisklad2024";
@@ -356,6 +357,12 @@ function renderRates() {
     </div>`;
 }
 
+function getVisibleWarehouses() {
+  return reportHeaders.filter(function(h) {
+    return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1;
+  });
+}
+
 function renderReports() {
   var tableHtml = "";
   if (reportData.length > 0) {
@@ -368,17 +375,29 @@ function renderReports() {
     tableHtml = '<div style="text-align:center;padding:40px;color:#555;">Натисніть "Оновити" щоб завантажити звіт</div>';
   }
 
+  var warehouses = getVisibleWarehouses();
+  var whFilterOptions = '<option value="">Всі склади</option>' +
+    warehouses.map(function(wh) {
+      var name = wh.replace("Склад ","");
+      var selected = state.reportWarehouse === wh ? "selected" : "";
+      return '<option value="' + wh + '" ' + selected + '>' + name + '</option>';
+    }).join('');
+
   return `
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div style="color:#777;font-size:13px;">Залишки по складах · ${reportData.length} позицій</div>
         <button class="btn-gold" onclick="loadWarehouseReport()">🔄 Оновити</button>
       </div>
-      <div style="margin-bottom:14px;">
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
         <input type="text" id="report-search-input"
           oninput="handleReportSearch(this.value)"
-          placeholder="🔍 Пошук за назвою або артикулом..."
-          style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+          placeholder="🔍 Пошук..."
+          style="flex:1;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+        <select onchange="state.reportWarehouse=this.value;render();"
+          style="padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;cursor:pointer;">
+          ${whFilterOptions}
+        </select>
       </div>
       <div style="overflow-x:auto;">${tableHtml}</div>
     </div>`;
@@ -451,10 +470,22 @@ function buildReportTableHtml(rows) {
   if (!rows || rows.length === 0) return '<div style="text-align:center;padding:40px;color:#555;">Нічого не знайдено</div>';
 
   var search = (state.reportSearch||"").toLowerCase();
-  var filtered = search ? rows.filter(function(r) {
-    return String(r["Артикул"]||"").toLowerCase().includes(search) ||
-           String(r["Назва"]||"").toLowerCase().includes(search);
-  }) : rows;
+  var selectedWh = state.reportWarehouse || "";
+
+  var filtered = rows.filter(function(r) {
+    var matchSearch = !search ||
+      String(r["Артикул"]||"").toLowerCase().includes(search) ||
+      String(r["Назва"]||"").toLowerCase().includes(search);
+    var matchWh = !selectedWh || (parseFloat(r[selectedWh]) || 0) > 0;
+    return matchSearch && matchWh;
+  });
+
+  // Сортуємо по залишках вибраного складу або по загальній сумі
+  filtered.sort(function(a, b) {
+    var valA = selectedWh ? (parseFloat(a[selectedWh]) || 0) : (parseFloat(a["Всього"]) || 0);
+    var valB = selectedWh ? (parseFloat(b[selectedWh]) || 0) : (parseFloat(b["Всього"]) || 0);
+    return valB - valA;
+  });
 
   var whCols = reportHeaders.filter(function(h) {
     return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1;
@@ -468,10 +499,11 @@ function buildReportTableHtml(rows) {
     var unit = String(row["Од. вим."]||"м²");
     var total = parseFloat(row["Всього"]) || 0;
 
-    // Беремо лише склади з ненульовими залишками
+    // Беремо лише склади з ненульовими залишками і сортуємо по спаданню
     var whItems = whCols.map(function(wh, i) {
       return { name: wh.replace("Склад ",""), val: parseFloat(row[wh]) || 0, color: WH_COLORS[i % WH_COLORS.length] };
-    }).filter(function(w) { return w.val > 0; });
+    }).filter(function(w) { return w.val > 0; })
+      .sort(function(a, b) { return b.val - a.val; });
 
     if (whItems.length === 0 && total === 0) return;
 
