@@ -397,7 +397,7 @@ function renderReports() {
           style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:14px;">
-        <select id="wh-select" onchange="filterByWarehouse(this.value)"
+        <select id="wh-select"
           style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;cursor:pointer;">
           ${whFilterOptions}
         </select>
@@ -1137,6 +1137,10 @@ function bindEvents() {
   var whSelect = document.getElementById("wh-select");
   if (whSelect) {
     whSelect.value = state.reportWarehouse || "";
+    whSelect.onchange = function() {
+      state.reportWarehouse = this.value;
+      render();
+    };
   }
   // Restore search input value after render
   const input = document.getElementById("collection-search-input");
