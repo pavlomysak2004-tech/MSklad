@@ -161,6 +161,7 @@ let state = {
   rates: { eur: 43.5, usd: 41.2 },
   autoRate: true,
   collectionSearch: "",
+  tabOrder: JSON.parse(localStorage.getItem('msklad_tab_order') || 'null') || ['collections','pannos','rates','orders','reports'],
   reportLoading: false,
   reportError: null,
   reportSearch: "",
@@ -221,12 +222,26 @@ function renderAdmin() {
       </div>
 
       <!-- Tabs -->
-      <div class="nav-tabs">
-        <button class="nav-tab ${state.tab==='collections'?'active':''}" onclick="switchTab('collections')">🏷 Колекції</button>
-        <button class="nav-tab ${state.tab==='pannos'?'active':''}" onclick="switchTab('pannos')">🎨 Панно</button>
-        <button class="nav-tab ${state.tab==='rates'?'active':''}" onclick="switchTab('rates')">💱 Курс валют</button>
-        <button class="nav-tab ${state.tab==='orders'?'active':''}" onclick="switchTab('orders')">📋 Замовлення</button>
-        <button class="nav-tab ${state.tab==='reports'?'active':''}" onclick="switchTab('reports')">📊 Звіти</button>
+      <div class="nav-tabs" id="nav-tabs-container">
+        ${state.tabOrder.map(tab => {
+          const labels = {
+            collections: '🏷 Колекції',
+            pannos: '🎨 Панно',
+            rates: '💱 Курс валют',
+            orders: '📋 Замовлення',
+            reports: '📊 Звіти'
+          };
+          return `<button
+            class="nav-tab ${state.tab===tab?'active':''}"
+            onclick="switchTab('${tab}')"
+            draggable="true"
+            ondragstart="tabDragStart(event,'${tab}')"
+            ondragover="tabDragOver(event)"
+            ondrop="tabDrop(event,'${tab}')"
+            ondragend="tabDragEnd(event)"
+            style="cursor:grab;"
+          >${labels[tab]}</button>`;
+        }).join('')}
       </div>
 
       <!-- Content -->
@@ -987,6 +1002,40 @@ function switchTab(tab) {
   state.tab = tab;
   state.collectionSearch = "";
   render();
+}
+
+let tabDragSrc = null;
+
+function tabDragStart(e, tab) {
+  tabDragSrc = tab;
+  e.target.style.opacity = "0.4";
+  e.dataTransfer.effectAllowed = "move";
+}
+
+function tabDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+}
+
+function tabDrop(e, targetTab) {
+  e.preventDefault();
+  if (!tabDragSrc || tabDragSrc === targetTab) return;
+  var order = [...state.tabOrder];
+  var fromIdx = order.indexOf(tabDragSrc);
+  var toIdx = order.indexOf(targetTab);
+  order.splice(fromIdx, 1);
+  order.splice(toIdx, 0, tabDragSrc);
+  state.tabOrder = order;
+  localStorage.setItem('msklad_tab_order', JSON.stringify(order));
+  tabDragSrc = null;
+  render();
+}
+
+function tabDragEnd(e) {
+  tabDragSrc = null;
+  document.querySelectorAll('.nav-tab').forEach(function(el) {
+    el.style.opacity = "1";
+  });
 }
 
 async function loadData() {
