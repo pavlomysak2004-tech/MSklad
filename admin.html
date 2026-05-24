@@ -177,7 +177,6 @@ const ADMIN_PASSWORD = "mitnyisklad2024";
 
 // RENDER
 function render() {
-  console.log("render() called from:", new Error().stack.split("\n")[2]);
   document.getElementById("app").innerHTML = state.page === "login" ? renderLogin() : renderAdmin();
   bindEvents();
 }
@@ -387,7 +386,7 @@ function renderReports() {
   return `
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div style="color:#777;font-size:13px;">Залишки по складах · ${reportData.length} позицій</div>
+        <div data-report-count style="color:#777;font-size:13px;">Залишки по складах · ${reportData.length} позицій</div>
         <button class="btn-gold" onclick="loadWarehouseReport()">🔄 Оновити</button>
       </div>
       <div style="margin-bottom:8px;">
@@ -451,7 +450,22 @@ function startCollectionVoice() {
 function filterByWarehouse(val) {
   state.reportWarehouse = val;
   try { localStorage.setItem("msklad_report_wh", val); } catch(e) {}
-  render();
+  // Оновлюємо тільки контейнер — без повного render()
+  var container = document.getElementById("report-table-container");
+  if (container && reportData.length > 0) {
+    container.innerHTML = buildReportTableHtml(reportData);
+  }
+  // Оновлюємо лічильник позицій
+  var countEl = document.querySelector("[data-report-count]");
+  if (countEl) {
+    var search = (state.reportSearch||"").toLowerCase();
+    var cnt = reportData.filter(function(r) {
+      var ms = !search || String(r["Артикул"]||"").toLowerCase().includes(search) || String(r["Назва"]||"").toLowerCase().includes(search);
+      var mw = !val || (parseFloat(r[val])||0) > 0;
+      return ms && mw;
+    }).length;
+    countEl.textContent = "Залишки по складах · " + cnt + " позицій";
+  }
 }
 
 let reportSearchTimeout = null;
@@ -490,7 +504,6 @@ function buildReportTableHtml(rows) {
     return matchSearch && matchWh;
   });
 
-  console.log("Filtered count:", filtered.length, "from:", rows.length);
   // Сортуємо по залишках вибраного складу або по загальній сумі
   filtered.sort(function(a, b) {
     var valA = selectedWh ? (parseFloat(a[selectedWh]) || 0) : (parseFloat(a["Всього"]) || 0);
