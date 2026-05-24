@@ -358,12 +358,26 @@ function renderReports() {
         <button class="btn-gold" onclick="loadWarehouseReport()">🔄 Оновити</button>
       </div>
       <div style="margin-bottom:14px;">
-        <input type="text" value="${state.reportSearch||''}" placeholder="🔍 Пошук за назвою або артикулом..."
-          oninput="state.reportSearch=this.value;render();"
+        <input type="text" id="report-search-input"
+          oninput="handleReportSearch(this.value)"
+          placeholder="🔍 Пошук за назвою або артикулом..."
           style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
       </div>
       <div style="overflow-x:auto;">${tableHtml}</div>
     </div>`;
+}
+
+let reportSearchTimeout = null;
+
+function handleReportSearch(val) {
+  state.reportSearch = val;
+  clearTimeout(reportSearchTimeout);
+  reportSearchTimeout = setTimeout(function() {
+    var container = document.querySelector('[style*="overflow-x:auto"]');
+    if (container && reportData.length > 0) {
+      container.innerHTML = buildReportTableHtml(reportData);
+    }
+  }, 150);
 }
 
 function buildReportTableHtml(rows) {
@@ -965,6 +979,11 @@ function renderCollectionsList() {
 }
 
 function bindEvents() {
+  // Restore report search input value after render
+  const reportInput = document.getElementById("report-search-input");
+  if (reportInput && state.reportSearch) {
+    reportInput.value = state.reportSearch;
+  }
   // Restore search input value after render
   const input = document.getElementById("collection-search-input");
   if (input && state.collectionSearch) {
