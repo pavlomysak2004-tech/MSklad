@@ -485,13 +485,16 @@ function buildReportTableHtml(rows) {
   var search = (state.reportSearch||"").toLowerCase();
   var selectedWh = state.reportWarehouse || "";
 
+  console.log("selectedWh:", selectedWh, "search:", search);
   var filtered = rows.filter(function(r) {
     var matchSearch = !search ||
       String(r["Артикул"]||"").toLowerCase().includes(search) ||
       String(r["Назва"]||"").toLowerCase().includes(search);
-    var matchWh = !selectedWh || (parseFloat(r[selectedWh]) || 0) > 0;
+    var whVal = selectedWh ? (parseFloat(r[selectedWh]) || 0) : 1;
+    var matchWh = !selectedWh || whVal > 0;
     return matchSearch && matchWh;
   });
+  console.log("filtered:", filtered.length);
 
   // Сортуємо по залишках вибраного складу або по загальній сумі
   filtered.sort(function(a, b) {
