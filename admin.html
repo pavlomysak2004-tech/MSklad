@@ -1105,37 +1105,63 @@ function reorderTab(fromTab, toTab) {
   render();
 }
 
-// Long press для мобільного
+// Long press + swipe для мобільного
 var longPressTimer = null;
 var longPressSrc = null;
+var longPressTouchId = null;
 
 function tabLongPressStart(e, tab) {
+  var touch = e.touches[0];
+  longPressTouchId = touch.identifier;
   longPressTimer = setTimeout(function() {
     longPressSrc = tab;
     if (navigator.vibrate) navigator.vibrate(50);
     document.querySelectorAll(".nav-tab").forEach(function(t) {
-      if (t.getAttribute("data-tab") === tab) {
-        t.style.outline = "2px solid #c9a84c";
-      }
+      t.style.outline = t.getAttribute("data-tab") === tab ? "2px solid #c9a84c" : "";
     });
-    showToast("✦ Натисніть іншу вкладку для переміщення", "success");
-  }, 600);
+    // Додаємо обробник touchmove на весь документ
+    document.addEventListener("touchmove", onTabDragMove, { passive: false });
+    document.addEventListener("touchend", onTabDragEnd);
+  }, 500);
 }
 
 function tabLongPressEnd(e, tab) {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  if (!longPressSrc) switchTab(tab);
+}
+
+function onTabDragMove(e) {
+  e.preventDefault();
+  var touch = e.touches[0];
+  var el = document.elementFromPoint(touch.clientX, touch.clientY);
+  document.querySelectorAll(".nav-tab").forEach(function(t) {
+    var isActive = t.getAttribute("data-tab") === longPressSrc;
+    var isTarget = el && t === el && !isActive;
+    t.style.outline = isActive ? "2px solid #c9a84c" : "";
+    t.style.background = isTarget ? "#c9a84c33" : "";
+  });
+}
+
+function onTabDragEnd(e) {
+  document.removeEventListener("touchmove", onTabDragMove);
+  document.removeEventListener("touchend", onTabDragEnd);
+  var touch = e.changedTouches[0];
+  var el = document.elementFromPoint(touch.clientX, touch.clientY);
+  document.querySelectorAll(".nav-tab").forEach(function(t) {
+    t.style.outline = "";
+    t.style.background = "";
+  });
+  if (el && el.classList.contains("nav-tab")) {
+    var targetTab = el.getAttribute("data-tab");
+    if (targetTab && targetTab !== longPressSrc) {
+      reorderTab(longPressSrc, targetTab);
+    }
+  }
+  longPressSrc = null;
 }
 
 function handleTabClick(e, tab) {
-  if (longPressSrc) {
-    if (longPressSrc !== tab) {
-      reorderTab(longPressSrc, tab);
-    }
-    longPressSrc = null;
-    document.querySelectorAll(".nav-tab").forEach(function(t) { t.style.outline = ""; });
-  } else {
-    switchTab(tab);
-  }
+  if (!longPressSrc) switchTab(tab);
 }
 
 async function loadData() {
