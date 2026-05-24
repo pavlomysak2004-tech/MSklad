@@ -489,6 +489,7 @@ function buildReportTableHtml(rows) {
     return matchSearch && matchWh;
   });
 
+  console.log("Filtered count:", filtered.length, "from:", rows.length);
   // Сортуємо по залишках вибраного складу або по загальній сумі
   filtered.sort(function(a, b) {
     var valA = selectedWh ? (parseFloat(a[selectedWh]) || 0) : (parseFloat(a["Всього"]) || 0);
