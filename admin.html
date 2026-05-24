@@ -390,11 +390,10 @@ function renderReports() {
           style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;box-sizing:border-box;">
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
-        <button onclick="filterByWarehouse('')" style="padding:6px 12px;border-radius:20px;border:1px solid;border-color:${!state.reportWarehouse?'#c9a84c':'#2a2a2a'};background:${!state.reportWarehouse?'#c9a84c11':'transparent'};color:${!state.reportWarehouse?'#c9a84c':'#555'};cursor:pointer;font-size:12px;">Всі</button>
+        <button id="wf-all" onclick="updateReportFilter('')" style="padding:6px 12px;border-radius:20px;border:1px solid #2a2a2a;background:transparent;color:#555;cursor:pointer;font-size:12px;">Всі</button>
         ${getVisibleWarehouses().map(function(wh) {
           var name = wh.replace('Склад ','');
-          var active = state.reportWarehouse === wh;
-          return '<button onclick="filterByWarehouse(\''+wh+'\')" style="padding:6px 12px;border-radius:20px;border:1px solid;border-color:'+(active?'#7b68ee':'#2a2a2a')+';background:'+(active?'#7b68ee22':'transparent')+';color:'+(active?'#7b68ee':'#555')+';cursor:pointer;font-size:12px;">'+name+'</button>';
+          return '<button class="wf-btn" data-wh="'+wh+'" onclick="updateReportFilter(\''+wh+'\')" style="padding:6px 12px;border-radius:20px;border:1px solid #2a2a2a;background:transparent;color:#555;cursor:pointer;font-size:12px;">'+name+'</button>';
         }).join('')}
       </div>
       <div id="report-table-container" style="overflow-x:auto;">${tableHtml}</div>
@@ -443,10 +442,33 @@ function startCollectionVoice() {
   });
 }
 
-function filterByWarehouse(val) {
+function updateReportFilter(val) {
   state.reportWarehouse = val;
   try { localStorage.setItem("msklad_report_wh", val); } catch(e) {}
-  render();
+
+  // Оновлюємо кнопки
+  var allBtn = document.getElementById("wf-all");
+  if (allBtn) {
+    allBtn.style.borderColor = !val ? "#c9a84c" : "#2a2a2a";
+    allBtn.style.background = !val ? "#c9a84c11" : "transparent";
+    allBtn.style.color = !val ? "#c9a84c" : "#555";
+  }
+  document.querySelectorAll(".wf-btn").forEach(function(btn) {
+    var active = btn.getAttribute("data-wh") === val;
+    btn.style.borderColor = active ? "#7b68ee" : "#2a2a2a";
+    btn.style.background = active ? "#7b68ee22" : "transparent";
+    btn.style.color = active ? "#7b68ee" : "#555";
+  });
+
+  // Оновлюємо тільки таблицю
+  var container = document.getElementById("report-table-container");
+  if (container && reportData.length > 0) {
+    container.innerHTML = buildReportTableHtml(reportData);
+  }
+}
+
+function filterByWarehouse(val) {
+  updateReportFilter(val);
 }
 
 let reportSearchTimeout = null;
