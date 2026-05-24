@@ -1109,21 +1109,27 @@ function reorderTab(fromTab, toTab) {
 }
 
 // Touch support for mobile
+let tabTouchStartY = 0;
+
 function tabTouchStart(e, tab) {
   tabTouchSrc = tab;
   tabTouchStartX = e.touches[0].clientX;
+  tabTouchStartY = e.touches[0].clientY;
   e.currentTarget.style.opacity = "0.4";
 }
 
 function tabTouchMove(e) {
-  e.preventDefault();
-  var x = e.touches[0].clientX;
-  var el = document.elementFromPoint(x, e.touches[0].clientY);
-  document.querySelectorAll(".nav-tab").forEach(function(t) {
-    t.style.background = "";
-  });
-  if (el && el.classList.contains("nav-tab")) {
-    el.style.background = "#c9a84c33";
+  var dx = Math.abs(e.touches[0].clientX - tabTouchStartX);
+  var dy = Math.abs(e.touches[0].clientY - (tabTouchStartY || e.touches[0].clientY));
+  // Блокуємо скрол тільки якщо рух більше горизонтальний
+  if (dx > dy && dx > 10) {
+    e.preventDefault();
+    var x = e.touches[0].clientX;
+    var el = document.elementFromPoint(x, e.touches[0].clientY);
+    document.querySelectorAll(".nav-tab").forEach(function(t) { t.style.background = ""; });
+    if (el && el.classList.contains("nav-tab")) {
+      el.style.background = "#c9a84c33";
+    }
   }
 }
 
