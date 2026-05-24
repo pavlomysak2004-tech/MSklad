@@ -391,7 +391,13 @@ function startVoiceSearch(onResult) {
     onResult(text);
   };
   recognition.onerror = function(e) {
-    showToast("Помилка розпізнавання: " + e.error, "error");
+    var msgs = {
+      "not-allowed": "Мікрофон заблоковано. Дозвольте доступ в браузері.",
+      "no-speech": "Не почуто мови. Спробуйте ще раз.",
+      "network": "Помилка мережі. Потрібен інтернет.",
+      "aborted": "Скасовано.",
+    };
+    showToast(msgs[e.error] || "Помилка: " + e.error, "error");
   };
   recognition.start();
   showToast("🎤 Говоріть...", "success");
