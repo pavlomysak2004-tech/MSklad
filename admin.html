@@ -447,24 +447,85 @@ function updateReportFilter(val) {
   try { localStorage.setItem("msklad_report_wh", val); } catch(e) {}
 
   // Оновлюємо кнопки
-  var allBtn = document.getElementById("wf-all");
-  if (allBtn) {
-    allBtn.style.borderColor = !val ? "#c9a84c" : "#2a2a2a";
-    allBtn.style.background = !val ? "#c9a84c11" : "transparent";
-    allBtn.style.color = !val ? "#c9a84c" : "#555";
-  }
-  document.querySelectorAll(".wf-btn").forEach(function(btn) {
-    var active = btn.getAttribute("data-wh") === val;
-    btn.style.borderColor = active ? "#7b68ee" : "#2a2a2a";
-    btn.style.background = active ? "#7b68ee22" : "transparent";
-    btn.style.color = active ? "#7b68ee" : "#555";
+  document.querySelectorAll(".wf-btn, #wf-all").forEach(function(btn) {
+    var bval = btn.getAttribute("data-wh") || "";
+    var active = bval === val;
+    var isAll = btn.id === "wf-all";
+    btn.style.borderColor = active || (isAll && !val) ? (isAll ? "#c9a84c" : "#7b68ee") : "#2a2a2a";
+    btn.style.background = active || (isAll && !val) ? (isAll ? "#c9a84c11" : "#7b68ee22") : "transparent";
+    btn.style.color = active || (isAll && !val) ? (isAll ? "#c9a84c" : "#7b68ee") : "#555";
   });
 
-  // Оновлюємо тільки таблицю
+  // Фільтруємо і рендеримо
+  var search = (state.reportSearch||"").toLowerCase();
+  var filtered = reportData.filter(function(r) {
+    var ms = !search ||
+      String(r["Артикул"]||"").toLowerCase().includes(search) ||
+      String(r["Назва"]||"").toLowerCase().includes(search);
+    var mw = !val || (parseFloat(r[val])||0) > 0;
+    return ms && mw;
+  });
+
+  filtered.sort(function(a,b) {
+    var va = val ? (parseFloat(a[val])||0) : (parseFloat(a["Всього"])||0);
+    var vb = val ? (parseFloat(b[val])||0) : (parseFloat(b["Всього"])||0);
+    return vb - va;
+  });
+
   var container = document.getElementById("report-table-container");
-  if (container && reportData.length > 0) {
-    container.innerHTML = buildReportTableHtml(reportData);
+  if (!container) return;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#555;">Нічого не знайдено</div>';
+    return;
   }
+
+  var whCols = reportHeaders.filter(function(h) {
+    return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1;
+  });
+
+  var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+  filtered.forEach(function(row) {
+    var article = String(row["Артикул"]||"");
+    var name = String(row["Назва"]||"");
+    var unit = String(row["Од. вим."]||"м²");
+    var total = parseFloat(row["Всього"]) || 0;
+
+    var whItems = whCols.map(function(wh, i) {
+      return { name: wh.replace("Склад ",""), val: parseFloat(row[wh]) || 0, color: WH_COLORS[i % WH_COLORS.length] };
+    }).filter(function(w) { return w.val > 0; })
+      .sort(function(a,b) { return b.val - a.val; });
+
+    if (whItems.length === 0 && total === 0) return;
+
+    html += '<div style="background:#111;border-radius:12px;padding:12px 14px;border:1px solid #1e1e1e;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
+    html += '<div style="min-width:0;flex:1;">';
+    html += '<div style="color:#c9a84c;font-size:10px;letter-spacing:1px;margin-bottom:2px;">' + article + '</div>';
+    html += '<div style="color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">' + name + '</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;flex-shrink:0;margin-left:12px;">';
+    html += '<div style="color:#c9a84c;font-size:15px;font-weight:700;">' + total.toFixed(2) + '</div>';
+    html += '<div style="color:#555;font-size:10px;">' + unit + ' всього</div>';
+    html += '</div></div>';
+
+    if (whItems.length > 0) {
+      html += '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#1a1a1a;margin-bottom:6px;">';
+      whItems.forEach(function(w) {
+        var pct = total > 0 ? (w.val/total*100).toFixed(1) : 0;
+        html += '<div style="width:'+pct+'%;background:'+w.color+';" title="'+w.name+': '+w.val.toFixed(2)+'"></div>';
+      });
+      html += '</div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      whItems.forEach(function(w) {
+        html += '<span style="font-size:11px;color:'+w.color+';">■ '+w.name+' '+w.val.toFixed(2)+'</span>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 function filterByWarehouse(val) {
