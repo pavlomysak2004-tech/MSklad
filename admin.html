@@ -442,6 +442,11 @@ function handleReportSearch(val) {
 // Склади які не відображати
 var HIDDEN_WAREHOUSES = ["Склад Липинського"];
 
+// Кольори для складів
+var WH_COLORS = [
+  "#7b68ee", "#4caf50", "#ff9800", "#2196f3", "#e91e63", "#9c27b0"
+];
+
 function buildReportTableHtml(rows) {
   if (!rows || rows.length === 0) return '<div style="text-align:center;padding:40px;color:#555;">Нічого не знайдено</div>';
 
@@ -451,71 +456,60 @@ function buildReportTableHtml(rows) {
            String(r["Назва"]||"").toLowerCase().includes(search);
   }) : rows;
 
-  // Фільтруємо заголовки — прибираємо закриті склади
-  var visibleHeaders = reportHeaders.filter(function(h) {
-    return HIDDEN_WAREHOUSES.indexOf(h) === -1;
+  var whCols = reportHeaders.filter(function(h) {
+    return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1;
   });
-  var whCols = visibleHeaders.filter(function(h) { return h.indexOf("Склад") === 0; });
 
-  // Знаходимо максимальне значення для теплової карти
-  var maxVal = 0;
+  var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+
   filtered.forEach(function(row) {
-    whCols.forEach(function(wh) {
-      var v = parseFloat(row[wh]) || 0;
-      if (v > maxVal) maxVal = v;
-    });
-  });
-
-  function getHeatColor(val) {
-    if (val <= 0) return null;
-    var ratio = Math.min(val / maxVal, 1);
-    if (ratio > 0.5) return { bg: "#4caf50" + Math.round(ratio * 200).toString(16).padStart(2,"0"), color: ratio > 0.7 ? "#1b5e20" : "#2e7d32" };
-    if (ratio > 0.1) return { bg: "#7b68ee" + Math.round(ratio * 300).toString(16).padStart(2,"0"), color: "#4527a0" };
-    return { bg: "#ff980022", color: "#e65100" };
-  }
-
-  var html = '<div style="overflow-x:auto;">';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px;">';
-
-  // Header
-  html += '<thead><tr style="background:#0a0a0a;">';
-  html += '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid #2a2a2a;color:#777;font-size:11px;white-space:nowrap;">Артикул · Назва</th>';
-  whCols.forEach(function(wh) {
-    html += '<th style="padding:8px 8px;text-align:center;border-bottom:2px solid #2a2a2a;color:#7b68ee;font-size:11px;white-space:nowrap;">' + wh.replace("Склад ","") + '</th>';
-  });
-  html += '<th style="padding:8px 12px;text-align:right;border-bottom:2px solid #2a2a2a;color:#c9a84c;font-size:11px;">Всього</th>';
-  html += '</tr></thead><tbody>';
-
-  // Rows
-  filtered.forEach(function(row, ri) {
     var article = String(row["Артикул"]||"");
     var name = String(row["Назва"]||"");
-    var total = parseFloat(row["Всього"]) || 0;
     var unit = String(row["Од. вим."]||"м²");
+    var total = parseFloat(row["Всього"]) || 0;
 
-    html += '<tr style="background:' + (ri%2===0?"#111":"#0f0f0f") + ';border-top:0.5px solid #1a1a1a;">';
-    html += '<td style="padding:7px 12px;">';
-    html += '<div style="color:#c9a84c;font-size:10px;">' + article + '</div>';
-    html += '<div style="color:#fff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">' + name + '</div>';
-    html += '</td>';
+    // Беремо лише склади з ненульовими залишками
+    var whItems = whCols.map(function(wh, i) {
+      return { name: wh.replace("Склад ",""), val: parseFloat(row[wh]) || 0, color: WH_COLORS[i % WH_COLORS.length] };
+    }).filter(function(w) { return w.val > 0; });
 
-    whCols.forEach(function(wh) {
-      var val = parseFloat(row[wh]) || 0;
-      var heat = getHeatColor(val);
-      if (heat) {
-        html += '<td style="padding:4px 8px;text-align:center;">';
-        html += '<div style="background:' + heat.bg + ';border-radius:6px;padding:3px 6px;font-size:11px;color:' + heat.color + ';white-space:nowrap;">' + val.toFixed(2) + '</div>';
-        html += '</td>';
-      } else {
-        html += '<td style="padding:4px 8px;text-align:center;color:#333;font-size:11px;">—</td>';
-      }
-    });
+    if (whItems.length === 0 && total === 0) return;
 
-    html += '<td style="padding:7px 12px;text-align:right;color:#c9a84c;font-size:13px;font-weight:700;white-space:nowrap;">' + total.toFixed(2) + ' ' + unit + '</td>';
-    html += '</tr>';
+    html += '<div style="background:#111;border-radius:12px;padding:12px 14px;border:1px solid #1e1e1e;">';
+
+    // Заголовок
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
+    html += '<div style="min-width:0;flex:1;">';
+    html += '<div style="color:#c9a84c;font-size:10px;letter-spacing:1px;margin-bottom:2px;">' + article + '</div>';
+    html += '<div style="color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">' + name + '</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;flex-shrink:0;margin-left:12px;">';
+    html += '<div style="color:#c9a84c;font-size:15px;font-weight:700;">' + total.toFixed(2) + '</div>';
+    html += '<div style="color:#555;font-size:10px;">' + unit + ' всього</div>';
+    html += '</div>';
+    html += '</div>';
+
+    if (whItems.length > 0) {
+      // Прогрес бар
+      html += '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#1a1a1a;margin-bottom:6px;">';
+      whItems.forEach(function(w) {
+        var pct = total > 0 ? (w.val / total * 100).toFixed(1) : 0;
+        html += '<div style="width:' + pct + '%;background:' + w.color + ';transition:width 0.3s;" title="' + w.name + ': ' + w.val.toFixed(2) + '"></div>';
+      });
+      html += '</div>';
+
+      // Легенда
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      whItems.forEach(function(w) {
+        html += '<span style="font-size:11px;color:' + w.color + ';">■ ' + w.name + ' ' + w.val.toFixed(2) + '</span>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
   });
 
-  html += '</tbody></table></div>';
+  html += '</div>';
   return html;
 }
 
