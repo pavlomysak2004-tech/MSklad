@@ -375,13 +375,7 @@ function renderReports() {
     tableHtml = '<div style="text-align:center;padding:40px;color:#555;">Натисніть "Оновити" щоб завантажити звіт</div>';
   }
 
-  var warehouses = getVisibleWarehouses();
-  var whFilterOptions = '<option value=""' + (!state.reportWarehouse ? " selected" : "") + '>Всі склади</option>' +
-    warehouses.map(function(wh) {
-      var name = wh.replace("Склад ","");
-      var selected = state.reportWarehouse === wh ? " selected" : "";
-      return '<option value="' + wh + '"' + selected + '>' + name + '</option>';
-    }).join('');
+
 
   return `
     <div>
@@ -395,11 +389,13 @@ function renderReports() {
           placeholder="🔍 Пошук за назвою або артикулом..."
           style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;box-sizing:border-box;">
       </div>
-      <div style="margin-bottom:14px;">
-        <select id="wh-select"
-          style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;cursor:pointer;">
-          ${whFilterOptions}
-        </select>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+        <button onclick="filterByWarehouse('')" style="padding:6px 12px;border-radius:20px;border:1px solid;border-color:${!state.reportWarehouse?'#c9a84c':'#2a2a2a'};background:${!state.reportWarehouse?'#c9a84c11':'transparent'};color:${!state.reportWarehouse?'#c9a84c':'#555'};cursor:pointer;font-size:12px;">Всі</button>
+        ${getVisibleWarehouses().map(function(wh) {
+          var name = wh.replace('Склад ','');
+          var active = state.reportWarehouse === wh;
+          return '<button onclick="filterByWarehouse(\''+wh+'\')" style="padding:6px 12px;border-radius:20px;border:1px solid;border-color:'+(active?'#7b68ee':'#2a2a2a')+';background:'+(active?'#7b68ee22':'transparent')+';color:'+(active?'#7b68ee':'#555')+';cursor:pointer;font-size:12px;">'+name+'</button>';
+        }).join('')}
       </div>
       <div id="report-table-container" style="overflow-x:auto;">${tableHtml}</div>
     </div>`;
@@ -450,22 +446,7 @@ function startCollectionVoice() {
 function filterByWarehouse(val) {
   state.reportWarehouse = val;
   try { localStorage.setItem("msklad_report_wh", val); } catch(e) {}
-  // Оновлюємо тільки контейнер — без повного render()
-  var container = document.getElementById("report-table-container");
-  if (container && reportData.length > 0) {
-    container.innerHTML = buildReportTableHtml(reportData);
-  }
-  // Оновлюємо лічильник позицій
-  var countEl = document.querySelector("[data-report-count]");
-  if (countEl) {
-    var search = (state.reportSearch||"").toLowerCase();
-    var cnt = reportData.filter(function(r) {
-      var ms = !search || String(r["Артикул"]||"").toLowerCase().includes(search) || String(r["Назва"]||"").toLowerCase().includes(search);
-      var mw = !val || (parseFloat(r[val])||0) > 0;
-      return ms && mw;
-    }).length;
-    countEl.textContent = "Залишки по складах · " + cnt + " позицій";
-  }
+  render();
 }
 
 let reportSearchTimeout = null;
@@ -1144,16 +1125,7 @@ function bindEvents() {
     }
   }
   // Відновлюємо вибраний склад у select
-  var whSelect = document.getElementById("wh-select");
-  if (whSelect && !whSelect._bound) {
-    whSelect._bound = true;
-    whSelect.value = state.reportWarehouse || "";
-    whSelect.addEventListener("change", function() {
-      filterByWarehouse(this.value);
-    });
-  } else if (whSelect) {
-    whSelect.value = state.reportWarehouse || "";
-  }
+
   // Restore search input value after render
   const input = document.getElementById("collection-search-input");
   if (input && state.collectionSearch) {
