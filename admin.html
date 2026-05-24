@@ -279,9 +279,8 @@ function renderCollections(isPanno) {
           <input type="text" id="collection-search-input"
             oninput="handleSearchInput(this.value)"
             placeholder="🔍 Пошук за назвою, артикулом, розміром..."
-            style="width:100%;padding:10px 44px 10px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
-          <button onclick="startCollectionVoice()" title="Голосовий пошук"
-            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#555;">🎤</button>
+            x-webkit-speech speech
+            style="width:100%;padding:10px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
         </div>
         ${searchVal ? `<span id="search-clear-btn" onclick="clearSearch()"
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#555;font-size:18px;">×</span>` : ''}
@@ -366,9 +365,8 @@ function renderReports() {
           <input type="text" id="report-search-input"
             oninput="handleReportSearch(this.value)"
             placeholder="🔍 Пошук за назвою або артикулом..."
-            style="width:100%;padding:10px 44px 10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
-          <button onclick="startReportVoice()" id="report-voice-btn" title="Голосовий пошук"
-            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:0;color:#555;">🎤</button>
+            x-webkit-speech speech
+            style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
         </div>
       </div>
       <div style="overflow-x:auto;">${tableHtml}</div>
