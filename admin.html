@@ -177,6 +177,7 @@ const ADMIN_PASSWORD = "mitnyisklad2024";
 
 // RENDER
 function render() {
+  console.log("render() called from:", new Error().stack.split("\n")[2]);
   document.getElementById("app").innerHTML = state.page === "login" ? renderLogin() : renderAdmin();
   bindEvents();
 }
