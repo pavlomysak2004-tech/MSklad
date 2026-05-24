@@ -234,11 +234,15 @@ function renderAdmin() {
           return `<button
             class="nav-tab ${state.tab===tab?'active':''}"
             onclick="switchTab('${tab}')"
+            data-tab="${tab}"
             draggable="true"
             ondragstart="tabDragStart(event,'${tab}')"
             ondragover="tabDragOver(event)"
             ondrop="tabDrop(event,'${tab}')"
             ondragend="tabDragEnd(event)"
+            ontouchstart="tabTouchStart(event,'${tab}')"
+            ontouchmove="tabTouchMove(event)"
+            ontouchend="tabTouchEnd(event,'${tab}')"
             style="cursor:grab;"
           >${labels[tab]}</button>`;
         }).join('')}
@@ -275,13 +279,10 @@ function renderCollections(isPanno) {
         <button class="btn-gold" onclick="openAddModal(${isPanno})">+ Додати</button>
       </div>
       <div style="margin-bottom:12px;position:relative;">
-        <div style="position:relative;">
-          <input type="text" id="collection-search-input"
-            oninput="handleSearchInput(this.value)"
-            placeholder="🔍 Пошук за назвою, артикулом, розміром..."
-            x-webkit-speech speech
-            style="width:100%;padding:10px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
-        </div>
+        <input type="text" id="collection-search-input"
+          oninput="handleSearchInput(this.value)"
+          placeholder="🔍 Пошук за назвою, артикулом, розміром..."
+          style="width:100%;padding:10px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
         ${searchVal ? `<span id="search-clear-btn" onclick="clearSearch()"
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#555;font-size:18px;">×</span>` : ''}
       </div>
@@ -361,13 +362,10 @@ function renderReports() {
         <button class="btn-gold" onclick="loadWarehouseReport()">🔄 Оновити</button>
       </div>
       <div style="margin-bottom:14px;">
-        <div style="position:relative;">
-          <input type="text" id="report-search-input"
-            oninput="handleReportSearch(this.value)"
-            placeholder="🔍 Пошук за назвою або артикулом..."
-            x-webkit-speech speech
-            style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
-        </div>
+        <input type="text" id="report-search-input"
+          oninput="handleReportSearch(this.value)"
+          placeholder="🔍 Пошук за назвою або артикулом..."
+          style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
       </div>
       <div style="overflow-x:auto;">${tableHtml}</div>
     </div>`;
@@ -1072,6 +1070,8 @@ function switchTab(tab) {
 }
 
 let tabDragSrc = null;
+let tabTouchSrc = null;
+let tabTouchStartX = 0;
 
 function tabDragStart(e, tab) {
   tabDragSrc = tab;
@@ -1087,22 +1087,57 @@ function tabDragOver(e) {
 function tabDrop(e, targetTab) {
   e.preventDefault();
   if (!tabDragSrc || tabDragSrc === targetTab) return;
-  var order = [...state.tabOrder];
-  var fromIdx = order.indexOf(tabDragSrc);
-  var toIdx = order.indexOf(targetTab);
-  order.splice(fromIdx, 1);
-  order.splice(toIdx, 0, tabDragSrc);
-  state.tabOrder = order;
-  localStorage.setItem('msklad_tab_order', JSON.stringify(order));
+  reorderTab(tabDragSrc, targetTab);
   tabDragSrc = null;
-  render();
 }
 
 function tabDragEnd(e) {
   tabDragSrc = null;
-  document.querySelectorAll('.nav-tab').forEach(function(el) {
-    el.style.opacity = "1";
+  document.querySelectorAll(".nav-tab").forEach(function(el) { el.style.opacity = "1"; });
+}
+
+function reorderTab(fromTab, toTab) {
+  var order = state.tabOrder.slice();
+  var fromIdx = order.indexOf(fromTab);
+  var toIdx = order.indexOf(toTab);
+  if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+  order.splice(fromIdx, 1);
+  order.splice(toIdx, 0, fromTab);
+  state.tabOrder = order;
+  localStorage.setItem("msklad_tab_order", JSON.stringify(order));
+  render();
+}
+
+// Touch support for mobile
+function tabTouchStart(e, tab) {
+  tabTouchSrc = tab;
+  tabTouchStartX = e.touches[0].clientX;
+  e.currentTarget.style.opacity = "0.4";
+}
+
+function tabTouchMove(e) {
+  e.preventDefault();
+  var x = e.touches[0].clientX;
+  var el = document.elementFromPoint(x, e.touches[0].clientY);
+  document.querySelectorAll(".nav-tab").forEach(function(t) {
+    t.style.background = "";
   });
+  if (el && el.classList.contains("nav-tab")) {
+    el.style.background = "#c9a84c33";
+  }
+}
+
+function tabTouchEnd(e, tab) {
+  e.currentTarget.style.opacity = "1";
+  document.querySelectorAll(".nav-tab").forEach(function(t) { t.style.background = ""; });
+  var x = e.changedTouches[0].clientX;
+  var y = e.changedTouches[0].clientY;
+  var el = document.elementFromPoint(x, y);
+  if (el && el.classList.contains("nav-tab") && el !== e.currentTarget) {
+    var targetTab = el.getAttribute("data-tab");
+    if (targetTab && targetTab !== tab) reorderTab(tab, targetTab);
+  }
+  tabTouchSrc = null;
 }
 
 async function loadData() {
