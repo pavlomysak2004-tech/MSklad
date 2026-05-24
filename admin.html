@@ -389,13 +389,15 @@ function renderReports() {
         <div style="color:#777;font-size:13px;">Залишки по складах · ${reportData.length} позицій</div>
         <button class="btn-gold" onclick="loadWarehouseReport()">🔄 Оновити</button>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div style="margin-bottom:8px;">
         <input type="text" id="report-search-input"
           oninput="handleReportSearch(this.value)"
-          placeholder="🔍 Пошук..."
-          style="flex:1;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+          placeholder="🔍 Пошук за назвою або артикулом..."
+          style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:14px;">
         <select onchange="state.reportWarehouse=this.value;render();"
-          style="padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;cursor:pointer;">
+          style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;cursor:pointer;">
           ${whFilterOptions}
         </select>
       </div>
@@ -1111,9 +1113,13 @@ function renderCollectionsList() {
 
 function bindEvents() {
   // Restore report search input value after render
-  const reportInput = document.getElementById("report-search-input");
-  if (reportInput && state.reportSearch) {
-    reportInput.value = state.reportSearch;
+  var reportInput = document.getElementById("report-search-input");
+  if (reportInput) {
+    reportInput.value = state.reportSearch || "";
+    if (state.reportSearch) {
+      reportInput.focus();
+      reportInput.setSelectionRange(reportInput.value.length, reportInput.value.length);
+    }
   }
   // Restore search input value after render
   const input = document.getElementById("collection-search-input");
