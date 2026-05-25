@@ -501,7 +501,7 @@ function buildReportTableHtml(rows) {
     html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
     html += '<div style="min-width:0;flex:1;">';
     html += '<div style="color:#c9a84c;font-size:10px;letter-spacing:1px;margin-bottom:2px;">' + article + '</div>';
-    html += '<div style="color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">' + name + '</div>';
+    html += '<div style="color:#fff;font-size:12px;word-break:break-word;">' + name + '</div>';
     html += '</div>';
     html += '<div style="text-align:right;flex-shrink:0;margin-left:12px;">';
     html += '<div style="color:#c9a84c;font-size:15px;font-weight:700;">' + total.toFixed(2) + '</div>';
