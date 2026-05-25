@@ -1019,8 +1019,10 @@ function RoomCalculator({ tile, onClose }) {
   const totalPrice = area * tile.price;
   const enoughStock = area <= tile.stock;
 
-  const addArea = () => setExtraArea(e => e + 1);
-  const subArea = () => setExtraArea(e => Math.max(-(withWaste - 1), e - 1));
+  // Крок = площа однієї плитки (наприклад 0.72 м² для 120×60), або 1 м² якщо даних нема
+  const areaStep = hasTileData ? tileArea : 1;
+  const addArea = () => setExtraArea(e => parseFloat((e + areaStep).toFixed(4)));
+  const subArea = () => setExtraArea(e => parseFloat(Math.max(-(withWaste - areaStep), e - areaStep).toFixed(4)));
 
   const submit = async () => {
     if (!phone.trim() || phone.replace(/\D/g, "").length < 9) {
