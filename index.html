@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>МитнийSklad — Гуртовий продаж плитки, сантехніки та ламінату по всій Україні</title>
-  <meta name="description" content="Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні. Широкий вибір колекцій, доступні ціни, доставка по Україні. Замовляйте онлайн або телефонуйте.">
-  <meta name="keywords" content="плитка гурт, керамічна плитка купити, плитка Україна, гуртовий продаж плитки, плитка Львів, сантехніка гурт, ламінат гурт, плитка для ванної, плитка для підлоги, МитнийSklad">
+  <meta name="description" content="Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні. Широкий вибір колекцій, доступні ціни, доставка по Україні.">
+  <meta name="keywords" content="плитка гурт, керамічна плитка купити, плитка Україна, гуртовий продаж плитки, сантехніка гурт, ламінат гурт">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://mysak.com.ua/">
   <meta property="og:title" content="МитнийSklad — Гуртовий продаж плитки по всій Україні">
@@ -559,24 +559,24 @@ function AIVisualization({ tile, onClose }) {
 
   // Завантажуємо збережені фото з бази
   const loadSaved = async () => {
-    if (!tile.article) return;
+    if (!tile.article) return {};
     try {
       const res = await fetch(SUPA + "/rest/v1/interior_images?article=eq." + encodeURIComponent(tile.article) + "&order=created_at.desc", {
         headers: { "apikey": KEY, "Authorization": "Bearer " + KEY }
       });
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
-        // Беремо останнє фото для кожної кімнати
         const byRoom = {};
         data.forEach(item => {
           if (!byRoom[item.room]) byRoom[item.room] = item.image_url;
         });
         setGeneratedImages(byRoom);
-        if (byRoom["Ванна кімната"]) setLoading(false);
+        return byRoom;
       }
     } catch(e) {
       console.error("Load saved error:", e.message);
     }
+    return {};
   };
 
   const generateImage = async (room, force = false) => {
@@ -608,23 +608,18 @@ function AIVisualization({ tile, onClose }) {
   };
 
   // При відкритті — завантажуємо збережені фото
-  const [initDone, setInitDone] = useState(false);
   useEffect(() => {
     (async () => {
       setLoading(true);
-      await loadSaved();
-      setInitDone(true);
+      const saved = await loadSaved();
+      // Якщо для ванної є збережене фото — показуємо, інакше генеруємо
+      if (saved["Ванна кімната"]) {
+        setLoading(false);
+      } else {
+        generateImage("Ванна кімната");
+      }
     })();
   }, []);
-
-  // Після завантаження збережених — якщо для ванної немає фото, генеруємо
-  useEffect(() => {
-    if (initDone && !generatedImages["Ванна кімната"]) {
-      generateImage("Ванна кімната");
-    } else if (initDone) {
-      setLoading(false);
-    }
-  }, [initDone]);
 
   const handleRoomChange = (room) => {
     setActiveRoom(room);
