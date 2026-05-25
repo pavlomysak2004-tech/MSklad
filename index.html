@@ -53,8 +53,7 @@ const TILE_IMAGES = [
 const TILE_IMAGE = TILE_IMAGES[0];
 
 
-const BOT_TOKEN = "8852451114:AAGS6p47r0vn4rcbsC-okztcyiwQYrMahqo";
-const OWNER_CHAT_ID = "1750776827";
+const TG_PROXY = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
 
 function LiveChat() {
   const [open, setOpen] = useState(false);
@@ -75,13 +74,17 @@ function LiveChat() {
     if (!open) return;
     const poll = async () => {
       try {
-        const res = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/getUpdates?offset=" + (lastUpdateRef.current + 1) + "&timeout=3");
+        const res = await fetch(TG_PROXY, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "getUpdates", offset: lastUpdateRef.current + 1 })
+        });
         const data = await res.json();
         if (data.ok && data.result.length > 0) {
           data.result.forEach(update => {
             lastUpdateRef.current = update.update_id;
             const msg = update.message;
-            if (msg && msg.from && String(msg.from.id) === OWNER_CHAT_ID && msg.text) {
+            if (msg && msg.text) {
               setMessages(prev => [...prev, {
                 id: Date.now() + Math.random(),
                 from: "bot",
@@ -109,13 +112,10 @@ function LiveChat() {
       time: new Date().toLocaleTimeString("uk", {hour:"2-digit",minute:"2-digit"})
     }]);
     try {
-      await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
+      await fetch(TG_PROXY, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: OWNER_CHAT_ID,
-          text: "💬 Клієнт [" + clientId + "] пише:\n" + text
-        })
+        body: JSON.stringify({ action: "sendMessage", text: "💬 Клієнт [" + clientId + "] пише:\n" + text })
       });
     } catch(e) {}
     setSending(false);
@@ -832,11 +832,10 @@ function OrderModal({ tile, onClose }) {
 
     // Відправляємо через Telegram бота прямо вам
     try {
-      await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
+      await fetch(TG_PROXY, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: OWNER_CHAT_ID,
+        body: JSON.stringify({ action: "sendMessage",
           text: text,
           parse_mode: "HTML"
         })
@@ -1337,10 +1336,10 @@ function PannoModal({ panno, collections, onClose }) {
       "🔲 Плитка: " + selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²\n" +
       "Площа: ~20 м²"
     );
-    fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
+    fetch(TG_PROXY, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: OWNER_CHAT_ID, text: decodeURIComponent(text) })
+      body: JSON.stringify({ action: "sendMessage", text: decodeURIComponent(text) })
     }).then(() => alert("✅ Замовлення відправлено! Менеджер зв'яжеться з вами."))
       .catch(() => alert("Помилка відправки. Спробуйте ще раз."));
   };
