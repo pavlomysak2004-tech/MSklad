@@ -49,6 +49,7 @@ const SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTr0m9YOJOve
 
 
 const TG_PROXY = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
 
 function LiveChat() {
   const [open, setOpen] = useState(false);
@@ -735,8 +736,6 @@ function OrderModal({ tile, onClose }) {
   const [sent, setSent] = useState(false);
   const [orderNum, setOrderNum] = useState("");
   const [sending, setSending] = useState(false);
-  const inputRef = useRef(null);
-
   const tileCount = hasTileData ? Math.round(area / tileArea) : null;
   const total = Math.round(area * tile.price);
 
@@ -1001,39 +1000,58 @@ function OrderModal({ tile, onClose }) {
 function RoomCalculator({ tile, onClose }) {
   const tileArea = tile.tileArea || 0;
   const hasTileData = tileArea > 0;
-  const step = hasTileData ? tileArea : 0.01;
 
   const [length, setLength] = useState("5");
   const [width, setWidth] = useState("4");
   const [waste, setWaste] = useState(10);
+  const [extraArea, setExtraArea] = useState(0); // ручне коригування м²
+  const [phone, setPhone] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const roomArea = parseFloat(length || 0) * parseFloat(width || 0);
   const withWaste = roomArea > 0 ? roomArea * (1 + waste / 100) : 0;
-  const initTiles = hasTileData ? Math.ceil(withWaste / tileArea) : 0;
-  const [tileCount, setTileCount] = useState(initTiles);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (withWaste > 0) {
-      const t = hasTileData ? Math.ceil(withWaste / tileArea) : 0;
-      setTileCount(t);
-      if (inputRef.current) inputRef.current.value = (hasTileData ? t * tileArea : withWaste).toFixed(2);
-    }
-  }, [withWaste, waste]);
-
-  const area = hasTileData ? tileCount * tileArea : withWaste;
+  const baseArea = withWaste + extraArea;
+  // Якщо є дані про плитку — округлюємо до цілих плиток
+  const tileCount = hasTileData ? Math.ceil(baseArea / tileArea) : 0;
+  const area = hasTileData ? tileCount * tileArea : baseArea;
   const totalPrice = area * tile.price;
   const enoughStock = area <= tile.stock;
 
-  const decrease = () => {
-    const newCount = Math.max(1, tileCount - 1);
-    setTileCount(newCount);
-    if (inputRef.current) inputRef.current.value = (newCount * tileArea).toFixed(2);
-  };
-  const increase = () => {
-    const newCount = tileCount + 1;
-    setTileCount(newCount);
-    if (inputRef.current) inputRef.current.value = (newCount * tileArea).toFixed(2);
+  const addArea = () => setExtraArea(e => e + 1);
+  const subArea = () => setExtraArea(e => Math.max(-(withWaste - 1), e - 1));
+
+  const submit = async () => {
+    if (!phone.trim() || phone.replace(/\D/g, "").length < 9) {
+      alert("Введіть коректний номер телефону");
+      return;
+    }
+    if (area <= 0) {
+      alert("Спочатку введіть розміри кімнати");
+      return;
+    }
+    setSending(true);
+    const msg =
+      "📐 Розрахунок з калькулятора\n\n" +
+      "🔲 Плитка: " + tile.name + "\n" +
+      "💰 Ціна: " + tile.price.toLocaleString() + " грн/м²\n" +
+      "📏 Кімната: " + length + " × " + width + " = " + roomArea.toFixed(2) + " м²\n" +
+      "➕ Запас: " + waste + "%\n" +
+      (hasTileData ? "🔢 Кількість: " + tileCount + " шт\n" : "") +
+      "📦 Площа: " + area.toFixed(2) + " м²\n" +
+      "💵 Сума: " + totalPrice.toLocaleString() + " грн\n\n" +
+      "📞 Телефон: " + phone;
+    try {
+      await fetch(TG_PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + SUPA_KEY, "apikey": SUPA_KEY },
+        body: JSON.stringify({ action: "sendMessage", text: msg })
+      });
+      setSent(true);
+    } catch(e) {
+      alert("Помилка відправки. Спробуйте ще раз.");
+    }
+    setSending(false);
   };
 
   return (
@@ -1044,10 +1062,11 @@ function RoomCalculator({ tile, onClose }) {
       <div style={{
         background: "#0f0f0f", borderRadius: 20, maxWidth: 420, width: "100%",
         border: "1px solid #2a2a2a", overflow: "hidden", animation: "fadeIn 0.25s ease",
+        maxHeight: "92vh", overflowY: "auto",
       }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#0f0f0f", zIndex: 5 }}>
           <div>
             <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>📏 Калькулятор кімнати</div>
             <div style={{ color: "#fff", fontSize: 17, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
@@ -1056,20 +1075,28 @@ function RoomCalculator({ tile, onClose }) {
           <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#555", cursor: "pointer", width: 34, height: 34, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         </div>
 
+        {sent ? (
+          <div style={{ padding: "40px 22px", textAlign: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+            <div style={{ color: "#fff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Заявку відправлено!</div>
+            <div style={{ color: "#777", fontSize: 13, marginBottom: 24 }}>Менеджер зв'яжеться з вами найближчим часом</div>
+            <button onClick={onClose} style={{ padding: "12px 28px", borderRadius: 12, background: "#c9a84c", border: "none", color: "#000", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Закрити</button>
+          </div>
+        ) : (
         <div style={{ padding: "20px 22px 24px" }}>
           {/* Розміри кімнати */}
           <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
               <div style={{ color: "#555", fontSize: 11, marginBottom: 6, textAlign: "center" }}>Довжина (м)</div>
               <input type="number" value={length}
-                onChange={e => setLength(e.target.value)}
+                onChange={e => { setLength(e.target.value); setExtraArea(0); }}
                 style={{ width: "100%", padding: "12px", borderRadius: 10, background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#fff", fontSize: 18, fontWeight: 700, textAlign: "center", outline: "none" }} />
             </div>
             <div style={{ display: "flex", alignItems: "center", paddingTop: 22, color: "#333", fontSize: 20 }}>×</div>
             <div style={{ flex: 1 }}>
               <div style={{ color: "#555", fontSize: 11, marginBottom: 6, textAlign: "center" }}>Ширина (м)</div>
               <input type="number" value={width}
-                onChange={e => setWidth(e.target.value)}
+                onChange={e => { setWidth(e.target.value); setExtraArea(0); }}
                 style={{ width: "100%", padding: "12px", borderRadius: 10, background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#fff", fontSize: 18, fontWeight: 700, textAlign: "center", outline: "none" }} />
             </div>
           </div>
@@ -1082,7 +1109,7 @@ function RoomCalculator({ tile, onClose }) {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               {[5, 10, 15, 20].map(w => (
-                <button key={w} onClick={() => setWaste(w)} style={{
+                <button key={w} onClick={() => { setWaste(w); setExtraArea(0); }} style={{
                   flex: 1, padding: "7px 0", borderRadius: 8, border: "1px solid",
                   borderColor: waste === w ? "#c9a84c" : "#2a2a2a",
                   background: waste === w ? "#c9a84c11" : "transparent",
@@ -1093,45 +1120,23 @@ function RoomCalculator({ tile, onClose }) {
             </div>
           </div>
 
-          {/* Кількість плиток +/- */}
-          {tileCount > 0 && (
+          {area > 0 && (
             <>
+              {/* Коригування площі +/- */}
               <div style={{ marginBottom: 16 }}>
-                <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Кількість</div>
+                <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Площа (м²)</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
-                  <button onClick={decrease} style={{
+                  <button onClick={subArea} style={{
                     width: 44, height: 44, borderRadius: "50%",
                     background: "#1a1a1a", border: "1px solid #2a2a2a",
                     color: "#fff", fontSize: 24, cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>−</button>
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <input
-                        ref={inputRef}
-                        type="number"
-                        defaultValue={area.toFixed(2)}
-                        onBlur={e => {
-                          const val = parseFloat(e.target.value);
-                          if (!isNaN(val) && val > 0) {
-                            const t = hasTileData ? Math.round(val / tileArea) : 0;
-                            setTileCount(t);
-                            e.target.value = (hasTileData ? t * tileArea : val).toFixed(2);
-                          }
-                        }}
-                        onKeyDown={e => { if (e.key === "Enter") e.target.blur(); }}
-                        style={{
-                          width: 130, padding: "8px 10px", borderRadius: 10,
-                          background: "#1a1a1a", border: "1px solid #2a2a2a",
-                          color: "#fff", fontSize: 22, fontWeight: 900,
-                          textAlign: "center", outline: "none",
-                        }}
-                      />
-                      <span style={{ color: "#c9a84c", fontSize: 16, fontWeight: 700 }}>м²</span>
-                    </div>
-                    {hasTileData && <div style={{ color: "#555", fontSize: 11, marginTop: 6 }}>{tileCount} шт</div>}
+                  <div style={{ textAlign: "center", minWidth: 130 }}>
+                    <div style={{ color: "#fff", fontSize: 28, fontWeight: 900 }}>{area.toFixed(2)} <span style={{ color: "#c9a84c", fontSize: 16 }}>м²</span></div>
+                    {hasTileData && <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{tileCount} шт</div>}
                   </div>
-                  <button onClick={increase} style={{
+                  <button onClick={addArea} style={{
                     width: 44, height: 44, borderRadius: "50%",
                     background: "linear-gradient(135deg, #c9a84c, #b8860b)",
                     border: "none", color: "#000", fontSize: 24, cursor: "pointer",
@@ -1154,16 +1159,36 @@ function RoomCalculator({ tile, onClose }) {
                 <div style={{
                   marginTop: 10, padding: "7px 10px", borderRadius: 8,
                   background: enoughStock ? "#4caf5011" : "#f4433611",
-                  border: `1px solid ${enoughStock ? "#4caf5033" : "#f4433633"}`,
+                  border: "1px solid " + (enoughStock ? "#4caf5033" : "#f4433633"),
                   textAlign: "center", fontSize: 12,
                   color: enoughStock ? "#4caf50" : "#f44336",
                 }}>
-                  {enoughStock ? `✓ На складі достатньо (${tile.stock} м²)` : `⚠ На складі лише ${tile.stock} м²`}
+                  {enoughStock ? "✓ На складі достатньо (" + tile.stock + " м²)" : "⚠ На складі лише " + tile.stock + " м²"}
                 </div>
               </div>
+
+              {/* Телефон */}
+              <input
+                type="tel"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="📞 Ваш номер телефону"
+                style={{ width: "100%", padding: "13px 16px", borderRadius: 12, background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#fff", fontSize: 15, textAlign: "center", outline: "none", marginBottom: 12 }}
+              />
+
+              {/* Кнопка замовити */}
+              <button onClick={submit} disabled={sending} style={{
+                width: "100%", padding: "15px", borderRadius: 12,
+                background: sending ? "#555" : "linear-gradient(135deg, #c9a84c, #b8860b)",
+                border: "none", color: "#000", fontSize: 15, fontWeight: 800,
+                cursor: sending ? "default" : "pointer",
+              }}>
+                {sending ? "Відправка..." : "Прорахувати і замовити"}
+              </button>
             </>
           )}
         </div>
+        )}
       </div>
     </div>
   );
