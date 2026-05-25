@@ -6,7 +6,6 @@
   <title>МитнийSklad — Гуртовий продаж плитки, сантехніки та ламінату по всій Україні</title>
   <meta name="description" content="Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні. Широкий вибір колекцій, доступні ціни, доставка по Україні. Замовляйте онлайн або телефонуйте.">
   <meta name="keywords" content="плитка гурт, керамічна плитка купити, плитка Україна, гуртовий продаж плитки, плитка Львів, сантехніка гурт, ламінат гурт, плитка для ванної, плитка для підлоги, МитнийSklad">
-  <meta name="author" content="МитнийSklad">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://mysak.com.ua/">
   <meta property="og:title" content="МитнийSklad — Гуртовий продаж плитки по всій Україні">
@@ -15,16 +14,7 @@
   <meta property="og:url" content="https://mysak.com.ua/">
   <meta property="og:locale" content="uk_UA">
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Store",
-    "name": "МитнийSklad",
-    "description": "Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні",
-    "url": "https://mysak.com.ua",
-    "areaServed": "UA",
-    "hasOfferCatalog": { "@type": "OfferCatalog", "name": "Каталог плитки та оздоблювальних матеріалів" },
-    "contactPoint": { "@type": "ContactPoint", "contactType": "sales", "availableLanguage": "Ukrainian" }
-  }
+  {"@context":"https://schema.org","@type":"Store","name":"МитнийSklad","description":"Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні","url":"https://mysak.com.ua","areaServed":"UA"}
   </script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -300,6 +290,7 @@ function useCollections() {
           return {
             ...existing,
             id: item.id,
+            article: item.article || "",
             name: item.name || existing.name,
             subtitle: item.article || existing.subtitle,
             size: item.size || existing.size,
@@ -344,6 +335,7 @@ function useCollections() {
               .map(p => p.url);
             return {
               id: item.id,
+              article: item.article || "",
               name: item.name || "",
               subtitle: item.article || "Декоративне панно",
               size: item.size || "",
