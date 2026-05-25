@@ -9,15 +9,11 @@
   <meta name="author" content="МитнийSklad">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://mysak.com.ua/">
-
-  <!-- Open Graph для соціальних мереж -->
   <meta property="og:title" content="МитнийSklad — Гуртовий продаж плитки по всій Україні">
   <meta property="og:description" content="Широкий вибір керамічної плитки, сантехніки та ламінату. Гуртові ціни, доставка по Україні.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://mysak.com.ua/">
   <meta property="og:locale" content="uk_UA">
-
-  <!-- Schema.org структуровані дані -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -26,15 +22,8 @@
     "description": "Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні",
     "url": "https://mysak.com.ua",
     "areaServed": "UA",
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "Каталог плитки та оздоблювальних матеріалів"
-    },
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "contactType": "sales",
-      "availableLanguage": "Ukrainian"
-    }
+    "hasOfferCatalog": { "@type": "OfferCatalog", "name": "Каталог плитки та оздоблювальних матеріалів" },
+    "contactPoint": { "@type": "ContactPoint", "contactType": "sales", "availableLanguage": "Ukrainian" }
   }
   </script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -574,26 +563,32 @@ function AIVisualization({ tile, onClose }) {
 
   const rooms = ["Ванна кімната", "Кухня", "Коридор", "Вітальня"];
 
-  const roomPrompts = {
-    "Ванна кімната": "modern luxury bathroom marble tiles walls floor glass shower bright lighting minimalist photorealistic 4k interior design",
-    "Кухня": "modern kitchen elegant ceramic tiles floor backsplash white cabinets bright natural light photorealistic 4k interior",
-    "Коридор": "elegant hallway decorative ceramic tiles floor modern interior bright lighting photorealistic 4k design",
-    "Вітальня": "modern living room beautiful ceramic tiles floor stylish furniture bright natural lighting photorealistic 4k",
-  };
-
-  const sessionSeed = useRef(Math.floor(Math.random() * 99999));
-
-  const generateImage = (room, force = false) => {
+  const generateImage = async (room, force = false) => {
     if (generatedImages[room] && !force) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    const prompt = roomPrompts[room] || roomPrompts["Ванна кімната"];
-    const encoded = encodeURIComponent(prompt);
-    const seed = sessionSeed.current + room.length + (force ? Date.now() % 9999 : 0);
-    const imageUrl = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=768&nologo=true&seed=" + seed + "&t=" + Date.now();
-    setGeneratedImages(prev => ({ ...prev, [room]: imageUrl }));
+    try {
+      const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-interior", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+        },
+        body: JSON.stringify({ tileName: tile.name, tileImage: tile.image, room })
+      });
+      const data = await res.json();
+      if (data.imageUrl) {
+        setGeneratedImages(prev => ({ ...prev, [room]: data.imageUrl }));
+      } else {
+        console.error("Interior error:", data.error);
+        setLoading(false);
+      }
+    } catch(e) {
+      console.error("Interior fetch error:", e.message);
+      setLoading(false);
+    }
   };
 
   // Генеруємо одразу при відкритті
@@ -1545,7 +1540,6 @@ function TileCatalog() {
           }}>
             {warehouseMode ? "📦 Склад" : "👁 Повний"}
           </button>
-          <a href="/admin.html" style={{ padding: "6px 10px", borderRadius: 20, border: "1px solid #2a2a2a", background: "transparent", color: "#555", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>⚙️</a>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4caf50" }} />
           <span style={{ color: "#555", fontSize: 11 }}>{collections.length} колекції</span>
         </div>
