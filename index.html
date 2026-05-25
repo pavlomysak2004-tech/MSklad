@@ -1579,20 +1579,12 @@ function TileCatalog() {
       {/* Header */}
       <div style={{ borderBottom: "1px solid #141414", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#0a0a0aee", backdropFilter: "blur(20px)", zIndex: 100 }}>
         <div>
-          <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginBottom: 2 }}>Ексклюзивні колекції від компанії</div>
-          <div style={{ color: "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 900 }}><span style={{ color: "#fff" }}>#МитнийSklad</span></div>
+          <div style={{ color: "#555", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginBottom: 2 }}>Зв'яжіться з нами</div>
+          <a href="tel:+380979000398" style={{ textDecoration: "none" }}>
+            <div style={{ color: "#c9a84c", fontSize: 22, fontWeight: 900, letterSpacing: 1 }}>📞 097 900 03 98</div>
+          </a>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <a href="tel:+380979000398" style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "7px 14px", borderRadius: 20,
-            border: "1px solid #c9a84c44",
-            background: "linear-gradient(135deg, #c9a84c11, #c9a84c22)",
-            textDecoration: "none",
-          }}>
-            <span style={{ fontSize: 13 }}>📞</span>
-            <span style={{ color: "#c9a84c", fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>097 900 03 98</span>
-          </a>
           <button onClick={() => setWarehouseMode(v => !v)} style={{
             padding: "6px 12px", borderRadius: 20, border: "1px solid",
             borderColor: warehouseMode ? "#7b68ee" : "#2a2a2a",
