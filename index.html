@@ -1455,15 +1455,6 @@ function PannoModal({ panno, collections, onClose }) {
 }
 
 function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
-  const handleShare = (e) => {
-    e.stopPropagation();
-    const text = encodeURIComponent(tile.name + " - " + tile.subtitle + " | " + tile.size + " | " + tile.price.toLocaleString() + " грн/м² | #МитнийSklad");
-    if (navigator.share) {
-      navigator.share({ title: tile.name, text: decodeURIComponent(text), url: "https://mysak.com.ua" });
-    } else {
-      navigator.clipboard.writeText("https://mysak.com.ua").then(() => alert("Посилання скопійовано!"));
-    }
-  };
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
@@ -1535,14 +1526,12 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, wareh
           {tile.isPanno ? (
             <>
               <button onClick={(e) => { e.stopPropagation(); onPanno && onPanno(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", cursor: "pointer", fontSize: 12, fontWeight: 800 }}>🎨 Підібрати плитку</button>
-              <button onClick={handleShare} style={{ padding: "11px 12px", borderRadius: 10, background: "transparent", border: "1px solid #2a2a2a", color: "#777", cursor: "pointer", fontSize: 13 }}>🔗</button>
               <button onClick={(e) => { e.stopPropagation(); onOrder(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c44", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🛒 Замовити</button>
             </>
           ) : (
             <>
               <button onClick={(e) => { e.stopPropagation(); onVisualize(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", cursor: "pointer", fontSize: 12, fontWeight: 800 }}>✦ Інтер'єр</button>
               <button onClick={(e) => { e.stopPropagation(); onCalc(tile); }} style={{ padding: "11px 12px", borderRadius: 10, background: "transparent", border: "1px solid #2a2a2a", color: "#777", cursor: "pointer", fontSize: 13 }}>🏠</button>
-              <button onClick={handleShare} style={{ padding: "11px 12px", borderRadius: 10, background: "transparent", border: "1px solid #2a2a2a", color: "#777", cursor: "pointer", fontSize: 13 }}>🔗</button>
               <button onClick={(e) => { e.stopPropagation(); onOrder(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c44", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🛒 Замовити</button>
             </>
           )}
