@@ -1178,7 +1178,7 @@ function RoomCalculator({ tile, onClose }) {
                   textAlign: "center", fontSize: 12,
                   color: enoughStock ? "#4caf50" : "#f44336",
                 }}>
-                  {enoughStock ? "✓ На складі достатньо (" + tile.stock + " м²)" : "⚠ На складі лише " + tile.stock + " м²"}
+                  {enoughStock ? "✓ На складі достатньо (" + Number(tile.stock).toFixed(2) + " м²)" : "⚠ На складі лише " + Number(tile.stock).toFixed(2) + " м²"}
                 </div>
               </div>
 
@@ -1327,11 +1327,11 @@ function StockBar({ stock, reserve, totalStock, unit }) {
   } else if (stock > 10 || unit === "к-т") {
     statusColor = "#4caf50";
     statusLabel = "Є";
-    displayStock = stock.toLocaleString() + " " + unit;
+    displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
   } else {
     statusColor = "#f44336";
     statusLabel = "Мало";
-    displayStock = stock.toLocaleString() + " " + unit;
+    displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
   }
 
   const hasReserve = reserve > 0;
