@@ -562,6 +562,30 @@ function AIVisualization({ tile, onClose }) {
   const [generatedImages, setGeneratedImages] = useState({});
 
   const rooms = ["Ванна кімната", "Кухня", "Коридор", "Вітальня"];
+  const SUPA = "https://svbmamaqrtsknuztxiuq.supabase.co";
+  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+
+  // Завантажуємо збережені фото з бази
+  const loadSaved = async () => {
+    if (!tile.article) return;
+    try {
+      const res = await fetch(SUPA + "/rest/v1/interior_images?article=eq." + encodeURIComponent(tile.article) + "&order=created_at.desc", {
+        headers: { "apikey": KEY, "Authorization": "Bearer " + KEY }
+      });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        // Беремо останнє фото для кожної кімнати
+        const byRoom = {};
+        data.forEach(item => {
+          if (!byRoom[item.room]) byRoom[item.room] = item.image_url;
+        });
+        setGeneratedImages(byRoom);
+        if (byRoom["Ванна кімната"]) setLoading(false);
+      }
+    } catch(e) {
+      console.error("Load saved error:", e.message);
+    }
+  };
 
   const generateImage = async (room, force = false) => {
     if (generatedImages[room] && !force) {
@@ -570,13 +594,13 @@ function AIVisualization({ tile, onClose }) {
     }
     setLoading(true);
     try {
-      const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-interior", {
+      const res = await fetch(SUPA + "/functions/v1/generate-interior", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+          "Authorization": "Bearer " + KEY
         },
-        body: JSON.stringify({ tileName: tile.name, tileImage: tile.image, room })
+        body: JSON.stringify({ tileName: tile.name, tileImage: tile.image, room, article: tile.article })
       });
       const data = await res.json();
       if (data.imageUrl) {
@@ -591,14 +615,32 @@ function AIVisualization({ tile, onClose }) {
     }
   };
 
-  // Генеруємо одразу при відкритті
+  // При відкритті — завантажуємо збережені фото
+  const [initDone, setInitDone] = useState(false);
   useEffect(() => {
-    generateImage("Ванна кімната");
+    (async () => {
+      setLoading(true);
+      await loadSaved();
+      setInitDone(true);
+    })();
   }, []);
+
+  // Після завантаження збережених — якщо для ванної немає фото, генеруємо
+  useEffect(() => {
+    if (initDone && !generatedImages["Ванна кімната"]) {
+      generateImage("Ванна кімната");
+    } else if (initDone) {
+      setLoading(false);
+    }
+  }, [initDone]);
 
   const handleRoomChange = (room) => {
     setActiveRoom(room);
-    generateImage(room);
+    if (!generatedImages[room]) {
+      generateImage(room);
+    } else {
+      setLoading(false);
+    }
   };
 
   const currentImage = generatedImages[activeRoom];
@@ -665,12 +707,12 @@ function AIVisualization({ tile, onClose }) {
         </div>
 
         <div style={{ padding: "0 24px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ color: "#444", fontSize: 11 }}>Натисніть на кімнату для генерації</div>
-          {currentImage && (
+          <div style={{ color: "#444", fontSize: 11 }}>Оберіть кімнату</div>
+          {currentImage && !loading && (
             <button onClick={() => generateImage(activeRoom, true)} style={{
-              padding: "6px 14px", borderRadius: 20, border: "1px solid #2a2a2a",
-              background: "transparent", color: "#666", cursor: "pointer", fontSize: 11,
-            }}>🔄 Перегенерувати</button>
+              padding: "6px 14px", borderRadius: 20, border: "1px solid #c9a84c",
+              background: "#c9a84c11", color: "#c9a84c", cursor: "pointer", fontSize: 11, fontWeight: 600,
+            }}>✦ Згенерувати нове</button>
           )}
         </div>
       </div>
