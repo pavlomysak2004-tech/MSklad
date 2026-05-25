@@ -738,6 +738,7 @@ function OrderModal({ tile, onClose }) {
   const [sending, setSending] = useState(false);
   const tileCount = hasTileData ? Math.round(area / tileArea) : null;
   const total = Math.round(area * tile.price);
+  const inputRef = useRef(null);
 
   const decrease = () => {
     const newArea = Math.max(step, parseFloat((area - step).toFixed(4)));
