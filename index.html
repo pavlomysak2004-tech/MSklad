@@ -42,8 +42,8 @@
 
 
 const SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTr0m9YOJOveKYYO5a7NeLBoKW5upwPwNb9amlieWbufwGEz6WaD1C_PaUuqMwmHJWqvUic7dNNr87l/pub?gid=501252041&single=true&output=csv";
-const TELEGRAM_USERNAME = "your_manager";
-const WHATSAPP_NUMBER = "380991234567";
+
+
 
 const TILE_IMAGES = [
   "",
@@ -1337,7 +1337,12 @@ function PannoModal({ panno, collections, onClose }) {
       "🔲 Плитка: " + selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²\n" +
       "Площа: ~20 м²"
     );
-    window.open("https://t.me/" + TELEGRAM_USERNAME + "?text=" + text, "_blank");
+    fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: OWNER_CHAT_ID, text: decodeURIComponent(text) })
+    }).then(() => alert("✅ Замовлення відправлено! Менеджер зв'яжеться з вами."))
+      .catch(() => alert("Помилка відправки. Спробуйте ще раз."));
   };
 
   return (
@@ -1433,7 +1438,11 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, wareh
   const handleShare = (e) => {
     e.stopPropagation();
     const text = encodeURIComponent(tile.name + " - " + tile.subtitle + " | " + tile.size + " | " + tile.price.toLocaleString() + " грн/м² | #МитнийSklad");
-    window.open("https://t.me/share/url?url=https://mitnyisklad.ua&text=" + text, "_blank");
+    if (navigator.share) {
+      navigator.share({ title: tile.name, text: decodeURIComponent(text), url: "https://mysak.com.ua" });
+    } else {
+      navigator.clipboard.writeText("https://mysak.com.ua").then(() => alert("Посилання скопійовано!"));
+    }
   };
   const [hovered, setHovered] = useState(false);
   return (
