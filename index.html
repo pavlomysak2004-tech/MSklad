@@ -567,10 +567,10 @@ function AIVisualization({ tile, onClose }) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         const byRoom = {};
+        // Беремо тільки перше (найновіше) фото для кожної кімнати
         data.forEach(item => {
           if (!byRoom[item.room]) byRoom[item.room] = item.image_url;
         });
-        setGeneratedImages(byRoom);
         return byRoom;
       }
     } catch(e) {
@@ -579,13 +579,26 @@ function AIVisualization({ tile, onClose }) {
     return {};
   };
 
-  const generateImage = async (room, force = false) => {
-    if (generatedImages[room] && !force) {
+  const generateImage = async (room, force = false, currentSaved = null) => {
+    // Використовуємо currentSaved якщо переданий (при першому завантаженні)
+    // або generatedImages зі стану (при ручному виклику)
+    const images = currentSaved !== null ? currentSaved : generatedImages;
+    if (images[room] && !force) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
+      // Спочатку видаляємо старі записи для цієї кімнати+артикулу (щоб не накопичувались дублікати)
+      if (tile.article) {
+        await fetch(
+          SUPA + "/rest/v1/interior_images?article=eq." + encodeURIComponent(tile.article) + "&room=eq." + encodeURIComponent(room),
+          {
+            method: "DELETE",
+            headers: { "apikey": KEY, "Authorization": "Bearer " + KEY }
+          }
+        );
+      }
       const res = await fetch(SUPA + "/functions/v1/generate-interior", {
         method: "POST",
         headers: {
@@ -612,11 +625,13 @@ function AIVisualization({ tile, onClose }) {
     (async () => {
       setLoading(true);
       const saved = await loadSaved();
-      // Якщо для ванної є збережене фото — показуємо, інакше генеруємо
+      // Одразу оновлюємо стан і передаємо saved напряму в generateImage
+      // щоб уникнути проблеми з React batching (стан ще не оновився)
+      setGeneratedImages(saved);
       if (saved["Ванна кімната"]) {
         setLoading(false);
       } else {
-        generateImage("Ванна кімната");
+        generateImage("Ванна кімната", false, saved);
       }
     })();
   }, []);
