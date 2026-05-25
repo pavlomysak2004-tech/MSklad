@@ -41,6 +41,18 @@
     const { useState, useRef, useCallback, useEffect } = React;
 
 
+// Рахує площу однієї плитки (м²) з поля розміру типу "120*60", "120x60", "120х60"
+function parseTileArea(size) {
+  if (!size) return 0;
+  const m = String(size).match(/(\d+(?:[.,]\d+)?)\s*[*xXхХ×]\s*(\d+(?:[.,]\d+)?)/);
+  if (!m) return 0;
+  const a = parseFloat(m[1].replace(",", "."));
+  const b = parseFloat(m[2].replace(",", "."));
+  if (!a || !b) return 0;
+  // Розміри в см → переводимо в м² (ділимо на 10000)
+  return parseFloat(((a * b) / 10000).toFixed(4));
+}
+
 const SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTr0m9YOJOveKYYO5a7NeLBoKW5upwPwNb9amlieWbufwGEz6WaD1C_PaUuqMwmHJWqvUic7dNNr87l/pub?gid=501252041&single=true&output=csv";
 
 
@@ -303,7 +315,7 @@ function useCollections() {
             reserve: item.reserve || 0,
             totalStock: (item.stock || 0) + (item.reserve || 0),
             unit: item.unit || "м²",
-            tileArea: item.tile_area || 0,
+            tileArea: item.tile_area || parseTileArea(item.size) || 0,
             description: item.description || existing.description,
             tags: item.tags || existing.tags || [],
             finish: item.finish || existing.finish || "",
