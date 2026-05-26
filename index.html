@@ -1573,9 +1573,11 @@ function HeroBanner() {
   const [startX, setStartX] = React.useState(0);
   const [offsetX, setOffsetX] = React.useState(0);
   const [transitioning, setTransitioning] = React.useState(true);
-  const [zoomSrc, setZoomSrc] = React.useState(null);
+  const [zoom, setZoom] = React.useState(1);
+  const [zx, setZx] = React.useState(0);
+  const [zy, setZy] = React.useState(0);
   const timerRef = React.useRef(null);
-  const tapRef = React.useRef({ x: 0, y: 0, t: 0, moved: false });
+  const pinchRef = React.useRef({ dist: 0, startZoom: 1, panX: 0, panY: 0, lastX: 0, lastY: 0 });
 
   // Завантаження банерів із Supabase
   React.useEffect(() => {
@@ -1623,35 +1625,77 @@ function HeroBanner() {
     if (slides.length > 1) timerRef.current = setInterval(next, autoplay * 1000);
   };
 
+  const pinchDist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
   const onStart = (e) => {
+    const touches = e.touches;
+    if (touches && touches.length === 2) {
+      // Початок зуму двома пальцями
+      clearInterval(timerRef.current);
+      pinchRef.current.dist = pinchDist(touches);
+      pinchRef.current.startZoom = zoom;
+      setDragging(false);
+      setTransitioning(false);
+      return;
+    }
     setDragging(true);
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = touches ? touches[0].clientX : e.clientX;
+    const y = touches ? touches[0].clientY : e.clientY;
     setStartX(x);
-    tapRef.current = { x, y, t: Date.now(), moved: false };
+    pinchRef.current.lastX = x;
+    pinchRef.current.lastY = y;
     setTransitioning(false);
   };
+
   const onMove = (e) => {
+    const touches = e.touches;
+    // Зум двома пальцями
+    if (touches && touches.length === 2) {
+      if (e.cancelable) e.preventDefault();
+      let next = pinchRef.current.startZoom * (pinchDist(touches) / pinchRef.current.dist);
+      next = Math.max(1, Math.min(next, 4));
+      setZoom(next);
+      if (next === 1) { setZx(0); setZy(0); }
+      return;
+    }
     if (!dragging) return;
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
-    if (Math.abs(x - tapRef.current.x) > 8 || Math.abs(y - tapRef.current.y) > 8) tapRef.current.moved = true;
+    const x = touches ? touches[0].clientX : e.clientX;
+    const y = touches ? touches[0].clientY : e.clientY;
+    // Якщо збільшено — рухаємо фото всередині банера
+    if (zoom > 1) {
+      if (e.cancelable) e.preventDefault();
+      const dx = x - pinchRef.current.lastX;
+      const dy = y - pinchRef.current.lastY;
+      pinchRef.current.lastX = x;
+      pinchRef.current.lastY = y;
+      setZx(v => v + dx);
+      setZy(v => v + dy);
+      return;
+    }
+    // Інакше — звичайний свайп каруселі
     setOffsetX(x - startX);
   };
-  const onEnd = () => {
+
+  const onEnd = (e) => {
+    // Якщо ще лишився один палець після зуму — нічого не робимо
+    if (e.touches && e.touches.length > 0) return;
+    if (zoom > 1) { setDragging(false); return; }
     if (!dragging) return;
     setDragging(false);
     setTransitioning(true);
-    // Тап без руху + швидко → відкрити фото на весь екран
-    const isTap = !tapRef.current.moved && (Date.now() - tapRef.current.t) < 300;
-    if (isTap) {
-      setOffsetX(0);
-      if (slides[active]) setZoomSrc(slides[active].image_url);
-      return;
-    }
     if (offsetX < -60) { goTo(active + 1); resetTimer(); }
     else if (offsetX > 60) { goTo(active - 1); resetTimer(); }
     else setOffsetX(0);
+  };
+
+  // Подвійний тап — скинути зум
+  const lastTapRef = React.useRef(0);
+  const onDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300 && zoom > 1) {
+      setZoom(1); setZx(0); setZy(0);
+    }
+    lastTapRef.current = now;
   };
 
   // Якщо немає фото — банер не показуємо
@@ -1700,7 +1744,13 @@ function HeroBanner() {
           }}>
             <img src={s.image_url} alt={s.title || "банер"} draggable={false}
               className="banner-img"
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+              onClick={active === i ? onDoubleTap : undefined}
+              style={{
+                position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center",
+                transform: active === i && zoom > 1 ? `translate(${zx}px, ${zy}px) scale(${zoom})` : "none",
+                transition: dragging ? "none" : "transform 0.15s ease",
+                transformOrigin: "center center",
+              }} />
             {(s.title || s.subtitle) && (
               <>
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.1) 100%)" }} />
@@ -1736,84 +1786,12 @@ function HeroBanner() {
       )}
 
       {/* Повноекранний перегляд із зумом */}
-      {zoomSrc && <BannerZoom src={zoomSrc} onClose={() => setZoomSrc(null)} />}
-    </div>
-  );
-}
-
-function BannerZoom({ src, onClose }) {
-  const [scale, setScale] = React.useState(1);
-  const [tx, setTx] = React.useState(0);
-  const [ty, setTy] = React.useState(0);
-  const st = React.useRef({ pinchDist: 0, startScale: 1, lastX: 0, lastY: 0, panning: false });
-
-  const dist = (t) => {
-    const dx = t[0].clientX - t[1].clientX;
-    const dy = t[0].clientY - t[1].clientY;
-    return Math.hypot(dx, dy);
-  };
-
-  const onTouchStart = (e) => {
-    if (e.touches.length === 2) {
-      st.current.pinchDist = dist(e.touches);
-      st.current.startScale = scale;
-    } else if (e.touches.length === 1 && scale > 1) {
-      st.current.panning = true;
-      st.current.lastX = e.touches[0].clientX;
-      st.current.lastY = e.touches[0].clientY;
-    }
-  };
-  const onTouchMove = (e) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      const d = dist(e.touches);
-      let next = st.current.startScale * (d / st.current.pinchDist);
-      next = Math.max(1, Math.min(next, 5));
-      setScale(next);
-      if (next === 1) { setTx(0); setTy(0); }
-    } else if (e.touches.length === 1 && st.current.panning && scale > 1) {
-      e.preventDefault();
-      const dx = e.touches[0].clientX - st.current.lastX;
-      const dy = e.touches[0].clientY - st.current.lastY;
-      st.current.lastX = e.touches[0].clientX;
-      st.current.lastY = e.touches[0].clientY;
-      setTx(t => t + dx);
-      setTy(t => t + dy);
-    }
-  };
-  const onTouchEnd = (e) => {
-    if (e.touches.length === 0) st.current.panning = false;
-  };
-
-  // Подвійний тап — скинути / збільшити
-  const lastTap = React.useRef(0);
-  const onTap = () => {
-    const now = Date.now();
-    if (now - lastTap.current < 300) {
-      if (scale > 1) { setScale(1); setTx(0); setTy(0); }
-      else setScale(2.5);
-    }
-    lastTap.current = now;
-  };
-
-  return (
-    <div
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.96)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", touchAction: "none" }}
-      onClick={(e) => { if (e.target === e.currentTarget && scale === 1) onClose(); }}
-      onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-    >
-      <img
-        src={src} alt="банер" draggable={false} onClick={onTap}
-        style={{
-          maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
-          transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
-          transition: st.current.panning ? "none" : "transform 0.15s ease",
-        }}
-      />
-      <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 22, cursor: "pointer", backdropFilter: "blur(8px)", zIndex: 5 }}>×</button>
-      <div style={{ position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.55)", fontSize: 12, textAlign: "center", whiteSpace: "nowrap" }}>
-        Двома пальцями — збільшити · подвійний тап — скинути
-      </div>
+      {/* Підказка про зум (тільки коли збільшено) */}
+      {zoom > 1 && (
+        <div style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.55)", color: "rgba(255,255,255,0.85)", fontSize: 11, padding: "4px 12px", borderRadius: 20, backdropFilter: "blur(8px)", zIndex: 6, whiteSpace: "nowrap" }}>
+          {Math.round(zoom * 100)}% · подвійний тап щоб скинути
+        </div>
+      )}
     </div>
   );
 }
