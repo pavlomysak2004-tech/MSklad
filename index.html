@@ -1652,8 +1652,14 @@ function HeroBanner() {
     >
       <style>{`
         @media (min-width: 769px) {
-          .hero-banner { height: auto !important; max-height: none !important; aspect-ratio: 21 / 7; }
-          .hero-banner .banner-img { object-fit: contain !important; }
+          .hero-banner { height: auto !important; max-height: none !important; }
+          .hero-banner .banner-slide.active { position: relative !important; }
+          .hero-banner .banner-slide.active .banner-img {
+            position: relative !important;
+            height: auto !important;
+            object-fit: contain !important;
+          }
+          .hero-banner .banner-slide:not(.active) { display: none !important; }
         }
       `}</style>
       {slides.map((s, i) => {
