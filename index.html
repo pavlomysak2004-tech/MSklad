@@ -1713,6 +1713,18 @@ function HeroBanner() {
     lastTapRef.current = now;
   };
 
+  // Desktop: зум колесом миші прямо на банері
+  const onWheelBanner = (e) => {
+    e.preventDefault();
+    clearInterval(timerRef.current);
+    const delta = e.deltaY < 0 ? 0.25 : -0.25;
+    setZoom(z => {
+      const n = Math.max(1, Math.min(z + delta, 4));
+      if (n === 1) { setZx(0); setZy(0); resetTimer(); }
+      return n;
+    });
+  };
+
   // Якщо немає фото — банер не показуємо
   if (slides.length === 0) return null;
 
@@ -1722,6 +1734,7 @@ function HeroBanner() {
       style={{ position: "relative", width: "100%", height: "56vw", maxHeight: 440, minHeight: 200, overflow: "hidden", userSelect: "none", touchAction: "pan-y", background: "#0a0a0a" }}
       onMouseDown={onStart} onMouseMove={onMove} onMouseUp={onEnd} onMouseLeave={onEnd}
       onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd}
+      onWheel={onWheelBanner}
     >
       <style>{`
         @media (min-width: 769px) {
