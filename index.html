@@ -851,6 +851,16 @@ function OrderModal({ tile, onClose }) {
       console.log("Telegram error:", e);
     }
 
+    // Google Ads — відстеження конверсії "Замовити"
+    if (typeof gtag === "function") {
+      gtag("event", "conversion", {
+        send_to: "AW-18188380707/cMVPCL-9grMcEKPU8uBD",
+        value: total,
+        currency: "UAH",
+        transaction_id: num,
+      });
+    }
+
     setSending(false);
     setSent(true);
   };
