@@ -174,7 +174,13 @@ let state = {
   rates: { eur: 43.5, usd: 41.2 },
   autoRate: true,
   collectionSearch: "",
-  tabOrder: JSON.parse(localStorage.getItem('msklad_tab_order') || 'null') || ['collections','pannos','rates','orders','reports'],
+  tabOrder: (() => {
+    const saved = JSON.parse(localStorage.getItem('msklad_tab_order') || 'null') || ['collections','pannos','rates','orders','reports'];
+    if (!saved.includes('banners')) saved.push('banners');
+    return saved;
+  })(),
+  banners: [],
+  bannerAutoplay: 4,
   reportLoading: false,
   reportError: null,
   reportSearch: "",
@@ -243,7 +249,8 @@ function renderAdmin() {
             pannos: '🎨 Панно',
             rates: '💱 Курс валют',
             orders: '📋 Замовлення',
-            reports: '📊 Звіти'
+            reports: '📊 Звіти',
+            banners: '🖼 Банер'
           };
           return state.tabOrder.map((tab, idx) => {
             const isActive = state.tab === tab;
@@ -277,6 +284,7 @@ function renderAdmin() {
         ${state.tab==='rates' ? renderRates() : ''}
         ${state.tab==='orders' ? renderOrders() : ''}
         ${state.tab==='reports' ? renderReports() : ''}
+        ${state.tab==='banners' ? renderBanners() : ''}
       </div>
 
       ${state.modal ? renderModal() : ''}
@@ -363,6 +371,175 @@ function renderRates() {
       ${!state.autoRate ? `<button class="btn-gold" style="width:100%;margin-top:16px;" onclick="saveRates()">Зберегти курс</button>` : ''}
       ${state.autoRate ? `<button class="btn-dark" style="width:100%;margin-top:16px;" onclick="refreshRates()">🔄 Оновити зараз</button>` : ''}
     </div>`;
+}
+
+// ============ БАНЕР (свайп зверху сайту) ============
+function renderBanners() {
+  const items = (state.banners || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  return `
+    <div>
+      <!-- Налаштування автопрокрутки -->
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">🖼 Банер на сайті</div>
+        <div style="color:#555;font-size:12px;margin-bottom:16px;">Фотографії що показуються зверху сайту у вигляді свайпу на повну ширину</div>
+
+        <div class="label">Затримка автопрокрутки (секунди)</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="range" min="2" max="10" step="1" value="${state.bannerAutoplay}"
+            oninput="document.getElementById('autoplay-val').textContent=this.value+' сек'; state.bannerAutoplay=parseInt(this.value)"
+            style="flex:1;accent-color:#c9a84c;cursor:pointer;">
+          <span id="autoplay-val" style="color:#c9a84c;font-size:14px;font-weight:700;min-width:54px;">${state.bannerAutoplay} сек</span>
+        </div>
+        <button class="btn-gold" style="width:100%;margin-top:14px;" onclick="saveBannerSettings()">💾 Зберегти затримку</button>
+      </div>
+
+      <!-- Кнопка додавання -->
+      <label class="upload-zone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px;margin-bottom:16px;">
+        <div style="font-size:28px;">📸</div>
+        <div style="font-size:13px;color:#c9a84c;font-weight:700;">Додати фото в банер</div>
+        <div style="font-size:11px;color:#555;">Можна обрати кілька фото одразу</div>
+        <input type="file" accept="image/*" multiple style="display:none" onchange="handleBannerUpload(this)">
+      </label>
+
+      <!-- Список банерів -->
+      <div style="color:#777;font-size:13px;margin-bottom:10px;">${items.length} фото · перетягуй щоб змінити порядок</div>
+
+      ${items.length === 0 ? `
+        <div style="text-align:center;padding:40px;color:#555;background:#0f0f0f;border-radius:12px;border:1px dashed #2a2a2a;">
+          Поки що немає фото.<br>Додайте перше — воно одразу з'явиться на сайті.
+        </div>
+      ` : items.map((b, i) => `
+        <div draggable="true"
+          ondragstart="bannerDragStart(event,${b.id})"
+          ondragover="event.preventDefault()"
+          ondrop="bannerDrop(event,${b.id})"
+          style="display:flex;align-items:center;gap:12px;background:#0f0f0f;border:1px solid ${b.is_visible===false?'#2a2a2a':'#c9a84c33'};border-radius:12px;padding:10px;margin-bottom:10px;cursor:grab;opacity:${b.is_visible===false?0.5:1};">
+          <div style="color:#444;font-size:18px;flex-shrink:0;">☰</div>
+          <div style="width:80px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#1a1a1a;">
+            <img src="${b.image_url}" alt="" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="flex:1;min-width:0;">
+            <input type="text" value="${(b.title||'').replace(/"/g,'&quot;')}" placeholder="Заголовок (необов'язково)"
+              onchange="updateBannerField(${b.id},'title',this.value)"
+              style="width:100%;padding:6px 8px;border-radius:6px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:12px;margin-bottom:4px;box-sizing:border-box;">
+            <input type="text" value="${(b.subtitle||'').replace(/"/g,'&quot;')}" placeholder="Підпис (необов'язково)"
+              onchange="updateBannerField(${b.id},'subtitle',this.value)"
+              style="width:100%;padding:6px 8px;border-radius:6px;background:#1a1a1a;border:1px solid #2a2a2a;color:#999;font-size:11px;box-sizing:border-box;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+            <button onclick="toggleBannerVisible(${b.id})" title="${b.is_visible===false?'Показати':'Сховати'}"
+              style="background:${b.is_visible===false?'#2a2a2a':'#c9a84c22'};border:1px solid ${b.is_visible===false?'#333':'#c9a84c44'};color:${b.is_visible===false?'#666':'#c9a84c'};cursor:pointer;width:32px;height:28px;border-radius:6px;font-size:13px;">${b.is_visible===false?'🚫':'👁'}</button>
+            <button onclick="deleteBanner(${b.id})" title="Видалити"
+              style="background:#f4433622;border:1px solid #f4433644;color:#f44336;cursor:pointer;width:32px;height:28px;border-radius:6px;font-size:13px;">🗑</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+async function loadBanners() {
+  try {
+    const banners = await api("GET", "banners?select=*&order=sort_order");
+    state.banners = banners || [];
+    const settings = await api("GET", "settings?select=*&key=eq.banner_autoplay");
+    if (settings && settings[0]) state.bannerAutoplay = parseInt(settings[0].value) || 4;
+  } catch(e) {
+    console.error("Banner load error:", e);
+    showToast("Помилка завантаження банерів: " + e.message, "error");
+  }
+}
+
+const uploadBannerPhoto = async (file) => {
+  const ext = file.name.split(".").pop();
+  const path = `banners/${Date.now()}_${Math.random().toString(36).substr(2,5)}.${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/Photos/${path}`, {
+    method: "POST",
+    headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY, "Content-Type": file.type },
+    body: file
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error('Upload: ' + err); }
+  return `${SUPABASE_URL}/storage/v1/object/public/Photos/${path}`;
+};
+
+async function handleBannerUpload(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  showToast("Завантаження " + files.length + " фото...", "info");
+  try {
+    let order = (state.banners || []).length;
+    for (const file of files) {
+      const url = await uploadBannerPhoto(file);
+      const created = await api("POST", "banners", {
+        image_url: url, title: "", subtitle: "", sort_order: order++, is_visible: true
+      });
+      if (created && created[0]) state.banners.push(created[0]);
+    }
+    showToast("✅ Додано " + files.length + " фото", "success");
+    render();
+  } catch(e) {
+    showToast("Помилка: " + e.message, "error");
+  }
+}
+
+async function updateBannerField(id, field, value) {
+  try {
+    await api("PATCH", "banners?id=eq." + id, { [field]: value });
+    const b = state.banners.find(x => x.id === id);
+    if (b) b[field] = value;
+  } catch(e) { showToast("Помилка збереження: " + e.message, "error"); }
+}
+
+async function toggleBannerVisible(id) {
+  const b = state.banners.find(x => x.id === id);
+  if (!b) return;
+  const newVal = b.is_visible === false ? true : false;
+  try {
+    await api("PATCH", "banners?id=eq." + id, { is_visible: newVal });
+    b.is_visible = newVal;
+    render();
+  } catch(e) { showToast("Помилка: " + e.message, "error"); }
+}
+
+async function deleteBanner(id) {
+  if (!confirm("Видалити це фото з банера?")) return;
+  try {
+    await api("DELETE", "banners?id=eq." + id);
+    state.banners = state.banners.filter(x => x.id !== id);
+    showToast("Фото видалено", "success");
+    render();
+  } catch(e) { showToast("Помилка: " + e.message, "error"); }
+}
+
+async function saveBannerSettings() {
+  try {
+    await api("POST", "settings?on_conflict=key", { key: "banner_autoplay", value: String(state.bannerAutoplay) });
+    showToast("✅ Затримку збережено: " + state.bannerAutoplay + " сек", "success");
+  } catch(e) {
+    // fallback: try PATCH if row exists
+    try {
+      await api("PATCH", "settings?key=eq.banner_autoplay", { value: String(state.bannerAutoplay) });
+      showToast("✅ Затримку збережено", "success");
+    } catch(e2) { showToast("Помилка: " + e2.message, "error"); }
+  }
+}
+
+let bannerDragSrc = null;
+function bannerDragStart(e, id) { bannerDragSrc = id; e.dataTransfer.effectAllowed = "move"; }
+async function bannerDrop(e, targetId) {
+  e.preventDefault();
+  if (bannerDragSrc === null || bannerDragSrc === targetId) return;
+  const arr = state.banners.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const from = arr.findIndex(x => x.id === bannerDragSrc);
+  const to = arr.findIndex(x => x.id === targetId);
+  const [moved] = arr.splice(from, 1);
+  arr.splice(to, 0, moved);
+  arr.forEach((b, i) => b.sort_order = i);
+  state.banners = arr;
+  render();
+  try {
+    for (const b of arr) await api("PATCH", "banners?id=eq." + b.id, { sort_order: b.sort_order });
+  } catch(e) { showToast("Помилка порядку: " + e.message, "error"); }
+  bannerDragSrc = null;
 }
 
 function renderReports() {
@@ -1298,6 +1475,7 @@ async function loadData() {
     showToast('Помилка: ' + e.message, 'error');
   }
   state.loading = false;
+  await loadBanners();
   render();
 }
 
