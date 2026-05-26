@@ -1645,10 +1645,17 @@ function HeroBanner() {
 
   return (
     <div
+      className="hero-banner"
       style={{ position: "relative", width: "100%", height: "56vw", maxHeight: 440, minHeight: 200, overflow: "hidden", userSelect: "none", touchAction: "pan-y", background: "#0a0a0a" }}
       onMouseDown={onStart} onMouseMove={onMove} onMouseUp={onEnd} onMouseLeave={onEnd}
       onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd}
     >
+      <style>{`
+        @media (min-width: 769px) {
+          .hero-banner { height: auto !important; max-height: none !important; aspect-ratio: 21 / 7; }
+          .hero-banner .banner-img { object-fit: contain !important; }
+        }
+      `}</style>
       {slides.map((s, i) => {
         const offset = i - active;
         const x = offset * 100 + (active === i ? (offsetX / window.innerWidth) * 100 : 0);
@@ -1659,6 +1666,7 @@ function HeroBanner() {
             transition: transitioning && !dragging ? "transform 0.5s cubic-bezier(.16,1,.3,1)" : "none",
           }}>
             <img src={s.image_url} alt={s.title || "банер"} draggable={false}
+              className="banner-img"
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
             {(s.title || s.subtitle) && (
               <>
