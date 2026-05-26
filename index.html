@@ -2018,7 +2018,7 @@ function BannerGallery({ slides, startIndex, onClose, onIndexChange }) {
 
 function TileCatalog() {
   const { collections, pannos, loading } = useCollections();
-  const [activeFilter, setActiveFilter] = useState("Всі");
+  const [activeFilters, setActiveFilters] = useState([]);
   const [visualizing, setVisualizing] = useState(null);
   const [ordering, setOrdering] = useState(null);
   const [viewing3D, setViewing3D] = useState(null);
@@ -2048,9 +2048,19 @@ function TileCatalog() {
   const minPrice = Math.min(...allPrices);
   const maxPrice = Math.max(...allPrices);
 
+  // Перемикання тегу: "Всі" скидає вибір, інші додаються/знімаються
+  const toggleFilter = (f) => {
+    if (f === "Всі") { setActiveFilters([]); return; }
+    setActiveFilters(prev =>
+      prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]
+    );
+  };
+
   const filtered = allItems.filter(t => {
-    const matchFilter = activeFilter === "Всі" || 
-      (activeFilter === "Панно" ? t.isPanno : (t.tags || []).includes(activeFilter));
+    // Якщо нічого не вибрано — показуємо все
+    const matchFilter = activeFilters.length === 0 || activeFilters.every(f =>
+      f === "Панно" ? t.isPanno : (t.tags || []).includes(f)
+    );
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
       (t.subtitle || "").toLowerCase().includes(search.toLowerCase());
     const effectivePrice = (() => { const s = getSaleInfo(t); return s ? s.salePrice : t.price; })();
@@ -2126,10 +2136,22 @@ function TileCatalog() {
         </div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Пошук колекції..." style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "#111", border: "1px solid #1e1e1e", color: "#fff", fontSize: 13, outline: "none", marginBottom: 16 }} />
         <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-          {filters.map(f => (
-            <button key={f} onClick={() => setActiveFilter(f)} style={{ whiteSpace: "nowrap", padding: "7px 16px", borderRadius: 20, border: "1px solid", borderColor: activeFilter===f?"#c9a84c":"#1e1e1e", background: activeFilter===f?"#c9a84c":"transparent", color: activeFilter===f?"#000":"#555", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{f}</button>
-          ))}
+          {filters.map(f => {
+            const isAll = f === "Всі";
+            const on = isAll ? activeFilters.length === 0 : activeFilters.includes(f);
+            return (
+              <button key={f} onClick={() => toggleFilter(f)} style={{ whiteSpace: "nowrap", padding: "7px 16px", borderRadius: 20, border: "1px solid", borderColor: on ? "#c9a84c" : "#1e1e1e", background: on ? "#c9a84c" : "transparent", color: on ? "#000" : "#555", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                {!isAll && on ? "✓ " : ""}{f}
+              </button>
+            );
+          })}
         </div>
+        {activeFilters.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+            <span style={{ color: "#555", fontSize: 11 }}>Вибрано: {activeFilters.join(" + ")}</span>
+            <button onClick={() => setActiveFilters([])} style={{ background: "transparent", border: "1px solid #2a2a2a", color: "#777", cursor: "pointer", fontSize: 11, padding: "3px 10px", borderRadius: 12 }}>✕ Скинути</button>
+          </div>
+        )}
 
         {/* Фільтр за ціною */}
         <div style={{ marginTop: 16, background: "#111", borderRadius: 14, padding: "14px 16px", border: "1px solid #1a1a1a" }}>
