@@ -1652,11 +1652,19 @@ function HeroBanner() {
     >
       <style>{`
         @media (min-width: 769px) {
-          .hero-banner { height: auto !important; max-height: none !important; }
+          .hero-banner {
+            height: auto !important;
+            max-height: 360px !important;
+            max-width: 1000px !important;
+            margin: 16px auto 0 !important;
+            border-radius: 14px;
+            overflow: hidden;
+          }
           .hero-banner .banner-slide.active { position: relative !important; }
           .hero-banner .banner-slide.active .banner-img {
             position: relative !important;
             height: auto !important;
+            max-height: 360px !important;
             object-fit: contain !important;
           }
           .hero-banner .banner-slide:not(.active) { display: none !important; }
