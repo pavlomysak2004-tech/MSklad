@@ -2078,22 +2078,19 @@ function TileCatalog() {
       `}</style>
 
       {/* Header */}
-      <div style={{ borderBottom: "1px solid #141414", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#0a0a0aee", backdropFilter: "blur(20px)", zIndex: 100 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div>
-            <div style={{ color: "#555", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginBottom: 2 }}>Зв'яжіться з нами</div>
-            <a href="tel:+380979000398" style={{ textDecoration: "none" }}>
-              <div style={{ color: "#c9a84c", fontSize: 22, fontWeight: 900, letterSpacing: 1 }}>📞 097 900 03 98</div>
-            </a>
-          </div>
-          {/* Синя кнопка чату поруч з номером */}
+      <div style={{ borderBottom: "1px solid #141414", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#0a0a0aee", backdropFilter: "blur(20px)", zIndex: 100 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <a href="tel:+380979000398" style={{ textDecoration: "none" }}>
+            <div style={{ color: "#c9a84c", fontSize: 18, fontWeight: 900, letterSpacing: 1, whiteSpace: "nowrap" }}>097 900 03 98</div>
+          </a>
+          {/* Кнопка чату */}
           <button onClick={() => window.__openChat && window.__openChat()} style={{
-            width: 44, height: 44, borderRadius: "50%",
+            width: 38, height: 38, borderRadius: "50%",
             background: "linear-gradient(135deg, #229ED9, #1a7fb5)",
             border: "none", cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(34,158,217,0.45)",
+            boxShadow: "0 4px 14px rgba(34,158,217,0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 20, flexShrink: 0,
+            fontSize: 18, flexShrink: 0,
           }}>💬</button>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
