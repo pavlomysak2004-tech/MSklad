@@ -326,13 +326,43 @@ function renderCollections(isPanno) {
 function renderCollectionRow(item) {
   const photos = item.photos || [];
   const thumb = photos[0]?.url || "";
+  const price = item.price_uah || 0;
+
+  // Акційна ціна: явна sale_price АБО розрахунок зі знижки sale_percent
+  let salePrice = 0;
+  if (item.sale_price > 0) salePrice = item.sale_price;
+  else if (item.sale_percent > 0 && price > 0) salePrice = Math.round(price * (1 - item.sale_percent / 100));
+  const hasSale = salePrice > 0 && salePrice < price;
+  const percent = item.sale_percent > 0 ? item.sale_percent : (hasSale ? Math.round((1 - salePrice / price) * 100) : 0);
+
+  // Блок ціни
+  let priceHtml;
+  if (hasSale) {
+    priceHtml = `
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px;">
+        <span style="color:#777;font-size:11px;text-decoration:line-through;">${price.toLocaleString()} грн</span>
+        <span style="color:#f44336;font-size:13px;font-weight:800;">${salePrice.toLocaleString()} грн</span>
+        ${percent > 0 ? `<span style="background:#f4433622;color:#f44336;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;border:1px solid #f4433644;">🔥 -${percent}%</span>` : ''}
+      </div>`;
+  } else {
+    priceHtml = `<div style="color:#c9a84c;font-size:12px;font-weight:700;margin-top:2px;">${price ? price.toLocaleString() + " грн" : "—"}</div>`;
+  }
+
+  // Теги під ціною
+  const tags = item.tags || [];
+  const tagsHtml = tags.length > 0 ? `
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+      ${tags.map(tag => `<span style="background:#c9a84c1a;color:#c9a84c;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;border:1px solid #c9a84c33;">${tag}</span>`).join('')}
+    </div>` : '';
+
   return `
     <div class="collection-row">
       ${thumb ? `<img class="collection-thumb" src="${thumb}" onerror="this.style.display='none'">` : `<div class="collection-thumb" style="display:flex;align-items:center;justify-content:center;color:#333;font-size:20px;">📷</div>`}
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
         <div style="color:#555;font-size:11px;margin-top:2px;">${item.size || "—"} · ${item.article || ""}</div>
-        <div style="color:#c9a84c;font-size:12px;font-weight:700;margin-top:2px;">${item.price_uah ? item.price_uah.toLocaleString() + " грн" : "—"}</div>
+        ${priceHtml}
+        ${tagsHtml}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
         <label class="switch" title="${item.is_visible ? 'Видимий' : 'Прихований'}">
