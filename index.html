@@ -2079,9 +2079,17 @@ function TileCatalog() {
 
       {/* Header */}
       <div style={{ borderBottom: "1px solid #141414", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#0a0a0aee", backdropFilter: "blur(20px)", zIndex: 100 }}>
+        <style>{`
+          @keyframes phonePulse {
+            0%   { color: #c9a84c; text-shadow: 0 0 0px rgba(201,168,76,0); }
+            50%  { color: #FFE066; text-shadow: 0 0 12px rgba(255,224,102,0.8), 0 0 24px rgba(201,168,76,0.4); }
+            100% { color: #c9a84c; text-shadow: 0 0 0px rgba(201,168,76,0); }
+          }
+          .phone-blink { animation: phonePulse 2s ease-in-out infinite; }
+        `}</style>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <a href="tel:+380979000398" style={{ textDecoration: "none" }}>
-            <div style={{ color: "#c9a84c", fontSize: 18, fontWeight: 900, letterSpacing: 1, whiteSpace: "nowrap" }}>097 900 03 98</div>
+            <div className="phone-blink" style={{ fontSize: 18, fontWeight: 900, letterSpacing: 1, whiteSpace: "nowrap" }}>097 900 03 98</div>
           </a>
           {/* Кнопка чату */}
           <button onClick={() => window.__openChat && window.__openChat()} style={{
