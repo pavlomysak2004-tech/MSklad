@@ -1652,14 +1652,13 @@ function HeroBanner() {
     >
       <style>{`
         @media (min-width: 769px) {
-          .hero-banner { height: auto !important; max-height: none !important; }
-          .hero-banner .banner-slide.active { position: relative !important; }
-          .hero-banner .banner-slide.active .banner-img {
-            position: relative !important;
+          .hero-banner {
             height: auto !important;
-            object-fit: contain !important;
+            max-height: 50vh !important;
+            aspect-ratio: 24 / 7;
+            background: #0a0a0a;
           }
-          .hero-banner .banner-slide:not(.active) { display: none !important; }
+          .hero-banner .banner-img { object-fit: contain !important; }
         }
       `}</style>
       {slides.map((s, i) => {
