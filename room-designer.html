@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Візуалізатор плитки — MS Ceramica</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0a0a;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+  user-select: none;
+}
+
+/* Header */
+header {
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid #1a1a1a;
+  position: sticky; top: 0; background: #0a0a0aee;
+  backdrop-filter: blur(20px); z-index: 100;
+}
+.back { background: none; border: 1px solid #2a2a2a; color: #c9a84c; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-block; }
+.back:hover { background: #1a1a1a; }
+.logo { font-size: 16px; font-weight: 800; color: #c9a84c; letter-spacing: 2px; }
+.help-btn { background: none; border: none; color: #555; font-size: 22px; cursor: pointer; }
+
+/* Layout */
+.app {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 0;
+  height: calc(100vh - 65px);
+}
+.canvas-area {
+  position: relative;
+  background: #050505;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sidebar {
+  background: #0d0d0d;
+  border-left: 1px solid #1a1a1a;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .sidebar { border-left: none; border-top: 1px solid #1a1a1a; max-height: 45vh; }
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+.empty-state h2 { font-size: 22px; margin-bottom: 12px; }
+.empty-state p { color: #777; font-size: 14px; line-height: 1.6; margin-bottom: 24px; max-width: 380px; margin-left: auto; margin-right: auto; }
+.upload-btn {
+  background: linear-gradient(135deg, #c9a84c, #b8860b);
+  color: #000;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 6px 20px rgba(201,168,76,0.3);
+}
+.upload-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,168,76,0.4); }
+
+/* Canvas */
+#workspace {
+  position: relative;
+  max-width: 100%; max-height: 100%;
+}
+#photo { display: block; max-width: 100%; max-height: 100%; }
+#mask-canvas, #overlay-canvas {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  touch-action: none;
+}
+#mask-canvas { pointer-events: auto; cursor: crosshair; }
+#overlay-canvas { pointer-events: none; }
+
+/* Sidebar sections */
+.section { margin-bottom: 18px; }
+.section-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* Tool buttons */
+.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tool {
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.tool.active {
+  background: #c9a84c22;
+  border-color: #c9a84c;
+  color: #c9a84c;
+}
+.tool:hover { background: #1f1f1f; }
+
+/* Brush size */
+.range-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+}
+input[type=range] {
+  flex: 1; accent-color: #c9a84c; cursor: pointer;
+}
+.range-val { color: #c9a84c; font-weight: 700; font-size: 13px; min-width: 36px; text-align: right; }
+
+/* Action buttons */
+.actions { display: flex; gap: 6px; margin-top: 8px; }
+.btn-sm {
+  flex: 1;
+  padding: 8px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-sm:hover { background: #1f1f1f; color: #fff; }
+.btn-red { color: #f44336; border-color: #f4433633; }
+.btn-red:hover { background: #f4433611; }
+
+/* Tile picker */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.tile-card {
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  position: relative;
+  aspect-ratio: 1;
+  background: #1a1a1a;
+}
+.tile-card.selected { border-color: #c9a84c; }
+.tile-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tile-card .label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  padding: 4px 6px; font-size: 9px; line-height: 1.1;
+  color: #fff; font-weight: 600;
+}
+.loading { color: #555; font-size: 13px; padding: 12px; text-align: center; }
+
+/* Save/done buttons */
+.bottom-actions {
+  margin-top: 20px;
+  display: flex; flex-direction: column; gap: 8px;
+  padding-top: 16px; border-top: 1px solid #1a1a1a;
+}
+.btn-gold {
+  padding: 12px;
+  background: linear-gradient(135deg, #c9a84c, #b8860b);
+  color: #000; border: none; border-radius: 10px;
+  font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.btn-dark {
+  padding: 12px;
+  background: #1a1a1a; color: #aaa;
+  border: 1px solid #2a2a2a; border-radius: 10px;
+  font-size: 13px; cursor: pointer;
+}
+
+/* Help modal */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 2000;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal.show { display: flex; }
+.modal-box {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 16px; padding: 24px;
+  max-width: 420px; width: 100%;
+}
+.modal-box h3 { font-size: 18px; margin-bottom: 14px; color: #c9a84c; }
+.modal-box ol { padding-left: 22px; font-size: 14px; line-height: 1.8; color: #ccc; }
+.modal-box ol li { margin-bottom: 6px; }
+.modal-box .close-btn { width: 100%; margin-top: 18px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #1a1a1a; border: 1px solid #c9a84c44;
+  color: #c9a84c; padding: 12px 20px; border-radius: 10px;
+  font-size: 13px; z-index: 3000;
+  transition: transform 0.3s;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="back">← Назад</a>
+  <span class="logo">ВІЗУАЛІЗАТОР</span>
+  <button class="help-btn" onclick="showHelp()" title="Як користуватись">?</button>
+</header>
+
+<div class="app">
+  <!-- Canvas -->
+  <div class="canvas-area">
+    <div id="empty-state" class="empty-state">
+      <h2>Приміряйте плитку у вашій кімнаті</h2>
+      <p>Завантажте фото своєї кімнати без ремонту, виділіть стіну або підлогу і побачте як виглядатиме плитка з нашого каталогу</p>
+      <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+        📷 Завантажити фото
+      </button>
+      <input type="file" id="file-input" accept="image/*" style="display:none" onchange="loadPhoto(this.files[0])">
+    </div>
+
+    <div id="workspace" style="display:none">
+      <img id="photo" alt="Фото кімнати">
+      <canvas id="overlay-canvas"></canvas>
+      <canvas id="mask-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar" style="display:none">
+
+    <div class="section">
+      <div class="section-title">1. Виберіть зону</div>
+      <div class="tools">
+        <div class="tool active" data-zone="wall" onclick="selectZone('wall')">🧱 Стіна</div>
+        <div class="tool" data-zone="floor" onclick="selectZone('floor')">⬜ Підлога</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2. Виділіть область</div>
+      <div class="range-row">
+        <span style="color:#777;font-size:12px;">Пензель</span>
+        <input type="range" id="brush-size" min="10" max="100" value="40" oninput="document.getElementById('brush-val').textContent=this.value+'px'">
+        <span class="range-val" id="brush-val">40px</span>
+      </div>
+      <div class="actions">
+        <button class="btn-sm" onclick="setTool('paint')" id="btn-paint">🖌 Малювати</button>
+        <button class="btn-sm" onclick="setTool('erase')" id="btn-erase">🧹 Стерти</button>
+        <button class="btn-sm btn-red" onclick="clearMask()">🗑 Очистити</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3. Виберіть плитку</div>
+      <div id="tile-grid" class="tile-grid">
+        <div class="loading">Завантаження...</div>
+      </div>
+    </div>
+
+    <div class="bottom-actions">
+      <button class="btn-gold" onclick="saveResult()">💾 Зберегти результат</button>
+      <button class="btn-dark" onclick="resetAll()">↻ Почати спочатку</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div class="modal" id="help-modal" onclick="if(event.target===this) closeHelp()">
+  <div class="modal-box">
+    <h3>Як користуватись візуалізатором</h3>
+    <ol>
+      <li><b>Завантажте фото</b> своєї кімнати (бажано без меблів)</li>
+      <li>Виберіть зону: <b>Стіна</b> або <b>Підлога</b></li>
+      <li>Виберіть інструмент <b>Малювати</b> і виділіть пензлем потрібну область прямо на фото</li>
+      <li>Натисніть на потрібну плитку з каталогу — вона з'явиться в виділеній області</li>
+      <li>Можна перемкнутись на іншу зону і повторити</li>
+      <li>Натисніть <b>Зберегти результат</b> щоб скачати фото з накладеною плиткою</li>
+    </ol>
+    <button class="btn-gold close-btn" onclick="closeHelp()">Зрозуміло</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// === Supabase ===
+const SUPA_URL = "https://svbmamaqrtsknuztxiuq.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+
+// === State ===
+let currentZone = "wall"; // wall | floor
+let currentTool = "paint"; // paint | erase
+const masks = { wall: null, floor: null }; // off-screen canvases per zone
+const tiles = { wall: null, floor: null }; // selected tile image per zone
+let photoImg = null;
+let photo, overlayCanvas, maskCanvas, octx, mctx;
+let allTiles = [];
+let drawing = false;
+
+// === Load photo ===
+function loadPhoto(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('workspace').style.display = 'block';
+    document.getElementById('sidebar').style.display = 'block';
+    photo = document.getElementById('photo');
+    photo.onload = setupCanvases;
+    photo.src = e.target.result;
+    loadTiles();
+  };
+  reader.readAsDataURL(file);
+}
+
+function setupCanvases() {
+  const w = photo.naturalWidth, h = photo.naturalHeight;
+  overlayCanvas = document.getElementById('overlay-canvas');
+  maskCanvas = document.getElementById('mask-canvas');
+  overlayCanvas.width = w; overlayCanvas.height = h;
+  maskCanvas.width = w; maskCanvas.height = h;
+  octx = overlayCanvas.getContext('2d');
+  mctx = maskCanvas.getContext('2d');
+
+  // Init masks
+  masks.wall = document.createElement('canvas');
+  masks.wall.width = w; masks.wall.height = h;
+  masks.floor = document.createElement('canvas');
+  masks.floor.width = w; masks.floor.height = h;
+
+  attachDrawing();
+  redrawMask();
+  setTool('paint');
+}
+
+// === Zone & Tool ===
+function selectZone(zone) {
+  currentZone = zone;
+  document.querySelectorAll('.tool[data-zone]').forEach(t =>
+    t.classList.toggle('active', t.dataset.zone === zone)
+  );
+  redrawMask();
+  document.querySelectorAll('.tile-card').forEach(c =>
+    c.classList.toggle('selected', tiles[zone] && c.dataset.url === tiles[zone].url)
+  );
+}
+
+function setTool(tool) {
+  currentTool = tool;
+  document.getElementById('btn-paint').style.background = tool === 'paint' ? '#c9a84c22' : '#1a1a1a';
+  document.getElementById('btn-paint').style.color = tool === 'paint' ? '#c9a84c' : '#aaa';
+  document.getElementById('btn-paint').style.borderColor = tool === 'paint' ? '#c9a84c' : '#2a2a2a';
+  document.getElementById('btn-erase').style.background = tool === 'erase' ? '#c9a84c22' : '#1a1a1a';
+  document.getElementById('btn-erase').style.color = tool === 'erase' ? '#c9a84c' : '#aaa';
+  document.getElementById('btn-erase').style.borderColor = tool === 'erase' ? '#c9a84c' : '#2a2a2a';
+}
+
+function clearMask() {
+  const mc = masks[currentZone];
+  mc.getContext('2d').clearRect(0, 0, mc.width, mc.height);
+  redrawMask();
+  redrawOverlay();
+}
+
+// === Drawing on mask ===
+function attachDrawing() {
+  const getPoint = (e) => {
+    const rect = maskCanvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return { x: x * (maskCanvas.width / rect.width), y: y * (maskCanvas.height / rect.height) };
+  };
+
+  const start = (e) => { drawing = true; draw(e); e.preventDefault(); };
+  const move = (e) => { if (drawing) draw(e); };
+  const end = () => { drawing = false; redrawOverlay(); };
+
+  maskCanvas.addEventListener('mousedown', start);
+  maskCanvas.addEventListener('mousemove', move);
+  maskCanvas.addEventListener('mouseup', end);
+  maskCanvas.addEventListener('mouseleave', end);
+  maskCanvas.addEventListener('touchstart', start);
+  maskCanvas.addEventListener('touchmove', move);
+  maskCanvas.addEventListener('touchend', end);
+
+  function draw(e) {
+    const p = getPoint(e);
+    const size = parseInt(document.getElementById('brush-size').value);
+    const realSize = size * (maskCanvas.width / maskCanvas.getBoundingClientRect().width);
+    const ctx = masks[currentZone].getContext('2d');
+    ctx.globalCompositeOperation = currentTool === 'erase' ? 'destination-out' : 'source-over';
+    ctx.fillStyle = currentZone === 'wall' ? 'rgba(255,80,80,1)' : 'rgba(80,180,255,1)';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, realSize, 0, Math.PI * 2);
+    ctx.fill();
+    redrawMask();
+  }
+}
+
+function redrawMask() {
+  mctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+  // Show current zone mask with translucency
+  mctx.globalAlpha = 0.35;
+  mctx.drawImage(masks[currentZone], 0, 0);
+  mctx.globalAlpha = 1;
+}
+
+// === Overlay tile pattern inside masks ===
+function redrawOverlay() {
+  octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+  // For each zone with a selected tile, fill its mask
+  ['wall', 'floor'].forEach(zone => {
+    if (!tiles[zone] || !masks[zone]) return;
+    const tileImg = tiles[zone].img;
+    if (!tileImg.complete) return;
+
+    // Create pattern
+    const tileCanvas = document.createElement('canvas');
+    const tileSize = zone === 'wall' ? 220 : 280;
+    tileCanvas.width = tileSize; tileCanvas.height = tileSize;
+    tileCanvas.getContext('2d').drawImage(tileImg, 0, 0, tileSize, tileSize);
+    const pattern = octx.createPattern(tileCanvas, 'repeat');
+
+    // Draw pattern only inside mask area
+    octx.save();
+    octx.globalCompositeOperation = 'source-over';
+
+    // Use mask as clipping
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = overlayCanvas.width;
+    tempCanvas.height = overlayCanvas.height;
+    const tctx = tempCanvas.getContext('2d');
+
+    // Fill with tile pattern
+    tctx.fillStyle = pattern;
+    tctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    // Apply mask
+    tctx.globalCompositeOperation = 'destination-in';
+    tctx.drawImage(masks[zone], 0, 0);
+
+    // Draw the masked tile pattern with multiply for realism
+    octx.globalAlpha = 0.85;
+    octx.drawImage(tempCanvas, 0, 0);
+    octx.globalAlpha = 1;
+    octx.restore();
+  });
+}
+
+// === Load tiles from Supabase ===
+async function loadTiles() {
+  try {
+    const res = await fetch(
+      SUPA_URL + "/rest/v1/collections?is_visible=eq.true&is_panno=eq.false&select=id,name,article,size,price_uah,collection_photos(url,sort_order)",
+      { headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY } }
+    );
+    const data = await res.json();
+    allTiles = (data || []).filter(t => t.collection_photos && t.collection_photos.length);
+    renderTileGrid();
+  } catch(e) {
+    document.getElementById('tile-grid').innerHTML = '<div class="loading">Помилка завантаження</div>';
+    console.error(e);
+  }
+}
+
+function renderTileGrid() {
+  const grid = document.getElementById('tile-grid');
+  if (!allTiles.length) {
+    grid.innerHTML = '<div class="loading">Немає плитки</div>';
+    return;
+  }
+  grid.innerHTML = allTiles.map(t => {
+    const photos = (t.collection_photos || []).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    const url = photos[0]?.url;
+    if (!url) return '';
+    return `<div class="tile-card" data-url="${url}" onclick="selectTile('${url}', '${(t.name||'').replace(/'/g,"\\'")}', ${t.price_uah || 0})">
+      <img src="${url}" loading="lazy">
+      <div class="label">${t.name || ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectTile(url, name, price) {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    tiles[currentZone] = { url, name, price, img };
+    redrawOverlay();
+    document.querySelectorAll('.tile-card').forEach(c =>
+      c.classList.toggle('selected', c.dataset.url === url)
+    );
+    toast(`✓ ${currentZone === 'wall' ? 'Стіна' : 'Підлога'}: ${name}`);
+  };
+  img.onerror = () => toast('Не вдалось завантажити плитку');
+  img.src = url;
+}
+
+// === Save ===
+function saveResult() {
+  const out = document.createElement('canvas');
+  out.width = photo.naturalWidth;
+  out.height = photo.naturalHeight;
+  const ctx = out.getContext('2d');
+  ctx.drawImage(photo, 0, 0);
+  ctx.drawImage(overlayCanvas, 0, 0);
+
+  out.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'my-room-' + Date.now() + '.png';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('✓ Фото збережено!');
+  });
+}
+
+function resetAll() {
+  if (!confirm('Почати спочатку? Поточний дизайн буде втрачено.')) return;
+  document.getElementById('empty-state').style.display = 'block';
+  document.getElementById('workspace').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'none';
+  tiles.wall = null; tiles.floor = null;
+  if (masks.wall) masks.wall.getContext('2d').clearRect(0,0,masks.wall.width,masks.wall.height);
+  if (masks.floor) masks.floor.getContext('2d').clearRect(0,0,masks.floor.width,masks.floor.height);
+}
+
+// === Help & Toast ===
+function showHelp() { document.getElementById('help-modal').classList.add('show'); }
+function closeHelp() { document.getElementById('help-modal').classList.remove('show'); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Show help first time
+if (!localStorage.getItem('room_help_seen')) {
+  setTimeout(showHelp, 800);
+  localStorage.setItem('room_help_seen', '1');
+}
+</script>
+</body>
+</html>
