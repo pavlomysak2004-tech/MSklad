@@ -115,7 +115,7 @@ const api = async (method, path, body) => {
       "apikey": SUPABASE_KEY,
       "Authorization": "Bearer " + SUPABASE_KEY,
       "Content-Type": "application/json",
-      "Prefer": method === "POST" ? "return=representation" : ""
+      "Prefer": (method === "POST" || method === "PATCH") ? "return=representation" : ""
     },
     body: body ? JSON.stringify(body) : undefined
   });
@@ -1797,6 +1797,7 @@ async function saveItem() {
       await api("PATCH", `collections?id=eq.${item.id}`, data);
     } else {
       const result = await api("POST", "collections", data);
+      if (!result || result.length === 0) throw new Error("Товар не створено — перевірте RLS політики в Supabase (collections: insert)");
       collectionId = result[0].id;
     }
 
