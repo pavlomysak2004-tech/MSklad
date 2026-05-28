@@ -65,6 +65,7 @@ const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 
 function LiveChat() {
   const [open, setOpen] = useState(false);
+  React.useEffect(() => { window.__openChat = () => setOpen(true); }, []);
   const [messages, setMessages] = useState([
     { id: 1, from: "bot", text: "Привіт! 👋 Я менеджер #МитнийSklad. Задайте будь-яке питання про плитку!", time: new Date().toLocaleTimeString("uk", {hour:"2-digit",minute:"2-digit"}) }
   ]);
@@ -131,16 +132,6 @@ function LiveChat() {
 
   return (
     <>
-      <button onClick={() => setOpen(o => !o)} style={{
-        position: "fixed", bottom: 90, right: 20, zIndex: 600,
-        width: 52, height: 52, borderRadius: "50%",
-        background: "linear-gradient(135deg, #229ED9, #1a7fb5)",
-        border: "none", cursor: "pointer",
-        boxShadow: "0 4px 20px rgba(34,158,217,0.5)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 24,
-      }}>💬</button>
-
       {open && (
         <>
           <div onClick={() => setOpen(false)} style={{
@@ -2086,12 +2077,27 @@ function TileCatalog() {
       `}</style>
 
       {/* Header */}
-      <div style={{ borderBottom: "1px solid #141414", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#0a0a0aee", backdropFilter: "blur(20px)", zIndex: 100 }}>
-        <div>
-          <div style={{ color: "#555", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginBottom: 2 }}>Зв'яжіться з нами</div>
+      <div style={{ borderBottom: "1px solid #141414", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#0a0a0aee", backdropFilter: "blur(20px)", zIndex: 100 }}>
+        <style>{`
+          @keyframes phonePulse {
+            0%   { color: #c9a84c; text-shadow: 0 0 0px rgba(201,168,76,0); }
+            50%  { color: #FFE066; text-shadow: 0 0 12px rgba(255,224,102,0.8), 0 0 24px rgba(201,168,76,0.4); }
+            100% { color: #c9a84c; text-shadow: 0 0 0px rgba(201,168,76,0); }
+          }
+          .phone-blink { animation: phonePulse 2s ease-in-out infinite; }
+        `}</style>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <a href="tel:+380979000398" style={{ textDecoration: "none" }}>
-            <div style={{ color: "#c9a84c", fontSize: 22, fontWeight: 900, letterSpacing: 1 }}>📞 097 900 03 98</div>
+            <div className="phone-blink" style={{ fontSize: 18, fontWeight: 900, letterSpacing: 1, whiteSpace: "nowrap" }}>097 900 03 98</div>
           </a>
+          <button onClick={() => window.__openChat && window.__openChat()} style={{
+            width: 38, height: 38, borderRadius: "50%",
+            background: "linear-gradient(135deg, #229ED9, #1a7fb5)",
+            border: "none", cursor: "pointer",
+            boxShadow: "0 4px 14px rgba(34,158,217,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 18, flexShrink: 0,
+          }}>💬</button>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => setWarehouseMode(v => !v)} style={{
@@ -2102,14 +2108,6 @@ function TileCatalog() {
             cursor: "pointer", fontSize: 11, fontWeight: 700,
           }}>
             {warehouseMode ? "📦 Склад" : "👁 Повний"}
-          </button>
-          <button onClick={() => window.location.href = "room-designer.html"} style={{
-            padding: "7px 14px", borderRadius: 20, border: "1px solid #c9a84c",
-            background: "linear-gradient(135deg, #c9a84c22, #b8860b22)",
-            color: "#c9a84c", cursor: "pointer", fontSize: 11, fontWeight: 700,
-            display: "flex", alignItems: "center", gap: 5,
-          }} title="Візуалізатор плитки">
-            🪞 Візуалізатор
           </button>
           <button onClick={() => window.location.href = "admin.html"} style={{
             width: 32, height: 32, borderRadius: "50%", border: "1px solid #2a2a2a",
