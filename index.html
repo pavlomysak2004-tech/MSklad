@@ -1504,7 +1504,7 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, wareh
       </div>
       <div style={{ padding: "16px 18px 18px" }}>
         <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{!warehouseMode && tile.subtitle}</div>
-        {!warehouseMode && <div style={{ color: "#fff", fontSize: 19, fontFamily: "serif", fontWeight: 700, marginBottom: 8 }}>{tile.name}</div>}
+        {!warehouseMode && <div onClick={() => { if (onView3D) onView3D(tile); }} style={{ color: "#fff", fontSize: 19, fontFamily: "serif", fontWeight: 700, marginBottom: 8, cursor: "pointer" }}>{tile.name}</div>}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
           {tile.size ? <div style={{ color: "#555", fontSize: 11 }}>📐 {tile.size}</div> : null}
           {(tile.finishTags || []).map(f => (
