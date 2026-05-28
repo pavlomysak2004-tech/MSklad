@@ -4,228 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Візуалізатор плитки — MS Ceramica</title>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: #0a0a0a;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  min-height: 100vh;
-  user-select: none;
-}
+body { background:#0a0a0a; color:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; min-height:100vh; user-select:none; }
+header { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1a1a1a; position:sticky; top:0; background:#0a0a0aee; backdrop-filter:blur(20px); z-index:100; }
+.back { background:none; border:1px solid #2a2a2a; color:#c9a84c; padding:8px 14px; border-radius:8px; font-size:13px; cursor:pointer; text-decoration:none; }
+.back:hover { background:#1a1a1a; }
+.logo { font-size:16px; font-weight:800; color:#c9a84c; letter-spacing:2px; }
+.help-btn { background:none; border:none; color:#555; font-size:22px; cursor:pointer; }
 
-/* Header */
-header {
-  padding: 16px 20px;
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid #1a1a1a;
-  position: sticky; top: 0; background: #0a0a0aee;
-  backdrop-filter: blur(20px); z-index: 100;
-}
-.back { background: none; border: 1px solid #2a2a2a; color: #c9a84c; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-block; }
-.back:hover { background: #1a1a1a; }
-.logo { font-size: 16px; font-weight: 800; color: #c9a84c; letter-spacing: 2px; }
-.help-btn { background: none; border: none; color: #555; font-size: 22px; cursor: pointer; }
+.start-screen { min-height: calc(100vh - 65px); display: flex; align-items: center; justify-content: center; padding: 30px 20px; }
+.start-inner { max-width: 1000px; width: 100%; text-align: center; }
+.start-inner h1 { font-size: clamp(24px, 4vw, 36px); margin-bottom: 14px; background: linear-gradient(135deg, #c9a84c, #ffe066, #b8860b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.start-inner p { color: #888; font-size: 15px; line-height: 1.6; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+.choice-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; text-align: left; }
+.choice-card { background: linear-gradient(180deg, #131313, #0d0d0d); border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px 24px; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+.choice-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #c9a84c, transparent); opacity: 0; transition: opacity 0.3s; }
+.choice-card:hover { border-color: #c9a84c; transform: translateY(-4px); }
+.choice-card:hover::before { opacity: 1; }
+.choice-card .icon { font-size: 40px; margin-bottom: 14px; }
+.choice-card h3 { font-size: 17px; margin-bottom: 8px; color: #fff; }
+.choice-card p { font-size: 13px; color: #888; line-height: 1.5; margin: 0; }
+.choice-card .badge { position: absolute; top: 12px; right: 12px; background: #c9a84c; color: #000; padding: 3px 9px; border-radius: 10px; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
 
-/* Layout */
-.app {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 0;
-  height: calc(100vh - 65px);
-}
-.canvas-area {
-  position: relative;
-  background: #050505;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.sidebar {
-  background: #0d0d0d;
-  border-left: 1px solid #1a1a1a;
-  overflow-y: auto;
-  padding: 16px;
-}
-
+.app { display: grid; grid-template-columns: 1fr 340px; height: calc(100vh - 65px); }
+.canvas-area { position: relative; background: #050505; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.sidebar { background: #0d0d0d; border-left: 1px solid #1a1a1a; overflow-y: auto; padding: 16px; }
 @media (max-width: 768px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-  .sidebar { border-left: none; border-top: 1px solid #1a1a1a; max-height: 45vh; }
+  .sidebar { border-left: none; border-top: 1px solid #1a1a1a; max-height: 50vh; }
 }
 
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-}
-.empty-state h2 { font-size: 22px; margin-bottom: 12px; }
-.empty-state p { color: #777; font-size: 14px; line-height: 1.6; margin-bottom: 24px; max-width: 380px; margin-left: auto; margin-right: auto; }
-.upload-btn {
-  background: linear-gradient(135deg, #c9a84c, #b8860b);
-  color: #000;
-  padding: 14px 32px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 6px 20px rgba(201,168,76,0.3);
-}
-.upload-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,168,76,0.4); }
+.section { margin-bottom: 18px; }
+.section-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #777; margin-bottom: 10px; font-weight: 600; }
 
-/* Canvas */
-#workspace {
-  position: relative;
-  max-width: 100%; max-height: 100%;
-}
-#photo { display: block; max-width: 100%; max-height: 100%; }
-#mask-canvas, #overlay-canvas {
-  position: absolute; top: 0; left: 0;
-  width: 100%; height: 100%;
-  touch-action: none;
-}
+.dim-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.dim-field { display: flex; flex-direction: column; gap: 4px; }
+.dim-field label { font-size: 11px; color: #888; }
+.dim-field input { background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; width: 100%; }
+.dim-field input:focus { border-color: #c9a84c; }
+
+.surface-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.surface-tab { padding: 10px 12px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; color: #aaa; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; }
+.surface-tab.active { background: #c9a84c22; border-color: #c9a84c; color: #c9a84c; }
+
+.tile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; max-height: 240px; overflow-y: auto; }
+.tile-card { cursor: pointer; border-radius: 8px; overflow: hidden; border: 2px solid transparent; position: relative; aspect-ratio: 1; background: #1a1a1a; }
+.tile-card.selected { border-color: #c9a84c; }
+.tile-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tile-card .label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.85)); padding: 4px 6px; font-size: 9px; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.loading { color: #555; font-size: 13px; padding: 12px; text-align: center; grid-column: 1/-1; }
+
+.calc-box { background: linear-gradient(180deg, #1a1612, #14110d); border: 1px solid #c9a84c44; border-radius: 12px; padding: 14px; }
+.calc-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+.calc-row + .calc-row { border-top: 1px solid #2a2a2a33; }
+.calc-row .lbl { color: #999; }
+.calc-row .val { color: #fff; font-weight: 700; }
+.calc-row.total .lbl { color: #c9a84c; }
+.calc-row.total .val { color: #c9a84c; font-size: 16px; }
+
+.bottom-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid #1a1a1a; }
+.btn-gold { padding: 12px; background: linear-gradient(135deg, #c9a84c, #b8860b); color: #000; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn-dark { padding: 12px; background: #1a1a1a; color: #aaa; border: 1px solid #2a2a2a; border-radius: 10px; font-size: 13px; cursor: pointer; }
+.btn-dark:hover { background: #1f1f1f; color: #fff; }
+
+#three-canvas { width: 100%; height: 100%; display: block; }
+
+#photo-workspace { position: relative; max-width: 100%; max-height: 100%; }
+#photo-img { display: block; max-width: 100%; max-height: 100%; }
+#mask-canvas, #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; }
 #mask-canvas { pointer-events: auto; cursor: crosshair; }
 #overlay-canvas { pointer-events: none; }
 
-/* Sidebar sections */
-.section { margin-bottom: 18px; }
-.section-title {
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #777;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-/* Tool buttons */
-.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.tool {
-  padding: 10px 12px;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  color: #aaa;
-  cursor: pointer;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-weight: 600;
-}
-.tool.active {
-  background: #c9a84c22;
-  border-color: #c9a84c;
-  color: #c9a84c;
-}
-.tool:hover { background: #1f1f1f; }
-
-/* Brush size */
-.range-row {
-  display: flex; align-items: center; gap: 10px; padding: 8px 0;
-}
-input[type=range] {
-  flex: 1; accent-color: #c9a84c; cursor: pointer;
-}
+.range-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+input[type=range] { flex: 1; accent-color: #c9a84c; cursor: pointer; }
 .range-val { color: #c9a84c; font-weight: 700; font-size: 13px; min-width: 36px; text-align: right; }
 
-/* Action buttons */
 .actions { display: flex; gap: 6px; margin-top: 8px; }
-.btn-sm {
-  flex: 1;
-  padding: 8px;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  color: #aaa;
-  cursor: pointer;
-  font-size: 12px;
-}
-.btn-sm:hover { background: #1f1f1f; color: #fff; }
-.btn-red { color: #f44336; border-color: #f4433633; }
-.btn-red:hover { background: #f4433611; }
+.btn-sm { flex: 1; padding: 8px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; color: #aaa; cursor: pointer; font-size: 12px; }
+.btn-sm.active { background: #c9a84c22; border-color: #c9a84c; color: #c9a84c; }
+.btn-sm.red { color: #f44336; border-color: #f4433633; }
 
-/* Tile picker */
-.tile-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-top: 10px;
-  max-height: 280px;
-  overflow-y: auto;
-}
-.tile-card {
-  cursor: pointer;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  position: relative;
-  aspect-ratio: 1;
-  background: #1a1a1a;
-}
-.tile-card.selected { border-color: #c9a84c; }
-.tile-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tile-card .label {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
-  padding: 4px 6px; font-size: 9px; line-height: 1.1;
-  color: #fff; font-weight: 600;
-}
-.loading { color: #555; font-size: 13px; padding: 12px; text-align: center; }
-
-/* Save/done buttons */
-.bottom-actions {
-  margin-top: 20px;
-  display: flex; flex-direction: column; gap: 8px;
-  padding-top: 16px; border-top: 1px solid #1a1a1a;
-}
-.btn-gold {
-  padding: 12px;
-  background: linear-gradient(135deg, #c9a84c, #b8860b);
-  color: #000; border: none; border-radius: 10px;
-  font-weight: 700; font-size: 13px; cursor: pointer;
-}
-.btn-dark {
-  padding: 12px;
-  background: #1a1a1a; color: #aaa;
-  border: 1px solid #2a2a2a; border-radius: 10px;
-  font-size: 13px; cursor: pointer;
-}
-
-/* Help modal */
-.modal {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 2000;
-  display: none; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.modal.show { display: flex; }
-.modal-box {
-  background: #1a1a1a; border: 1px solid #2a2a2a;
-  border-radius: 16px; padding: 24px;
-  max-width: 420px; width: 100%;
-}
-.modal-box h3 { font-size: 18px; margin-bottom: 14px; color: #c9a84c; }
-.modal-box ol { padding-left: 22px; font-size: 14px; line-height: 1.8; color: #ccc; }
-.modal-box ol li { margin-bottom: 6px; }
-.modal-box .close-btn { width: 100%; margin-top: 18px; }
-
-/* Toast */
-.toast {
-  position: fixed; bottom: 20px; left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: #1a1a1a; border: 1px solid #c9a84c44;
-  color: #c9a84c; padding: 12px 20px; border-radius: 10px;
-  font-size: 13px; z-index: 3000;
-  transition: transform 0.3s;
-}
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1a1a1a; border: 1px solid #c9a84c44; color: #c9a84c; padding: 12px 20px; border-radius: 10px; font-size: 13px; z-index: 3000; transition: transform 0.3s; }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+.hint-overlay { position: absolute; top: 12px; left: 12px; right: 12px; background: rgba(20,20,20,0.85); border: 1px solid #c9a84c33; border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(10px); font-size: 12px; color: #aaa; text-align: center; pointer-events: none; z-index: 5; }
+.hint-overlay strong { color: #c9a84c; }
 </style>
 </head>
 <body>
@@ -233,178 +99,450 @@ input[type=range] {
 <header>
   <a href="index.html" class="back">← Назад</a>
   <span class="logo">ВІЗУАЛІЗАТОР</span>
-  <button class="help-btn" onclick="showHelp()" title="Як користуватись">?</button>
+  <button class="help-btn" onclick="goStart()" title="На головну">🏠</button>
 </header>
 
-<div class="app">
-  <!-- Canvas -->
+<div class="start-screen" id="start-screen">
+  <div class="start-inner">
+    <h1>Як виглядатиме плитка у вас?</h1>
+    <p>Оберіть зручний спосіб — завантажте фото своєї кімнати, оберіть 3D-шаблон з розмірами або порахуйте кількість і вартість</p>
+    <div class="choice-cards">
+      <div class="choice-card" onclick="startMode('photo')">
+        <div class="icon">📷</div>
+        <h3>Завантажити фото</h3>
+        <p>Сфотографуйте свою кімнату і виділіть пензлем стіну або підлогу — плитка накладеться поверх</p>
+      </div>
+      <div class="choice-card" onclick="startMode('bathroom3d')">
+        <span class="badge">3D</span>
+        <div class="icon">🛁</div>
+        <h3>3D Ванна кімната</h3>
+        <p>Введіть свої розміри і побачте реалістичну 3D-модель з обертанням. Окрема плитка для стін і підлоги</p>
+      </div>
+      <div class="choice-card" onclick="startMode('calc')">
+        <span class="badge">м²</span>
+        <div class="icon">🧮</div>
+        <h3>Розрахунок плитки</h3>
+        <p>Введіть розміри приміщення — отримайте точну кількість м² і вартість потрібної плитки</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3D MODE -->
+<div class="app" id="bathroom3d-mode" style="display:none">
   <div class="canvas-area">
-    <div id="empty-state" class="empty-state">
-      <h2>Приміряйте плитку у вашій кімнаті</h2>
-      <p>Завантажте фото своєї кімнати без ремонту, виділіть стіну або підлогу і побачте як виглядатиме плитка з нашого каталогу</p>
-      <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-        📷 Завантажити фото
-      </button>
+    <canvas id="three-canvas"></canvas>
+    <div class="hint-overlay"><strong>Обертайте</strong> мишкою / пальцем · <strong>Колесо</strong> — наближення</div>
+  </div>
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Розміри ванної (см)</div>
+      <div class="dim-row">
+        <div class="dim-field"><label>Довжина</label><input type="number" id="dim-length" value="200" min="100" max="800" oninput="rebuildRoom()"></div>
+        <div class="dim-field"><label>Ширина</label><input type="number" id="dim-width" value="170" min="100" max="800" oninput="rebuildRoom()"></div>
+      </div>
+      <div class="dim-field"><label>Висота стелі</label><input type="number" id="dim-height" value="260" min="200" max="400" oninput="rebuildRoom()"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Поверхня для плитки</div>
+      <div class="surface-tabs">
+        <div class="surface-tab active" data-surf="wall" onclick="selectSurface('wall')">🧱 Стіни</div>
+        <div class="surface-tab" data-surf="floor" onclick="selectSurface('floor')">⬜ Підлога</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Виберіть плитку</div>
+      <div id="tile-grid-3d" class="tile-grid"><div class="loading">Завантаження...</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Розрахунок</div>
+      <div class="calc-box">
+        <div class="calc-row"><span class="lbl">Стіни:</span><span class="val" id="calc-walls">— м²</span></div>
+        <div class="calc-row"><span class="lbl">Підлога:</span><span class="val" id="calc-floor-area">— м²</span></div>
+        <div class="calc-row total"><span class="lbl">Вартість:</span><span class="val" id="calc-price">—</span></div>
+      </div>
+    </div>
+    <div class="bottom-actions">
+      <button class="btn-gold" onclick="saveScreenshot()">📸 Зберегти зображення</button>
+      <button class="btn-gold" onclick="orderTiles()">🛒 Замовити плитку</button>
+      <button class="btn-dark" onclick="goStart()">↻ Інший варіант</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALCULATOR MODE -->
+<div class="app" id="calc-mode" style="display:none">
+  <div class="canvas-area">
+    <div style="max-width:520px;padding:40px;width:100%;">
+      <h2 style="font-size:22px;margin-bottom:8px;">🧮 Розрахунок плитки</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:24px;">Введіть розміри і виберіть плитку — побачите скільки м² і скільки коштуватиме</p>
+      <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:12px;padding:20px;">
+        <div style="font-size:12px;color:#777;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Розміри (см)</div>
+        <div class="dim-row">
+          <div class="dim-field"><label>Довжина</label><input type="number" id="c-length" value="300" min="100" max="2000" oninput="recalcCalc()"></div>
+          <div class="dim-field"><label>Ширина</label><input type="number" id="c-width" value="250" min="100" max="2000" oninput="recalcCalc()"></div>
+        </div>
+        <div class="dim-field" style="margin-top:8px;"><label>Висота стелі</label><input type="number" id="c-height" value="260" min="200" max="400" oninput="recalcCalc()"></div>
+        <div style="margin-top:16px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#aaa;cursor:pointer;">
+            <input type="checkbox" id="c-with-walls" checked onchange="recalcCalc()" style="accent-color:#c9a84c;width:18px;height:18px;">Враховувати стіни
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#aaa;margin-top:8px;cursor:pointer;">
+            <input type="checkbox" id="c-with-floor" checked onchange="recalcCalc()" style="accent-color:#c9a84c;width:18px;height:18px;">Враховувати підлогу
+          </label>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a;font-size:12px;color:#777;">📌 До результату додається <b style="color:#c9a84c">10% запасу</b> на підрізку</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-title">Виберіть плитку</div>
+      <div id="tile-grid-calc" class="tile-grid"><div class="loading">Завантаження...</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Розрахунок</div>
+      <div class="calc-box">
+        <div class="calc-row"><span class="lbl">Площа стін:</span><span class="val" id="c-walls-area">— м²</span></div>
+        <div class="calc-row"><span class="lbl">Площа підлоги:</span><span class="val" id="c-floor-area">— м²</span></div>
+        <div class="calc-row"><span class="lbl">Всього:</span><span class="val" id="c-total-area">— м²</span></div>
+        <div class="calc-row"><span class="lbl">З запасом 10%:</span><span class="val" id="c-with-spare">— м²</span></div>
+        <div class="calc-row total"><span class="lbl">До сплати:</span><span class="val" id="c-price">—</span></div>
+      </div>
+    </div>
+    <div class="bottom-actions">
+      <button class="btn-gold" onclick="orderFromCalc()">🛒 Замовити</button>
+      <button class="btn-dark" onclick="goStart()">↻ Інший варіант</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO MODE -->
+<div class="app" id="photo-mode" style="display:none">
+  <div class="canvas-area">
+    <div style="text-align:center;padding:40px 20px;" id="photo-empty">
+      <h2 style="font-size:20px;margin-bottom:12px;">Завантажте фото кімнати</h2>
+      <p style="color:#777;font-size:14px;margin-bottom:24px;max-width:380px;margin-left:auto;margin-right:auto;">Виділіть пензлем стіну або підлогу і виберіть плитку</p>
+      <button class="btn-gold" style="padding:14px 32px;" onclick="document.getElementById('file-input').click()">📷 Завантажити фото</button>
       <input type="file" id="file-input" accept="image/*" style="display:none" onchange="loadPhoto(this.files[0])">
     </div>
-
-    <div id="workspace" style="display:none">
-      <img id="photo" alt="Фото кімнати">
+    <div id="photo-workspace" style="display:none">
+      <img id="photo-img" alt="Фото">
       <canvas id="overlay-canvas"></canvas>
       <canvas id="mask-canvas"></canvas>
     </div>
   </div>
-
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar" style="display:none">
-
+  <div class="sidebar" id="photo-sidebar" style="display:none">
     <div class="section">
-      <div class="section-title">1. Виберіть зону</div>
-      <div class="tools">
-        <div class="tool active" data-zone="wall" onclick="selectZone('wall')">🧱 Стіна</div>
-        <div class="tool" data-zone="floor" onclick="selectZone('floor')">⬜ Підлога</div>
+      <div class="section-title">Зона</div>
+      <div class="surface-tabs">
+        <div class="surface-tab active" data-zone="wall" onclick="selectZone('wall')">🧱 Стіна</div>
+        <div class="surface-tab" data-zone="floor" onclick="selectZone('floor')">⬜ Підлога</div>
       </div>
     </div>
-
     <div class="section">
-      <div class="section-title">2. Виділіть область</div>
+      <div class="section-title">Виділення</div>
       <div class="range-row">
         <span style="color:#777;font-size:12px;">Пензель</span>
         <input type="range" id="brush-size" min="10" max="100" value="40" oninput="document.getElementById('brush-val').textContent=this.value+'px'">
         <span class="range-val" id="brush-val">40px</span>
       </div>
       <div class="actions">
-        <button class="btn-sm" onclick="setTool('paint')" id="btn-paint">🖌 Малювати</button>
-        <button class="btn-sm" onclick="setTool('erase')" id="btn-erase">🧹 Стерти</button>
-        <button class="btn-sm btn-red" onclick="clearMask()">🗑 Очистити</button>
+        <button class="btn-sm active" onclick="setPhotoTool('paint')" id="btn-paint">🖌</button>
+        <button class="btn-sm" onclick="setPhotoTool('erase')" id="btn-erase">🧹</button>
+        <button class="btn-sm red" onclick="clearMask()">🗑</button>
       </div>
     </div>
-
     <div class="section">
-      <div class="section-title">3. Виберіть плитку</div>
-      <div id="tile-grid" class="tile-grid">
-        <div class="loading">Завантаження...</div>
-      </div>
+      <div class="section-title">Виберіть плитку</div>
+      <div id="tile-grid-photo" class="tile-grid"><div class="loading">Завантаження...</div></div>
     </div>
-
     <div class="bottom-actions">
-      <button class="btn-gold" onclick="saveResult()">💾 Зберегти результат</button>
-      <button class="btn-dark" onclick="resetAll()">↻ Почати спочатку</button>
+      <button class="btn-gold" onclick="savePhotoResult()">💾 Зберегти результат</button>
+      <button class="btn-dark" onclick="goStart()">↻ Інший варіант</button>
     </div>
-  </div>
-</div>
-
-<!-- Help modal -->
-<div class="modal" id="help-modal" onclick="if(event.target===this) closeHelp()">
-  <div class="modal-box">
-    <h3>Як користуватись візуалізатором</h3>
-    <ol>
-      <li><b>Завантажте фото</b> своєї кімнати (бажано без меблів)</li>
-      <li>Виберіть зону: <b>Стіна</b> або <b>Підлога</b></li>
-      <li>Виберіть інструмент <b>Малювати</b> і виділіть пензлем потрібну область прямо на фото</li>
-      <li>Натисніть на потрібну плитку з каталогу — вона з'явиться в виділеній області</li>
-      <li>Можна перемкнутись на іншу зону і повторити</li>
-      <li>Натисніть <b>Зберегти результат</b> щоб скачати фото з накладеною плиткою</li>
-    </ol>
-    <button class="btn-gold close-btn" onclick="closeHelp()">Зрозуміло</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// === Supabase ===
 const SUPA_URL = "https://svbmamaqrtsknuztxiuq.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
-
-// === State ===
-let currentZone = "wall"; // wall | floor
-let currentTool = "paint"; // paint | erase
-const masks = { wall: null, floor: null }; // off-screen canvases per zone
-const tiles = { wall: null, floor: null }; // selected tile image per zone
-let photoImg = null;
-let photo, overlayCanvas, maskCanvas, octx, mctx;
 let allTiles = [];
-let drawing = false;
 
-// === Load photo ===
+function goStart() {
+  document.getElementById('start-screen').style.display = 'flex';
+  document.getElementById('bathroom3d-mode').style.display = 'none';
+  document.getElementById('calc-mode').style.display = 'none';
+  document.getElementById('photo-mode').style.display = 'none';
+}
+
+function startMode(mode) {
+  document.getElementById('start-screen').style.display = 'none';
+  loadTiles().then(() => {
+    if (mode === 'bathroom3d') {
+      document.getElementById('bathroom3d-mode').style.display = 'grid';
+      renderTilesInto('tile-grid-3d', (url, name, price) => selectTile3D(url, name, price));
+      setTimeout(init3D, 100);
+    } else if (mode === 'calc') {
+      document.getElementById('calc-mode').style.display = 'grid';
+      renderTilesInto('tile-grid-calc', (url, name, price) => selectTileCalc(url, name, price));
+      recalcCalc();
+    } else if (mode === 'photo') {
+      document.getElementById('photo-mode').style.display = 'grid';
+      renderTilesInto('tile-grid-photo', (url, name) => selectTilePhoto(url, name));
+    }
+  });
+}
+
+async function loadTiles() {
+  if (allTiles.length) return;
+  try {
+    const res = await fetch(SUPA_URL + "/rest/v1/collections?is_visible=eq.true&is_panno=eq.false&select=id,name,article,size,price_uah,collection_photos(url,sort_order)",
+      { headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY } });
+    const data = await res.json();
+    allTiles = (data || []).filter(t => t.collection_photos && t.collection_photos.length);
+  } catch(e) { console.error(e); }
+}
+
+function renderTilesInto(gridId, onClick) {
+  const grid = document.getElementById(gridId);
+  if (!allTiles.length) { grid.innerHTML = '<div class="loading">Немає плитки</div>'; return; }
+  grid.innerHTML = allTiles.map(t => {
+    const photos = (t.collection_photos || []).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    const url = photos[0]?.url;
+    if (!url) return '';
+    return `<div class="tile-card" data-url="${url}" data-name="${(t.name||'').replace(/"/g,'&quot;')}" data-price="${t.price_uah||0}">
+      <img src="${url}" loading="lazy">
+      <div class="label">${t.name || ''}</div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.tile-card').forEach(c => {
+    c.addEventListener('click', () => {
+      grid.querySelectorAll('.tile-card').forEach(x => x.classList.remove('selected'));
+      c.classList.add('selected');
+      onClick(c.dataset.url, c.dataset.name, parseFloat(c.dataset.price) || 0);
+    });
+  });
+}
+
+// ===== 3D =====
+let scene, camera, renderer, controls, walls = [], floor, ceiling;
+let currentSurface = 'wall';
+const wallTexture = { url: null, name: null, price: 0 };
+const floorTexture = { url: null, name: null, price: 0 };
+let animationId;
+
+function init3D() {
+  if (renderer) return;
+  const canvas = document.getElementById('three-canvas');
+  const container = canvas.parentElement;
+  const w = container.clientWidth, h = container.clientHeight;
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a0a);
+  camera = new THREE.PerspectiveCamera(55, w / h, 1, 5000);
+  camera.position.set(250, 180, 250);
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+  controls.minDistance = 100; controls.maxDistance = 700;
+  controls.maxPolarAngle = Math.PI / 2 - 0.05;
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6); dir.position.set(200, 300, 100); scene.add(dir);
+  const dir2 = new THREE.DirectionalLight(0xffeebb, 0.3); dir2.position.set(-150, 200, -100); scene.add(dir2);
+  rebuildRoom();
+  animate();
+  window.addEventListener('resize', onResize);
+}
+
+function onResize() {
+  if (!renderer) return;
+  const container = document.querySelector('#bathroom3d-mode .canvas-area');
+  if (!container) return;
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+function rebuildRoom() {
+  if (!scene) return;
+  walls.forEach(w => scene.remove(w)); walls = [];
+  if (floor) scene.remove(floor);
+  if (ceiling) scene.remove(ceiling);
+  const L = parseFloat(document.getElementById('dim-length').value) || 200;
+  const W = parseFloat(document.getElementById('dim-width').value) || 170;
+  const H = parseFloat(document.getElementById('dim-height').value) || 260;
+  floor = new THREE.Mesh(new THREE.PlaneGeometry(L, W), makeMaterial(floorTexture.url, L, W));
+  floor.rotation.x = -Math.PI / 2; scene.add(floor);
+  ceiling = new THREE.Mesh(new THREE.PlaneGeometry(L, W), new THREE.MeshLambertMaterial({ color: 0xeeeeee }));
+  ceiling.rotation.x = Math.PI / 2; ceiling.position.y = H; scene.add(ceiling);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(L, H), makeMaterial(wallTexture.url, L, H));
+  back.position.set(0, H/2, -W/2); scene.add(back); walls.push(back);
+  const left = new THREE.Mesh(new THREE.PlaneGeometry(W, H), makeMaterial(wallTexture.url, W, H));
+  left.position.set(-L/2, H/2, 0); left.rotation.y = Math.PI / 2; scene.add(left); walls.push(left);
+  const right = new THREE.Mesh(new THREE.PlaneGeometry(W, H), makeMaterial(wallTexture.url, W, H));
+  right.position.set(L/2, H/2, 0); right.rotation.y = -Math.PI / 2; scene.add(right); walls.push(right);
+  controls.target.set(0, H/2, 0); controls.update();
+  updateCalc3D(L, W, H);
+}
+
+function makeMaterial(url, planeW, planeH) {
+  if (!url) return new THREE.MeshLambertMaterial({ color: 0xcccccc, side: THREE.DoubleSide });
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin('anonymous');
+  const tex = loader.load(url, () => { renderer && renderer.render(scene, camera); });
+  tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+  const tileSize = 60;
+  tex.repeat.set(planeW / tileSize, planeH / tileSize);
+  return new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
+}
+
+function selectSurface(s) {
+  currentSurface = s;
+  document.querySelectorAll('.surface-tab[data-surf]').forEach(t => t.classList.toggle('active', t.dataset.surf === s));
+}
+
+function selectTile3D(url, name, price) {
+  if (currentSurface === 'wall') { wallTexture.url = url; wallTexture.name = name; wallTexture.price = price; }
+  else { floorTexture.url = url; floorTexture.name = name; floorTexture.price = price; }
+  rebuildRoom();
+  toast(`✓ ${currentSurface === 'wall' ? 'Стіни' : 'Підлога'}: ${name}`);
+}
+
+function updateCalc3D(L, W, H) {
+  const wallsM2 = (2 * (L + W) * H) / 10000;
+  const floorM2 = (L * W) / 10000;
+  document.getElementById('calc-walls').textContent = wallsM2.toFixed(2) + ' м²';
+  document.getElementById('calc-floor-area').textContent = floorM2.toFixed(2) + ' м²';
+  let total = 0;
+  if (wallTexture.price && wallsM2) total += wallTexture.price * wallsM2 * 1.1;
+  if (floorTexture.price && floorM2) total += floorTexture.price * floorM2 * 1.1;
+  document.getElementById('calc-price').textContent = total > 0 ? Math.round(total).toLocaleString() + ' грн' : '—';
+}
+
+function animate() {
+  animationId = requestAnimationFrame(animate);
+  controls && controls.update();
+  renderer && renderer.render(scene, camera);
+}
+
+function saveScreenshot() {
+  if (!renderer) return;
+  renderer.render(scene, camera);
+  const a = document.createElement('a');
+  a.href = renderer.domElement.toDataURL('image/png');
+  a.download = 'my-bathroom-' + Date.now() + '.png';
+  a.click();
+  toast('✓ Зображення збережено');
+}
+
+function orderTiles() {
+  const parts = [];
+  if (wallTexture.url) parts.push('Стіни: ' + wallTexture.name);
+  if (floorTexture.url) parts.push('Підлога: ' + floorTexture.name);
+  if (!parts.length) { toast('Спочатку оберіть плитку'); return; }
+  const total = document.getElementById('calc-price').textContent;
+  alert('Замовлення:\n\n' + parts.join('\n') + '\n\nВартість: ' + total + '\n\n(Тут буде форма замовлення)');
+}
+
+// ===== CALCULATOR =====
+let calcSelectedTile = { url: null, name: null, price: 0 };
+
+function selectTileCalc(url, name, price) { calcSelectedTile = { url, name, price }; recalcCalc(); toast(`✓ ${name}`); }
+
+function recalcCalc() {
+  const L = parseFloat(document.getElementById('c-length').value) || 0;
+  const W = parseFloat(document.getElementById('c-width').value) || 0;
+  const H = parseFloat(document.getElementById('c-height').value) || 0;
+  const ww = document.getElementById('c-with-walls').checked;
+  const wf = document.getElementById('c-with-floor').checked;
+  const wallsM2 = ww ? (2 * (L + W) * H) / 10000 : 0;
+  const floorM2 = wf ? (L * W) / 10000 : 0;
+  const total = wallsM2 + floorM2;
+  const ws = total * 1.1;
+  const price = calcSelectedTile.price ? ws * calcSelectedTile.price : 0;
+  document.getElementById('c-walls-area').textContent = wallsM2.toFixed(2) + ' м²';
+  document.getElementById('c-floor-area').textContent = floorM2.toFixed(2) + ' м²';
+  document.getElementById('c-total-area').textContent = total.toFixed(2) + ' м²';
+  document.getElementById('c-with-spare').textContent = ws.toFixed(2) + ' м²';
+  document.getElementById('c-price').textContent = price > 0 ? Math.round(price).toLocaleString() + ' грн' : '—';
+}
+
+function orderFromCalc() {
+  if (!calcSelectedTile.url) { toast('Спочатку оберіть плитку'); return; }
+  const area = document.getElementById('c-with-spare').textContent;
+  const price = document.getElementById('c-price').textContent;
+  alert('Замовлення:\n\nПлитка: ' + calcSelectedTile.name + '\nПлоща: ' + area + '\nВартість: ' + price + '\n\n(Тут буде форма замовлення)');
+}
+
+// ===== PHOTO =====
+let photoTool = 'paint';
+let currentZone = 'wall';
+const masks = { wall: null, floor: null };
+const photoTiles = { wall: null, floor: null };
+let drawing = false;
+let photoImg, octx, mctx, overlayCanvas, maskCanvas;
+
 function loadPhoto(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    document.getElementById('empty-state').style.display = 'none';
-    document.getElementById('workspace').style.display = 'block';
-    document.getElementById('sidebar').style.display = 'block';
-    photo = document.getElementById('photo');
-    photo.onload = setupCanvases;
-    photo.src = e.target.result;
-    loadTiles();
+    document.getElementById('photo-empty').style.display = 'none';
+    document.getElementById('photo-workspace').style.display = 'block';
+    document.getElementById('photo-sidebar').style.display = 'block';
+    photoImg = document.getElementById('photo-img');
+    photoImg.onload = setupPhotoCanvases;
+    photoImg.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-function setupCanvases() {
-  const w = photo.naturalWidth, h = photo.naturalHeight;
+function setupPhotoCanvases() {
+  const w = photoImg.naturalWidth, h = photoImg.naturalHeight;
   overlayCanvas = document.getElementById('overlay-canvas');
   maskCanvas = document.getElementById('mask-canvas');
   overlayCanvas.width = w; overlayCanvas.height = h;
   maskCanvas.width = w; maskCanvas.height = h;
   octx = overlayCanvas.getContext('2d');
   mctx = maskCanvas.getContext('2d');
-
-  // Init masks
-  masks.wall = document.createElement('canvas');
-  masks.wall.width = w; masks.wall.height = h;
-  masks.floor = document.createElement('canvas');
-  masks.floor.width = w; masks.floor.height = h;
-
-  attachDrawing();
-  redrawMask();
-  setTool('paint');
+  masks.wall = document.createElement('canvas'); masks.wall.width = w; masks.wall.height = h;
+  masks.floor = document.createElement('canvas'); masks.floor.width = w; masks.floor.height = h;
+  attachPhotoDrawing();
+  redrawPhotoMask();
 }
 
-// === Zone & Tool ===
-function selectZone(zone) {
-  currentZone = zone;
-  document.querySelectorAll('.tool[data-zone]').forEach(t =>
-    t.classList.toggle('active', t.dataset.zone === zone)
-  );
-  redrawMask();
-  document.querySelectorAll('.tile-card').forEach(c =>
-    c.classList.toggle('selected', tiles[zone] && c.dataset.url === tiles[zone].url)
-  );
+function selectZone(z) {
+  currentZone = z;
+  document.querySelectorAll('.surface-tab[data-zone]').forEach(t => t.classList.toggle('active', t.dataset.zone === z));
+  redrawPhotoMask();
 }
 
-function setTool(tool) {
-  currentTool = tool;
-  document.getElementById('btn-paint').style.background = tool === 'paint' ? '#c9a84c22' : '#1a1a1a';
-  document.getElementById('btn-paint').style.color = tool === 'paint' ? '#c9a84c' : '#aaa';
-  document.getElementById('btn-paint').style.borderColor = tool === 'paint' ? '#c9a84c' : '#2a2a2a';
-  document.getElementById('btn-erase').style.background = tool === 'erase' ? '#c9a84c22' : '#1a1a1a';
-  document.getElementById('btn-erase').style.color = tool === 'erase' ? '#c9a84c' : '#aaa';
-  document.getElementById('btn-erase').style.borderColor = tool === 'erase' ? '#c9a84c' : '#2a2a2a';
+function setPhotoTool(t) {
+  photoTool = t;
+  document.getElementById('btn-paint').classList.toggle('active', t === 'paint');
+  document.getElementById('btn-erase').classList.toggle('active', t === 'erase');
 }
 
 function clearMask() {
-  const mc = masks[currentZone];
-  mc.getContext('2d').clearRect(0, 0, mc.width, mc.height);
-  redrawMask();
-  redrawOverlay();
+  if (!masks[currentZone]) return;
+  masks[currentZone].getContext('2d').clearRect(0,0,masks[currentZone].width,masks[currentZone].height);
+  redrawPhotoMask();
+  redrawPhotoOverlay();
 }
 
-// === Drawing on mask ===
-function attachDrawing() {
-  const getPoint = (e) => {
-    const rect = maskCanvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    return { x: x * (maskCanvas.width / rect.width), y: y * (maskCanvas.height / rect.height) };
+function attachPhotoDrawing() {
+  const getP = (e) => {
+    const r = maskCanvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    return { x: x * (maskCanvas.width / r.width), y: y * (maskCanvas.height / r.height) };
   };
-
   const start = (e) => { drawing = true; draw(e); e.preventDefault(); };
   const move = (e) => { if (drawing) draw(e); };
-  const end = () => { drawing = false; redrawOverlay(); };
-
+  const end = () => { drawing = false; redrawPhotoOverlay(); };
   maskCanvas.addEventListener('mousedown', start);
   maskCanvas.addEventListener('mousemove', move);
   maskCanvas.addEventListener('mouseup', end);
@@ -414,151 +552,79 @@ function attachDrawing() {
   maskCanvas.addEventListener('touchend', end);
 
   function draw(e) {
-    const p = getPoint(e);
+    const p = getP(e);
     const size = parseInt(document.getElementById('brush-size').value);
     const realSize = size * (maskCanvas.width / maskCanvas.getBoundingClientRect().width);
     const ctx = masks[currentZone].getContext('2d');
-    ctx.globalCompositeOperation = currentTool === 'erase' ? 'destination-out' : 'source-over';
+    ctx.globalCompositeOperation = photoTool === 'erase' ? 'destination-out' : 'source-over';
     ctx.fillStyle = currentZone === 'wall' ? 'rgba(255,80,80,1)' : 'rgba(80,180,255,1)';
     ctx.beginPath();
     ctx.arc(p.x, p.y, realSize, 0, Math.PI * 2);
     ctx.fill();
-    redrawMask();
+    redrawPhotoMask();
   }
 }
 
-function redrawMask() {
+function redrawPhotoMask() {
+  if (!mctx) return;
   mctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-  // Show current zone mask with translucency
   mctx.globalAlpha = 0.35;
   mctx.drawImage(masks[currentZone], 0, 0);
   mctx.globalAlpha = 1;
 }
 
-// === Overlay tile pattern inside masks ===
-function redrawOverlay() {
+function redrawPhotoOverlay() {
+  if (!octx) return;
   octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-  // For each zone with a selected tile, fill its mask
   ['wall', 'floor'].forEach(zone => {
-    if (!tiles[zone] || !masks[zone]) return;
-    const tileImg = tiles[zone].img;
+    if (!photoTiles[zone] || !masks[zone]) return;
+    const tileImg = photoTiles[zone].img;
     if (!tileImg.complete) return;
-
-    // Create pattern
     const tileCanvas = document.createElement('canvas');
     const tileSize = zone === 'wall' ? 220 : 280;
     tileCanvas.width = tileSize; tileCanvas.height = tileSize;
     tileCanvas.getContext('2d').drawImage(tileImg, 0, 0, tileSize, tileSize);
     const pattern = octx.createPattern(tileCanvas, 'repeat');
-
-    // Draw pattern only inside mask area
-    octx.save();
-    octx.globalCompositeOperation = 'source-over';
-
-    // Use mask as clipping
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = overlayCanvas.width;
-    tempCanvas.height = overlayCanvas.height;
-    const tctx = tempCanvas.getContext('2d');
-
-    // Fill with tile pattern
+    const temp = document.createElement('canvas');
+    temp.width = overlayCanvas.width; temp.height = overlayCanvas.height;
+    const tctx = temp.getContext('2d');
     tctx.fillStyle = pattern;
-    tctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-    // Apply mask
+    tctx.fillRect(0, 0, temp.width, temp.height);
     tctx.globalCompositeOperation = 'destination-in';
     tctx.drawImage(masks[zone], 0, 0);
-
-    // Draw the masked tile pattern with multiply for realism
     octx.globalAlpha = 0.85;
-    octx.drawImage(tempCanvas, 0, 0);
+    octx.drawImage(temp, 0, 0);
     octx.globalAlpha = 1;
-    octx.restore();
   });
 }
 
-// === Load tiles from Supabase ===
-async function loadTiles() {
-  try {
-    const res = await fetch(
-      SUPA_URL + "/rest/v1/collections?is_visible=eq.true&is_panno=eq.false&select=id,name,article,size,price_uah,collection_photos(url,sort_order)",
-      { headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY } }
-    );
-    const data = await res.json();
-    allTiles = (data || []).filter(t => t.collection_photos && t.collection_photos.length);
-    renderTileGrid();
-  } catch(e) {
-    document.getElementById('tile-grid').innerHTML = '<div class="loading">Помилка завантаження</div>';
-    console.error(e);
-  }
-}
-
-function renderTileGrid() {
-  const grid = document.getElementById('tile-grid');
-  if (!allTiles.length) {
-    grid.innerHTML = '<div class="loading">Немає плитки</div>';
-    return;
-  }
-  grid.innerHTML = allTiles.map(t => {
-    const photos = (t.collection_photos || []).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-    const url = photos[0]?.url;
-    if (!url) return '';
-    return `<div class="tile-card" data-url="${url}" onclick="selectTile('${url}', '${(t.name||'').replace(/'/g,"\\'")}', ${t.price_uah || 0})">
-      <img src="${url}" loading="lazy">
-      <div class="label">${t.name || ''}</div>
-    </div>`;
-  }).join('');
-}
-
-function selectTile(url, name, price) {
+function selectTilePhoto(url, name) {
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = () => {
-    tiles[currentZone] = { url, name, price, img };
-    redrawOverlay();
-    document.querySelectorAll('.tile-card').forEach(c =>
-      c.classList.toggle('selected', c.dataset.url === url)
-    );
+    photoTiles[currentZone] = { url, name, img };
+    redrawPhotoOverlay();
     toast(`✓ ${currentZone === 'wall' ? 'Стіна' : 'Підлога'}: ${name}`);
   };
   img.onerror = () => toast('Не вдалось завантажити плитку');
   img.src = url;
 }
 
-// === Save ===
-function saveResult() {
+function savePhotoResult() {
+  if (!photoImg) return;
   const out = document.createElement('canvas');
-  out.width = photo.naturalWidth;
-  out.height = photo.naturalHeight;
+  out.width = photoImg.naturalWidth; out.height = photoImg.naturalHeight;
   const ctx = out.getContext('2d');
-  ctx.drawImage(photo, 0, 0);
+  ctx.drawImage(photoImg, 0, 0);
   ctx.drawImage(overlayCanvas, 0, 0);
-
-  out.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
+  out.toBlob(b => {
+    const url = URL.createObjectURL(b);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'my-room-' + Date.now() + '.png';
-    a.click();
+    a.href = url; a.download = 'my-room-' + Date.now() + '.png'; a.click();
     URL.revokeObjectURL(url);
-    toast('✓ Фото збережено!');
+    toast('✓ Збережено');
   });
 }
-
-function resetAll() {
-  if (!confirm('Почати спочатку? Поточний дизайн буде втрачено.')) return;
-  document.getElementById('empty-state').style.display = 'block';
-  document.getElementById('workspace').style.display = 'none';
-  document.getElementById('sidebar').style.display = 'none';
-  tiles.wall = null; tiles.floor = null;
-  if (masks.wall) masks.wall.getContext('2d').clearRect(0,0,masks.wall.width,masks.wall.height);
-  if (masks.floor) masks.floor.getContext('2d').clearRect(0,0,masks.floor.width,masks.floor.height);
-}
-
-// === Help & Toast ===
-function showHelp() { document.getElementById('help-modal').classList.add('show'); }
-function closeHelp() { document.getElementById('help-modal').classList.remove('show'); }
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -566,12 +632,6 @@ function toast(msg) {
   t.classList.add('show');
   clearTimeout(window._toastTimer);
   window._toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// Show help first time
-if (!localStorage.getItem('room_help_seen')) {
-  setTimeout(showHelp, 800);
-  localStorage.setItem('room_help_seen', '1');
 }
 </script>
 </body>
