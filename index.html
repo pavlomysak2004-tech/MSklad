@@ -1729,29 +1729,26 @@ function HeroBanner() {
 
   // ── ДЕСКТОП: великий + два маленьких ──
   if (isDesk && slides.length >= 1) {
-    const main = slides[active % slides.length];
-    const right1 = slides[(active + 1) % slides.length];
-    const right2 = slides[(active + 2) % slides.length];
+    const left = slides[active % slides.length];
+    const right = slides[(active + 1) % slides.length];
     return (
-      <div style={{ width: "100%", display: "grid", gridTemplateColumns: "2fr 1fr", gridTemplateRows: "1fr 1fr", height: 380, gap: 3, background: "#0a0a0a" }}>
-        {/* Великий зліва */}
+      <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", height: 380, gap: 3, background: "#0a0a0a" }}>
+        {/* Лівий банер — активний */}
         <div
-          style={{ gridRow: "1 / 3", position: "relative", overflow: "hidden", cursor: "pointer" }}
+          style={{ position: "relative", overflow: "hidden", cursor: "pointer" }}
           onClick={() => { setGalleryOpen(true); clearInterval(timerRef.current); }}
         >
-          <img src={main.image_url} alt={main.title || ""} draggable={false}
+          <img src={left.image_url} alt={left.title || ""} draggable={false}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", transition: "transform 0.6s ease" }}
             onMouseEnter={e => e.target.style.transform = "scale(1.03)"}
             onMouseLeave={e => e.target.style.transform = "scale(1)"}
           />
-          {(main.title || main.subtitle) && (
-            <>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 100%)", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", bottom: 28, left: 28, pointerEvents: "none" }}>
-                {main.title && <div style={{ color: "#fff", fontSize: 28, fontWeight: 900, fontFamily: "serif", lineHeight: 1.15, marginBottom: 6, textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}>{main.title}</div>}
-                {main.subtitle && <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 14 }}>{main.subtitle}</div>}
-              </div>
-            </>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.7) 100%)", pointerEvents: "none" }} />
+          {(left.title || left.subtitle) && (
+            <div style={{ position: "absolute", bottom: 24, left: 24, pointerEvents: "none" }}>
+              {left.title && <div style={{ color: "#fff", fontSize: 24, fontWeight: 900, fontFamily: "serif", lineHeight: 1.15, marginBottom: 6, textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}>{left.title}</div>}
+              {left.subtitle && <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>{left.subtitle}</div>}
+            </div>
           )}
           {/* Крапки навігації */}
           {slides.length > 1 && (
@@ -1767,36 +1764,25 @@ function HeroBanner() {
           )}
         </div>
 
-        {/* Маленький правий верхній */}
+        {/* Правий банер — наступний слайд */}
         <div
           style={{ position: "relative", overflow: "hidden", cursor: "pointer" }}
           onClick={() => { goTo((active + 1) % slides.length); resetTimer(); }}
         >
-          <img src={right1.image_url} alt={right1.title || ""} draggable={false}
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", transition: "transform 0.6s ease", filter: "brightness(0.75)" }}
-            onMouseEnter={e => { e.target.style.transform = "scale(1.04)"; e.target.style.filter = "brightness(0.95)"; }}
-            onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.filter = "brightness(0.75)"; }}
+          <img src={right.image_url} alt={right.title || ""} draggable={false}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", transition: "transform 0.6s ease", filter: "brightness(0.8)" }}
+            onMouseEnter={e => { e.target.style.transform = "scale(1.03)"; e.target.style.filter = "brightness(1)"; }}
+            onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.filter = "brightness(0.8)"; }}
           />
-          {right1.title && (
-            <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "serif", textShadow: "0 1px 8px rgba(0,0,0,0.8)", pointerEvents: "none" }}>{right1.title}</div>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.7) 100%)", pointerEvents: "none" }} />
+          {(right.title || right.subtitle) && (
+            <div style={{ position: "absolute", bottom: 24, left: 24, pointerEvents: "none" }}>
+              {right.title && <div style={{ color: "#fff", fontSize: 24, fontWeight: 900, fontFamily: "serif", lineHeight: 1.15, marginBottom: 6, textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}>{right.title}</div>}
+              {right.subtitle && <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>{right.subtitle}</div>}
+            </div>
           )}
-          <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", color: "rgba(255,255,255,0.6)", fontSize: 10, padding: "3px 8px", borderRadius: 10, backdropFilter: "blur(6px)", pointerEvents: "none" }}>›</div>
-        </div>
-
-        {/* Маленький правий нижній */}
-        <div
-          style={{ position: "relative", overflow: "hidden", cursor: "pointer" }}
-          onClick={() => { goTo((active + 2) % slides.length); resetTimer(); }}
-        >
-          <img src={right2.image_url} alt={right2.title || ""} draggable={false}
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", transition: "transform 0.6s ease", filter: "brightness(0.65)" }}
-            onMouseEnter={e => { e.target.style.transform = "scale(1.04)"; e.target.style.filter = "brightness(0.9)"; }}
-            onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.filter = "brightness(0.65)"; }}
-          />
-          {right2.title && (
-            <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "serif", textShadow: "0 1px 8px rgba(0,0,0,0.8)", pointerEvents: "none" }}>{right2.title}</div>
-          )}
-          <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", color: "rgba(255,255,255,0.6)", fontSize: 10, padding: "3px 8px", borderRadius: 10, backdropFilter: "blur(6px)", pointerEvents: "none" }}>›</div>
+          {/* Стрілка вперед */}
+          <div style={{ position: "absolute", top: "50%", right: 16, transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "rgba(255,255,255,0.7)", fontSize: 22, width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(6px)", pointerEvents: "none" }}>›</div>
         </div>
 
         {/* Галерея */}
