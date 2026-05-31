@@ -1016,11 +1016,18 @@ async function sendTransferTelegram() {
     + "📦 Позицій: " + items.length + "\n\n"
     + lines.join("\n\n");
 
+  const TG_URL = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
+  const TG_HEADERS = {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY
+  };
+
   try {
     // Надсилаємо текст
-    await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
+    await fetch(TG_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+      headers: TG_HEADERS,
       body: JSON.stringify({ action: "sendMessage", text: msg })
     });
 
@@ -1039,9 +1046,9 @@ async function sendTransferTelegram() {
         reader.onload = async function(e) {
           var base64 = e.target.result.split(',')[1];
           try {
-            await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
+            await fetch(TG_URL, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+              headers: TG_HEADERS,
               body: JSON.stringify({ action: "sendPhoto", photo: base64, caption: caption })
             });
           } catch(err) { console.log("Помилка фото:", err); }
