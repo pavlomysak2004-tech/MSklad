@@ -1433,6 +1433,12 @@ function StockBar({ stock, reserve, totalStock, unit }) {
 function PannoModal({ panno, collections, onClose }) {
   const [selectedTile, setSelectedTile] = useState(collections[0]);
   const [search, setSearch] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const filtered = collections.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) && !t.isPanno
@@ -1440,19 +1446,43 @@ function PannoModal({ panno, collections, onClose }) {
 
   const total = panno.price + (selectedTile ? selectedTile.price * 20 : 0);
 
-  const order = () => {
-    const text = encodeURIComponent(
-      "🏷 Замовлення комплекту #МитнийSklad\n\n" +
+  const validatePhone = (val) => {
+    const digits = val.replace(/\D/g, "");
+    if (!digits) return "Введіть номер телефону";
+    if (digits.length < 10) return "Номер занадто короткий";
+    return "";
+  };
+
+  const handlePhoneChange = (val) => {
+    const clean = val.replace(/[^\d+\s\-()]/g, "");
+    setPhone(clean);
+    setPhoneError(validatePhone(clean));
+  };
+
+  const isValid = name.trim() && phone.trim() && !validatePhone(phone) && city.trim();
+
+  const order = async () => {
+    if (!isValid) return;
+    setSending(true);
+    const text = "🏷 ЗАМОВЛЕННЯ КОМПЛЕКТУ #МитнийSklad\n\n" +
       "🎨 Панно: " + panno.name + " — " + panno.price.toLocaleString() + " грн\n" +
-      "🔲 Плитка: " + selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²\n" +
-      "Площа: ~20 м²"
-    );
-    fetch(TG_PROXY, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o" },
-      body: JSON.stringify({ action: "sendMessage", text: decodeURIComponent(text) })
-    }).then(() => alert("✅ Замовлення відправлено! Менеджер зв'яжеться з вами."))
-      .catch(() => alert("Помилка відправки. Спробуйте ще раз."));
+      "🔲 Плитка: " + (selectedTile ? selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²" : "не обрано") + "\n" +
+      "Площа: ~20 м²\n" +
+      "💰 Орієнтовно: " + total.toLocaleString() + " грн\n\n" +
+      "👤 " + name + "\n" +
+      "📞 " + phone + "\n" +
+      "🏙 " + city;
+    try {
+      await fetch(TG_PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o" },
+        body: JSON.stringify({ action: "sendMessage", text })
+      });
+      setSent(true);
+    } catch(e) {
+      alert("Помилка відправки. Спробуйте ще раз.");
+    }
+    setSending(false);
   };
 
   return (
@@ -1505,11 +1535,57 @@ function PannoModal({ panno, collections, onClose }) {
             </div>
           </div>
 
-          <button onClick={order} style={{
-            width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: "pointer",
-            background: "linear-gradient(135deg, #c9a84c, #b8860b)",
-            color: "#000", fontSize: 14, fontWeight: 800, marginBottom: 20,
-          }}>🛒 Замовити комплект</button>
+          {sent ? (
+            <div style={{ textAlign: "center", padding: "20px 0 10px" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+              <div style={{ color: "#fff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Замовлення відправлено!</div>
+              <div style={{ color: "#777", fontSize: 14 }}>Менеджер зв'яжеться з вами найближчим часом</div>
+            </div>
+          ) : (
+            <>
+              {/* Форма контактів */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Контактні дані</div>
+
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ color: "#555", fontSize: 12, marginBottom: 5 }}>Ваше ім'я *</div>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)}
+                    placeholder="Введіть ваше ім'я"
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 10, background: "#111", border: name.trim() ? "1px solid #c9a84c44" : "1px solid #2a2a2a", color: "#fff", fontSize: 14, outline: "none" }} />
+                </div>
+
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ color: "#555", fontSize: 12, marginBottom: 5 }}>Телефон *</div>
+                  <input type="tel" value={phone} onChange={e => handlePhoneChange(e.target.value)}
+                    placeholder="+380XXXXXXXXX" inputMode="tel" maxLength={16}
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 10, background: "#111", border: phoneError && phone ? "1px solid #f4433666" : phone && !phoneError ? "1px solid #4caf5066" : "1px solid #2a2a2a", color: "#fff", fontSize: 14, outline: "none" }} />
+                  {phoneError && phone && <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ {phoneError}</div>}
+                  {phone && !phoneError && <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>}
+                </div>
+
+                <div>
+                  <div style={{ color: "#555", fontSize: 12, marginBottom: 5 }}>Місто *</div>
+                  <input type="text" value={city} onChange={e => setCity(e.target.value)}
+                    placeholder="Наприклад: Львів"
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 10, background: "#111", border: city.trim() ? "1px solid #c9a84c44" : "1px solid #2a2a2a", color: "#fff", fontSize: 14, outline: "none" }} />
+                </div>
+              </div>
+
+              <button onClick={order} disabled={!isValid || sending} style={{
+                width: "100%", padding: "13px", borderRadius: 12, border: "none",
+                cursor: isValid ? "pointer" : "not-allowed",
+                background: isValid ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
+                color: isValid ? "#000" : "#555", fontSize: 14, fontWeight: 800, marginBottom: 8,
+              }}>
+                {sending ? "⏳ Відправляємо..." : "🛒 Замовити комплект"}
+              </button>
+              {!isValid && (
+                <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginBottom: 16 }}>
+                  Заповніть ім'я, телефон і місто
+                </div>
+              )}
+            </>
+          )}
 
           <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
             ✦ Підібрати плитку ({filtered.length} варіантів)
