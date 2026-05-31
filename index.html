@@ -1473,7 +1473,7 @@ function PannoModal({ panno, collections, onClose }) {
   const decreaseTile = () => setTileArea(a => parseFloat(Math.max(tileStep, a - tileStep).toFixed(4)));
   const increaseTile = () => setTileArea(a => parseFloat((a + tileStep).toFixed(4)));
 
-  const isValid = phone.trim() && !validatePhone(phone) && city.trim();
+  const isValid = phone.trim() && !validatePhone(phone);
 
   const order = async () => {
     if (!isValid) return;
@@ -1483,8 +1483,7 @@ function PannoModal({ panno, collections, onClose }) {
       "🔲 Плитка: " + (selectedTile ? selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²" : "не обрано") + "\n" +
       "📐 Площа плитки: " + tileArea.toFixed(2) + " м² (" + tileCount + " шт)\n" +
       "💰 Орієнтовно: " + total.toLocaleString() + " грн\n\n" +
-      "📞 " + phone + "\n" +
-      "🏙 " + city;
+      "📞 " + phone;
     try {
       await fetch(TG_PROXY, {
         method: "POST",
@@ -1560,8 +1559,25 @@ function PannoModal({ panno, collections, onClose }) {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   <button onClick={decreaseTile} style={{ width: 32, height: 32, borderRadius: "50%", background: "#2a2a2a", border: "none", color: "#fff", fontSize: 18, cursor: "pointer" }}>−</button>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ color: "#c9a84c", fontSize: 20, fontWeight: 900 }}>{tileArea.toFixed(2)}</div>
-                    <div style={{ color: "#555", fontSize: 10 }}>{tileCount} шт</div>
+                    <input
+                      type="number"
+                      value={tileArea.toFixed(2)}
+                      min="0.01"
+                      step={tileStep}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val > 0) setTileArea(parseFloat(val.toFixed(4)));
+                      }}
+                      onBlur={e => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val > 0) {
+                          const snapped = Math.max(tileStep, Math.round(val / tileStep) * tileStep);
+                          setTileArea(parseFloat(snapped.toFixed(4)));
+                        }
+                      }}
+                      style={{ width: 70, textAlign: "center", background: "transparent", border: "none", borderBottom: "1px solid #c9a84c44", color: "#c9a84c", fontSize: 20, fontWeight: 900, outline: "none", padding: "2px 0" }}
+                    />
+                    <div style={{ color: "#555", fontSize: 10, marginTop: 2 }}>{tileCount} шт</div>
                   </div>
                   <button onClick={increaseTile} style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", fontSize: 18, cursor: "pointer" }}>+</button>
                 </div>
@@ -1608,13 +1624,6 @@ function PannoModal({ panno, collections, onClose }) {
                   {phoneError && phone && <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ {phoneError}</div>}
                   {phone && !phoneError && <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>}
                 </div>
-
-                <div>
-                  <div style={{ color: "#555", fontSize: 12, marginBottom: 5 }}>Місто *</div>
-                  <input type="text" value={city} onChange={e => setCity(e.target.value)}
-                    placeholder="Наприклад: Львів"
-                    style={{ width: "100%", padding: "11px 14px", borderRadius: 10, background: "#111", border: city.trim() ? "1px solid #c9a84c44" : "1px solid #2a2a2a", color: "#fff", fontSize: 14, outline: "none" }} />
-                </div>
               </div>
 
               <button onClick={order} disabled={!isValid || sending} style={{
@@ -1627,7 +1636,7 @@ function PannoModal({ panno, collections, onClose }) {
               </button>
               {!isValid && (
                 <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginBottom: 16 }}>
-                  Введіть телефон і місто
+                  Введіть коректний номер телефону
                 </div>
               )}
             </>
