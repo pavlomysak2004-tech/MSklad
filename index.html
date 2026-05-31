@@ -734,19 +734,17 @@ function OrderModal({ tile, onClose }) {
   const tileArea = tile.tileArea || 0;
   const hasTileData = tileArea > 0;
   const step = hasTileData ? tileArea : 0.01;
+  const isPanno = tile.isPanno;
   const [area, setArea] = useState(hasTileData ? tileArea : 1);
+  const [pannoQty, setPannoQty] = useState(1);
   const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
-  const [city, setCity] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [sent, setSent] = useState(false);
   const [orderNum, setOrderNum] = useState("");
   const [sending, setSending] = useState(false);
   const tileCount = hasTileData ? Math.round(area / tileArea) : null;
-  const total = Math.round(area * tile.price);
+  const total = isPanno ? Math.round(pannoQty * tile.price) : Math.round(area * tile.price);
   const inputRef = useRef(null);
-
-  const isPanno = tile.isPanno;
 
   // Валідація телефону
   const validatePhone = (val) => {
@@ -851,11 +849,11 @@ function OrderModal({ tile, onClose }) {
     const text = "🛒 НОВЕ ЗАМОВЛЕННЯ " + num + "\n\n" +
       "📦 " + tile.name + "\n" +
       "📐 " + (tile.size || "") + "\n" +
-      (isPanno ? "" : "📏 " + area.toFixed(2) + " м²" + (tileCount ? " (" + tileCount + " шт)" : "") + "\n") +
+      (isPanno
+        ? "🗂 " + pannoQty + " комплект" + (pannoQty > 1 ? (pannoQty < 5 ? "и" : "ів") : "") + "\n"
+        : "📏 " + area.toFixed(2) + " м²" + (tileCount ? " (" + tileCount + " шт)" : "") + "\n") +
       "💰 " + total.toLocaleString() + " грн\n" +
-      (name ? "👤 " + name + "\n" : "") +
-      "📞 " + phone +
-      (city ? "\n🏙 " + city : "");
+      "📞 " + phone;
 
     // Відправляємо через Telegram бота прямо вам
     try {
@@ -910,47 +908,75 @@ function OrderModal({ tile, onClose }) {
 
             {/* Кількість */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Кількість</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
-                <button onClick={decrease} style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  background: "#1a1a1a", border: "1px solid #2a2a2a",
-                  color: "#fff", fontSize: 24, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>−</button>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <input
-                      ref={inputRef}
-                      type="number"
-                      defaultValue={area.toFixed(2)}
-                      onBlur={e => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val) && val > 0) {
-                          const snapped = hasTileData ? Math.round(val / tileArea) * tileArea : val;
-                          setArea(parseFloat(snapped.toFixed(4)));
-                          e.target.value = snapped.toFixed(2);
-                        }
-                      }}
-                      onKeyDown={e => { if (e.key === "Enter") e.target.blur(); }}
-                      style={{
-                        width: 130, padding: "8px 10px", borderRadius: 10,
-                        background: "#1a1a1a", border: "1px solid #2a2a2a",
-                        color: "#fff", fontSize: 22, fontWeight: 900,
-                        textAlign: "center", outline: "none",
-                      }}
-                    />
-                    <span style={{ color: "#c9a84c", fontSize: 16, fontWeight: 700 }}>м²</span>
+              {isPanno ? (
+                /* Панно — лічильник комплектів */
+                <>
+                  <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Кількість комплектів</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
+                    <button onClick={() => setPannoQty(q => Math.max(1, q - 1))} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "#1a1a1a", border: "1px solid #2a2a2a",
+                      color: "#fff", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>−</button>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ color: "#c9a84c", fontSize: 36, fontWeight: 900, lineHeight: 1 }}>{pannoQty}</div>
+                      <div style={{ color: "#555", fontSize: 12, marginTop: 4 }}>комплект{pannoQty > 1 ? (pannoQty < 5 ? "и" : "ів") : ""}</div>
+                    </div>
+                    <button onClick={() => setPannoQty(q => q + 1)} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+                      border: "none", color: "#000", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>+</button>
                   </div>
-                  {tileCount && <div style={{ color: "#555", fontSize: 11, marginTop: 6 }}>{tileCount} шт</div>}
-                </div>
-                <button onClick={increase} style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  background: "linear-gradient(135deg, #c9a84c, #b8860b)",
-                  border: "none", color: "#000", fontSize: 24, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>+</button>
-              </div>
+                </>
+              ) : (
+                /* Плитка — лічильник м² */
+                <>
+                  <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Кількість</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                    <button onClick={decrease} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "#1a1a1a", border: "1px solid #2a2a2a",
+                      color: "#fff", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>−</button>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <input
+                          ref={inputRef}
+                          type="number"
+                          defaultValue={area.toFixed(2)}
+                          onBlur={e => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val > 0) {
+                              const snapped = hasTileData ? Math.round(val / tileArea) * tileArea : val;
+                              setArea(parseFloat(snapped.toFixed(4)));
+                              e.target.value = snapped.toFixed(2);
+                            }
+                          }}
+                          onKeyDown={e => { if (e.key === "Enter") e.target.blur(); }}
+                          style={{
+                            width: 130, padding: "8px 10px", borderRadius: 10,
+                            background: "#1a1a1a", border: "1px solid #2a2a2a",
+                            color: "#fff", fontSize: 22, fontWeight: 900,
+                            textAlign: "center", outline: "none",
+                          }}
+                        />
+                        <span style={{ color: "#c9a84c", fontSize: 16, fontWeight: 700 }}>м²</span>
+                      </div>
+                      {tileCount && <div style={{ color: "#555", fontSize: 11, marginTop: 6 }}>{tileCount} шт</div>}
+                    </div>
+                    <button onClick={increase} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+                      border: "none", color: "#000", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>+</button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Форма контактів */}
@@ -999,7 +1025,9 @@ function OrderModal({ tile, onClose }) {
               <div>
                 <div style={{ color: "#555", fontSize: 12 }}>Сума замовлення</div>
                 <div style={{ color: "#444", fontSize: 10, marginTop: 2 }}>
-                  {tile.price.toLocaleString()} грн/м² × {area.toFixed(2)} м²
+                  {isPanno
+                    ? tile.price.toLocaleString() + " грн × " + pannoQty + " комп."
+                    : tile.price.toLocaleString() + " грн/м² × " + area.toFixed(2) + " м²"}
                 </div>
               </div>
               <div style={{ color: "#fff", fontSize: 22, fontWeight: 800 }}>
