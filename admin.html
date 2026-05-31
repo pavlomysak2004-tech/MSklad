@@ -883,10 +883,12 @@ function rebuildTransferTable() {
 
 function transferToggle(article, checked, maxVal) {
   if (!state.transferItems) state.transferItems = {};
-  if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: maxVal, pallets: 1 };
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: maxVal };
   state.transferItems[article].checked = checked;
   if (checked && !state.transferItems[article].qty) state.transferItems[article].qty = maxVal;
-  rebuildTransferTable();
+  // Оновлюємо input поруч
+  var row = document.querySelector('input[data-article="' + article + '"]');
+  if (row) { row.disabled = !checked; row.style.background = checked ? '#1a1a1a' : '#111'; row.style.borderColor = checked ? '#c9a84c' : '#222'; row.style.color = checked ? '#fff' : '#555'; }
   updateTransferSendBtn();
 }
 
@@ -946,10 +948,17 @@ async function sendTransferTelegram() {
     + lines.join("\n\n");
 
   try {
+    const TG_HEADERS = {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY
+    };
+    const TG_URL = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
+
     // Надсилаємо текст
-    await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
+    await fetch(TG_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+      headers: TG_HEADERS,
       body: JSON.stringify({ action: "sendMessage", text: msg })
     });
 
@@ -968,9 +977,9 @@ async function sendTransferTelegram() {
         reader.onload = async function(e) {
           var base64 = e.target.result.split(',')[1];
           try {
-            await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
+            await fetch(TG_URL, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+              headers: TG_HEADERS,
               body: JSON.stringify({ action: "sendPhoto", photo: base64, caption: caption })
             });
           } catch(err) { console.log("Помилка фото:", err); }
