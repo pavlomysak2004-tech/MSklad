@@ -668,7 +668,7 @@ function renderReports() {
 
     var whToBtns = whCols2.filter(function(wh) { return wh !== fromWh; }).map(function(wh) {
       var isActive = toWh === wh;
-      return '<button onclick="state.transferTo=\'' + wh + '\';render();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#7b68ee':'#2a2a2a') + ';background:' + (isActive?'#7b68ee22':'transparent') + ';color:' + (isActive?'#7b68ee':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
+      return '<button data-to-wh="' + wh + '" onclick="state.transferTo=\'' + wh + '\';updateTransferSendBtn();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#7b68ee':'#2a2a2a') + ';background:' + (isActive?'#7b68ee22':'transparent') + ';color:' + (isActive?'#7b68ee':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
     }).join("");
 
     return `<div>
@@ -697,15 +697,9 @@ function renderReports() {
         ${checkedCount > 0 ? `<span style="color:#c9a84c;font-size:13px;white-space:nowrap;">✓ Обрано: ${checkedCount}</span>` : ''}
       </div>
       <div id="transfer-table" style="overflow-x:auto;"></div>
-      ${checkedCount > 0 && toWh ? `
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a;">
-        <button onclick="sendTransferTelegram();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">
-          📤 Надіслати накладну в Telegram (${checkedCount} позицій)
-        </button>
-      </div>` : checkedCount > 0 ? `
-      <div style="margin-top:16px;padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">
-        ⬆️ Оберіть склад призначення щоб надіслати
-      </div>` : ''}
+      <div id="transfer-send-area" style="margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a;">
+        ${checkedCount > 0 && toWh ? '<button onclick="sendTransferTelegram();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">📤 Надіслати накладну в Telegram (' + checkedCount + ' позицій)</button>' : checkedCount > 0 ? '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>' : ''}
+      </div>
       ` : '<div style="text-align:center;padding:40px;color:#555;">Оберіть склад-джерело щоб побачити товари</div>'}
     </div>`;
   }
@@ -760,6 +754,34 @@ function rebuildWarehouseSingleTable() {
   if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
 }
 
+function updateTransferSendBtn() {
+  // Оновлюємо підсвічування кнопок "На який склад"
+  var toWh = state.transferTo || "";
+  document.querySelectorAll('[data-to-wh]').forEach(function(btn) {
+    var wh = btn.dataset.toWh;
+    var isActive = wh === toWh;
+    btn.style.borderColor = isActive ? '#7b68ee' : '#2a2a2a';
+    btn.style.background = isActive ? '#7b68ee22' : 'transparent';
+    btn.style.color = isActive ? '#7b68ee' : '#777';
+  });
+
+  // Рахуємо обрані товари
+  var checkedCount = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked;
+  }).length;
+
+  // Оновлюємо або показуємо/ховаємо кнопку відправки
+  var sendArea = document.getElementById("transfer-send-area");
+  if (!sendArea) return;
+  if (checkedCount > 0 && toWh) {
+    sendArea.innerHTML = '<button onclick="sendTransferTelegram();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">📤 Надіслати накладну в Telegram (' + checkedCount + ' позицій)</button>';
+  } else if (checkedCount > 0) {
+    sendArea.innerHTML = '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>';
+  } else {
+    sendArea.innerHTML = '';
+  }
+}
+
 function rebuildTransferTable() {
   var container = document.getElementById("transfer-table");
   if (!container || !reportData.length) return;
@@ -789,7 +811,7 @@ function rebuildTransferTable() {
     html += '<td style="padding:10px 12px;"><input type="checkbox" ' + (checked?"checked":"") + ' onchange="transferToggle(\'' + article + '\',this.checked,' + val + ')" style="accent-color:#c9a84c;width:16px;height:16px;cursor:pointer;"></td>';
     html += '<td style="padding:10px 12px;"><div style="color:#ddd;font-size:13px;">' + String(row["Назва"]||"") + '</div><div style="color:#555;font-size:11px;">' + article + '</div></td>';
     html += '<td style="padding:10px 12px;text-align:right;"><span style="color:#c9a84c;font-weight:700;">' + val.toFixed(2) + '</span> <span style="color:#555;font-size:11px;">' + String(row["Од. вим."]||"м²") + '</span></td>';
-    html += '<td style="padding:10px 12px;text-align:right;"><input type="number" value="' + (item.qty||val) + '" min="0.01" max="' + val + '" step="0.01" ' + (checked?"":"disabled") + ' onchange="transferQty(\'' + article + '\',this.value)" style="width:80px;padding:6px;background:' + (checked?"#1a1a1a":"#111") + ';border:1px solid ' + (checked?"#c9a84c":"#222") + ';color:' + (checked?"#fff":"#555") + ';border-radius:8px;font-size:13px;text-align:right;outline:none;"></td>';
+    html += '<td style="padding:10px 12px;text-align:right;"><input type="number" data-article="' + article + '" value="' + (item.qty||val) + '" min="0.01" max="' + val + '" step="0.01" ' + (checked?"":"disabled") + ' onchange="transferQty(\'' + article + '\',this.value)" style="width:80px;padding:6px;background:' + (checked?"#1a1a1a":"#111") + ';border:1px solid ' + (checked?"#c9a84c":"#222") + ';color:' + (checked?"#fff":"#555") + ';border-radius:8px;font-size:13px;text-align:right;outline:none;"></td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -804,8 +826,10 @@ function transferToggle(article, checked, maxVal) {
   if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: maxVal };
   state.transferItems[article].checked = checked;
   if (checked && !state.transferItems[article].qty) state.transferItems[article].qty = maxVal;
-  render();
-  setTimeout(rebuildTransferTable, 10);
+  // Оновлюємо input поруч
+  var row = document.querySelector('input[data-article="' + article + '"]');
+  if (row) { row.disabled = !checked; row.style.background = checked ? '#1a1a1a' : '#111'; row.style.borderColor = checked ? '#c9a84c' : '#222'; row.style.color = checked ? '#fff' : '#555'; }
+  updateTransferSendBtn();
 }
 
 function transferQty(article, val) {
@@ -826,8 +850,8 @@ function transferCheckAll(checked) {
       state.transferItems[article].checked = checked;
     }
   });
-  render();
-  setTimeout(rebuildTransferTable, 10);
+  rebuildTransferTable();
+  updateTransferSendBtn();
 }
 
 async function sendTransferTelegram() {
