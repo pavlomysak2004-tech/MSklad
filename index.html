@@ -765,9 +765,6 @@ function OrderModal({ tile, onClose }) {
   };
 
   const isFormValid = () => {
-    if (isPanno) {
-      return name.trim() && !validatePhone(phone) && phone.trim() && city.trim();
-    }
     return !validatePhone(phone) && phone.trim();
   };
 
@@ -958,69 +955,38 @@ function OrderModal({ tile, onClose }) {
 
             {/* Форма контактів */}
             <div style={{ marginBottom: 16 }}>
-              {/* Ім'я — тільки для панно */}
-              {isPanno && (
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ color: "#555", fontSize: 12, marginBottom: 6 }}>Ваше ім'я *</div>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Введіть ваше ім'я"
-                    style={{
-                      width: "100%", padding: "12px 14px", borderRadius: 10,
-                      background: "#1a1a1a", border: name.trim() ? "1px solid #c9a84c44" : "1px solid #2a2a2a",
-                      color: "#fff", fontSize: 15, outline: "none",
-                    }}
-                  />
-                </div>
+              <style>{`
+                @keyframes phonePulseRed {
+                  0%   { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+                  50%  { border-color: #f44336cc; box-shadow: 0 0 10px rgba(244,67,51,0.4); }
+                  100% { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+                }
+                .phone-pulse-red { animation: phonePulseRed 1.5s ease-in-out infinite; }
+              `}</style>
+              <div style={{ color: "#f44336", fontSize: 12, marginBottom: 6, fontWeight: 600 }}>📞 Номер телефону *</div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={e => handlePhoneChange(e.target.value)}
+                onKeyDown={e => {
+                  const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter','+','-','(',')',' '];
+                  if (!allowed.includes(e.key) && !/[0-9]/.test(e.key)) e.preventDefault();
+                }}
+                placeholder="+380XXXXXXXXX"
+                inputMode="tel"
+                maxLength={16}
+                className={!phone ? "phone-pulse-red" : ""}
+                style={{
+                  width: "100%", padding: "12px 14px", borderRadius: 10, background: "#1a1a1a",
+                  border: phoneError && phone ? "1px solid #f44336" : phone && !phoneError ? "1px solid #4caf50" : "1px solid #f4433666",
+                  color: "#fff", fontSize: 15, outline: "none", transition: "border-color 0.3s",
+                }}
+              />
+              {phoneError && phone && (
+                <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ {phoneError}</div>
               )}
-
-              {/* Телефон */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ color: "#555", fontSize: 12, marginBottom: 6 }}>Номер телефону *</div>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => handlePhoneChange(e.target.value)}
-                  onKeyDown={e => {
-                    const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter','+','-','(',')',' '];
-                    if (!allowed.includes(e.key) && !/[0-9]/.test(e.key)) e.preventDefault();
-                  }}
-                  placeholder="+380XXXXXXXXX"
-                  inputMode="tel"
-                  maxLength={16}
-                  style={{
-                    width: "100%", padding: "12px 14px", borderRadius: 10,
-                    background: "#1a1a1a",
-                    border: phoneError ? "1px solid #f4433666" : phone && !phoneError ? "1px solid #4caf5066" : "1px solid #2a2a2a",
-                    color: "#fff", fontSize: 15, outline: "none",
-                  }}
-                />
-                {phoneError && phone && (
-                  <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ {phoneError}</div>
-                )}
-                {phone && !phoneError && (
-                  <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>
-                )}
-              </div>
-
-              {/* Місто — тільки для панно */}
-              {isPanno && (
-                <div>
-                  <div style={{ color: "#555", fontSize: 12, marginBottom: 6 }}>Місто *</div>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={e => setCity(e.target.value)}
-                    placeholder="Наприклад: Львів"
-                    style={{
-                      width: "100%", padding: "12px 14px", borderRadius: 10,
-                      background: "#1a1a1a", border: city.trim() ? "1px solid #c9a84c44" : "1px solid #2a2a2a",
-                      color: "#fff", fontSize: 15, outline: "none",
-                    }}
-                  />
-                </div>
+              {phone && !phoneError && (
+                <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>
               )}
             </div>
 
