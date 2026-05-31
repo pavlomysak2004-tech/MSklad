@@ -1433,6 +1433,8 @@ function StockBar({ stock, reserve, totalStock, unit }) {
 function PannoModal({ panno, collections, onClose }) {
   const [selectedTile, setSelectedTile] = useState(collections[0]);
   const [search, setSearch] = useState("");
+  const [pannoCount, setPannoCount] = useState(1);
+  const [tileArea, setTileArea] = useState(20);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
@@ -1444,7 +1446,7 @@ function PannoModal({ panno, collections, onClose }) {
     t.name.toLowerCase().includes(search.toLowerCase()) && !t.isPanno
   );
 
-  const total = panno.price + (selectedTile ? selectedTile.price * 20 : 0);
+  const total = panno.price * pannoCount + (selectedTile ? selectedTile.price * tileArea : 0);
 
   const validatePhone = (val) => {
     const digits = val.replace(/\D/g, "");
@@ -1465,9 +1467,9 @@ function PannoModal({ panno, collections, onClose }) {
     if (!isValid) return;
     setSending(true);
     const text = "🏷 ЗАМОВЛЕННЯ КОМПЛЕКТУ #МитнийSklad\n\n" +
-      "🎨 Панно: " + panno.name + " — " + panno.price.toLocaleString() + " грн\n" +
+      "🎨 Панно: " + panno.name + " × " + pannoCount + " шт — " + (panno.price * pannoCount).toLocaleString() + " грн\n" +
       "🔲 Плитка: " + (selectedTile ? selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²" : "не обрано") + "\n" +
-      "Площа: ~20 м²\n" +
+      "📐 Площа плитки: " + tileArea + " м²\n" +
       "💰 Орієнтовно: " + total.toLocaleString() + " грн\n\n" +
       "👤 " + name + "\n" +
       "📞 " + phone + "\n" +
@@ -1525,13 +1527,39 @@ function PannoModal({ panno, collections, onClose }) {
             </div>
           </div>
 
-          <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", border: "1px solid #c9a84c22", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ color: "#555", fontSize: 12 }}>Орієнтовна сума</div>
-              <div style={{ color: "#444", fontSize: 10, marginTop: 2 }}>Панно + плитка ~20 м²</div>
+          <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", border: "1px solid #c9a84c22", marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+              {/* Кількість панно */}
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#555", fontSize: 11, marginBottom: 8, textAlign: "center" }}>Кількість панно</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <button onClick={() => setPannoCount(Math.max(1, pannoCount - 1))} style={{ width: 32, height: 32, borderRadius: "50%", background: "#2a2a2a", border: "none", color: "#fff", fontSize: 18, cursor: "pointer" }}>−</button>
+                  <input type="number" value={pannoCount} min="1" onChange={e => setPannoCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{ width: 50, textAlign: "center", background: "transparent", border: "none", color: "#c9a84c", fontSize: 20, fontWeight: 900, outline: "none" }} />
+                  <button onClick={() => setPannoCount(pannoCount + 1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", fontSize: 18, cursor: "pointer" }}>+</button>
+                </div>
+                <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginTop: 4 }}>{(panno.price * pannoCount).toLocaleString()} грн</div>
+              </div>
+
+              <div style={{ width: 1, background: "#2a2a2a" }} />
+
+              {/* Площа плитки */}
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#555", fontSize: 11, marginBottom: 8, textAlign: "center" }}>Площа плитки (м²)</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <button onClick={() => setTileArea(Math.max(1, tileArea - 1))} style={{ width: 32, height: 32, borderRadius: "50%", background: "#2a2a2a", border: "none", color: "#fff", fontSize: 18, cursor: "pointer" }}>−</button>
+                  <input type="number" value={tileArea} min="1" onChange={e => setTileArea(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{ width: 50, textAlign: "center", background: "transparent", border: "none", color: "#c9a84c", fontSize: 20, fontWeight: 900, outline: "none" }} />
+                  <button onClick={() => setTileArea(tileArea + 1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", fontSize: 18, cursor: "pointer" }}>+</button>
+                </div>
+                <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginTop: 4 }}>{selectedTile ? (selectedTile.price * tileArea).toLocaleString() + " грн" : "—"}</div>
+              </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ color: "#fff", fontSize: 24, fontWeight: 900 }}>{total.toLocaleString()} <span style={{ color: "#c9a84c", fontSize: 14 }}>грн</span></div>
+
+            {/* Загальна сума */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: "1px solid #2a2a2a" }}>
+              <div style={{ color: "#555", fontSize: 12 }}>Орієнтовна сума</div>
+              <div style={{ color: "#fff", fontSize: 22, fontWeight: 900 }}>{total.toLocaleString()} <span style={{ color: "#c9a84c", fontSize: 14 }}>грн</span></div>
             </div>
           </div>
 
