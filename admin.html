@@ -883,12 +883,10 @@ function rebuildTransferTable() {
 
 function transferToggle(article, checked, maxVal) {
   if (!state.transferItems) state.transferItems = {};
-  if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: maxVal };
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: maxVal, pallets: 1 };
   state.transferItems[article].checked = checked;
   if (checked && !state.transferItems[article].qty) state.transferItems[article].qty = maxVal;
-  // Оновлюємо input поруч
-  var row = document.querySelector('input[data-article="' + article + '"]');
-  if (row) { row.disabled = !checked; row.style.background = checked ? '#1a1a1a' : '#111'; row.style.borderColor = checked ? '#c9a84c' : '#222'; row.style.color = checked ? '#fff' : '#555'; }
+  rebuildTransferTable();
   updateTransferSendBtn();
 }
 
