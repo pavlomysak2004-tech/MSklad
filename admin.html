@@ -846,9 +846,12 @@ function rebuildTransferTable() {
       html += '</div></div>';
 
       // м² вручну
+      var calcQty = Math.round((item.pallets || 1) * 44.64 * 100) / 100;
+      var displayQty = item.qty || calcQty;
       html += '<div style="display:flex;flex-direction:column;gap:4px;">';
-      html += '<label style="color:#777;font-size:10px;letter-spacing:1px;">КІЛ-ТЬ (М²)</label>';
-      html += '<input type="number" data-article="' + article + '" value="' + (item.qty||val) + '" min="0.01" max="' + val + '" step="0.01" onchange="transferQty(\'' + article + '\',this.value)" style="width:90px;padding:7px;background:#1a1a1a;border:1px solid #c9a84c;color:#fff;border-radius:8px;font-size:13px;text-align:right;outline:none;">';
+      html += '<label style="color:#777;font-size:10px;letter-spacing:1px;">КІЛ-ТЬ (М²) <span style="color:#555;">≈' + calcQty + ' авто</span></label>';
+      html += '<input type="number" data-article="' + article + '" value="' + displayQty + '" min="0.01" step="0.01" onchange="transferQty(\'' + article + '\',this.value)" style="width:100px;padding:7px;background:#1a1a1a;border:1px solid ' + (item.qtyManual ? '#ff9800' : '#c9a84c') + ';color:#fff;border-radius:8px;font-size:13px;text-align:right;outline:none;" title="' + (item.qtyManual ? "Скориговано вручну" : "Автоматично за палетами") + '">';
+      if (item.qtyManual) html += '<span style="color:#ff9800;font-size:10px;">✏️ скориговано</span>';
       html += '</div>';
 
       // Фото
@@ -896,6 +899,10 @@ function transferPallets(article, n) {
   if (!state.transferItems) state.transferItems = {};
   if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: 0, pallets: 1 };
   state.transferItems[article].pallets = n;
+  // Автоматично рахуємо м² (1 палета = 44.64 м²), якщо не коригували вручну
+  if (!state.transferItems[article].qtyManual) {
+    state.transferItems[article].qty = Math.round(n * 44.64 * 100) / 100;
+  }
   rebuildTransferTable();
 }
 
@@ -948,17 +955,10 @@ async function sendTransferTelegram() {
     + lines.join("\n\n");
 
   try {
-    const TG_HEADERS = {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_KEY,
-      "Authorization": "Bearer " + SUPABASE_KEY
-    };
-    const TG_URL = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
-
     // Надсилаємо текст
-    await fetch(TG_URL, {
+    await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
       method: "POST",
-      headers: TG_HEADERS,
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
       body: JSON.stringify({ action: "sendMessage", text: msg })
     });
 
@@ -977,9 +977,9 @@ async function sendTransferTelegram() {
         reader.onload = async function(e) {
           var base64 = e.target.result.split(',')[1];
           try {
-            await fetch(TG_URL, {
+            await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
               method: "POST",
-              headers: TG_HEADERS,
+              headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
               body: JSON.stringify({ action: "sendPhoto", photo: base64, caption: caption })
             });
           } catch(err) { console.log("Помилка фото:", err); }
@@ -1004,6 +1004,22 @@ function transferQty(article, val) {
   if (!state.transferItems) state.transferItems = {};
   if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: parseFloat(val) };
   state.transferItems[article].qty = parseFloat(val) || 0;
+  state.transferItems[article].qtyManual = true; // позначаємо що вручну скориговано
+}
+
+function transferToggle(article, checked, maxVal) {
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) {
+    // При першій відмітці — 1 палета = 44.64 м²
+    state.transferItems[article] = { checked: false, qty: 44.64, pallets: 1, qtyManual: false };
+  }
+  state.transferItems[article].checked = checked;
+  if (checked && !state.transferItems[article].qtyManual) {
+    // Оновлюємо м² за кількістю палет
+    state.transferItems[article].qty = Math.round((state.transferItems[article].pallets || 1) * 44.64 * 100) / 100;
+  }
+  rebuildTransferTable();
+  updateTransferSendBtn();
 }
 
 function transferCheckAll(checked) {
