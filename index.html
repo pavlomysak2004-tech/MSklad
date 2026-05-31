@@ -736,12 +736,40 @@ function OrderModal({ tile, onClose }) {
   const step = hasTileData ? tileArea : 0.01;
   const [area, setArea] = useState(hasTileData ? tileArea : 1);
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [city, setCity] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [sent, setSent] = useState(false);
   const [orderNum, setOrderNum] = useState("");
   const [sending, setSending] = useState(false);
   const tileCount = hasTileData ? Math.round(area / tileArea) : null;
   const total = Math.round(area * tile.price);
   const inputRef = useRef(null);
+
+  const isPanno = tile.isPanno;
+
+  // Валідація телефону
+  const validatePhone = (val) => {
+    const digits = val.replace(/\D/g, "");
+    if (!digits) return "Введіть номер телефону";
+    if (digits.length < 10) return "Номер занадто короткий";
+    if (digits.length > 13) return "Номер занадто довгий";
+    return "";
+  };
+
+  const handlePhoneChange = (val) => {
+    // Тільки цифри, +, пробіли, дужки, тире
+    const clean = val.replace(/[^\d+\s\-()]/g, "");
+    setPhone(clean);
+    setPhoneError(validatePhone(clean));
+  };
+
+  const isFormValid = () => {
+    if (isPanno) {
+      return name.trim() && !validatePhone(phone) && phone.trim() && city.trim();
+    }
+    return !validatePhone(phone) && phone.trim();
+  };
 
   const decrease = () => {
     const newArea = Math.max(step, parseFloat((area - step).toFixed(4)));
@@ -815,7 +843,9 @@ function OrderModal({ tile, onClose }) {
   };
 
   const handleOrder = async () => {
-    if (!phone.trim()) return;
+    if (!isFormValid()) return;
+    const err = validatePhone(phone);
+    if (err) { setPhoneError(err); return; }
     setSending(true);
     const num = await getNextOrderNum();
     setOrderNum(num);
@@ -824,9 +854,11 @@ function OrderModal({ tile, onClose }) {
     const text = "🛒 НОВЕ ЗАМОВЛЕННЯ " + num + "\n\n" +
       "📦 " + tile.name + "\n" +
       "📐 " + (tile.size || "") + "\n" +
-      "📏 " + area.toFixed(2) + " м²" + (tileCount ? " (" + tileCount + " шт)" : "") + "\n" +
+      (isPanno ? "" : "📏 " + area.toFixed(2) + " м²" + (tileCount ? " (" + tileCount + " шт)" : "") + "\n") +
       "💰 " + total.toLocaleString() + " грн\n" +
-      "📞 " + phone;
+      (name ? "👤 " + name + "\n" : "") +
+      "📞 " + phone +
+      (city ? "\n🏙 " + city : "");
 
     // Відправляємо через Telegram бота прямо вам
     try {
@@ -924,29 +956,72 @@ function OrderModal({ tile, onClose }) {
               </div>
             </div>
 
-            {/* Телефон */}
+            {/* Форма контактів */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ color: "#555", fontSize: 12, marginBottom: 6 }}>Номер телефону *</div>
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => {
-                  const val = e.target.value.replace(/[^0-9+]/g, "");
-                  setPhone(val);
-                }}
-                onKeyDown={e => {
-                  const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter'];
-                  if (!allowed.includes(e.key) && !/[0-9+]/.test(e.key)) e.preventDefault();
-                }}
-                placeholder="+380XXXXXXXXX"
-                inputMode="tel"
-                maxLength={13}
-                style={{
-                  width: "100%", padding: "12px 14px", borderRadius: 10,
-                  background: "#1a1a1a", border: phone ? "1px solid #c9a84c44" : "1px solid #2a2a2a",
-                  color: "#fff", fontSize: 15, outline: "none",
-                }}
-              />
+              {/* Ім'я — тільки для панно */}
+              {isPanno && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ color: "#555", fontSize: 12, marginBottom: 6 }}>Ваше ім'я *</div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Введіть ваше ім'я"
+                    style={{
+                      width: "100%", padding: "12px 14px", borderRadius: 10,
+                      background: "#1a1a1a", border: name.trim() ? "1px solid #c9a84c44" : "1px solid #2a2a2a",
+                      color: "#fff", fontSize: 15, outline: "none",
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Телефон */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ color: "#555", fontSize: 12, marginBottom: 6 }}>Номер телефону *</div>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={e => handlePhoneChange(e.target.value)}
+                  onKeyDown={e => {
+                    const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter','+','-','(',')',' '];
+                    if (!allowed.includes(e.key) && !/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                  placeholder="+380XXXXXXXXX"
+                  inputMode="tel"
+                  maxLength={16}
+                  style={{
+                    width: "100%", padding: "12px 14px", borderRadius: 10,
+                    background: "#1a1a1a",
+                    border: phoneError ? "1px solid #f4433666" : phone && !phoneError ? "1px solid #4caf5066" : "1px solid #2a2a2a",
+                    color: "#fff", fontSize: 15, outline: "none",
+                  }}
+                />
+                {phoneError && phone && (
+                  <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ {phoneError}</div>
+                )}
+                {phone && !phoneError && (
+                  <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>
+                )}
+              </div>
+
+              {/* Місто — тільки для панно */}
+              {isPanno && (
+                <div>
+                  <div style={{ color: "#555", fontSize: 12, marginBottom: 6 }}>Місто *</div>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={e => setCity(e.target.value)}
+                    placeholder="Наприклад: Львів"
+                    style={{
+                      width: "100%", padding: "12px 14px", borderRadius: 10,
+                      background: "#1a1a1a", border: city.trim() ? "1px solid #c9a84c44" : "1px solid #2a2a2a",
+                      color: "#fff", fontSize: 15, outline: "none",
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Сума */}
@@ -969,20 +1044,20 @@ function OrderModal({ tile, onClose }) {
             {/* Кнопка замовити */}
             <button
               onClick={handleOrder}
-              disabled={!phone.trim() || sending}
+              disabled={!isFormValid() || sending}
               style={{
                 width: "100%", padding: "14px", borderRadius: 12, border: "none",
-                background: phone.trim() ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
-                color: phone.trim() ? "#000" : "#555",
-                cursor: phone.trim() ? "pointer" : "not-allowed",
+                background: isFormValid() ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
+                color: isFormValid() ? "#000" : "#555",
+                cursor: isFormValid() ? "pointer" : "not-allowed",
                 fontSize: 15, fontWeight: 800, transition: "all 0.2s",
               }}
             >
               {sending ? "⏳ Оформлення..." : "🛒 Замовити"}
             </button>
-            {!phone.trim() && (
+            {!isFormValid() && (
               <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginTop: 8 }}>
-                Введіть номер телефону для замовлення
+                {isPanno ? "Заповніть ім'я, телефон і місто" : "Введіть коректний номер телефону"}
               </div>
             )}
           </div>
