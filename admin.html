@@ -875,6 +875,22 @@ function rebuildTransferTable() {
   });
 
   container.innerHTML = html;
+
+  // Оновлюємо кнопку відправки
+  var checkedCount = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked;
+  }).length;
+  var toWh = state.transferTo || "";
+  var sendArea = document.getElementById("transfer-send-area");
+  if (sendArea) {
+    if (checkedCount > 0 && toWh) {
+      sendArea.innerHTML = '<button onclick="showTransferPreview();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">👁 Переглянути і надіслати (' + checkedCount + ' позицій)</button>';
+    } else if (checkedCount > 0) {
+      sendArea.innerHTML = '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>';
+    } else {
+      sendArea.innerHTML = '';
+    }
+  }
 }
 
 function showTransferPreview() {
