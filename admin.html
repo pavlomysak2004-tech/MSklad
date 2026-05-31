@@ -184,9 +184,11 @@ let state = {
   reportLoading: false,
   reportError: null,
   reportSearch: "",
-  reportView: null, // null = список звітів, 'warehouses' = по складах, 'warehouse_single' = по одному складу
+  reportView: null,
   reportWarehouse: "",
-  reportSortDir: "desc", // asc | desc
+  reportSortDir: "desc",
+  transferTo: "",
+  transferItems: {},
 };
 
 const ADMIN_PASSWORD = "mitnyisklad2024";
@@ -576,38 +578,38 @@ async function bannerDrop(e, targetId) {
 }
 
 function renderReports() {
-  // Список звітів
+  // ── Меню звітів ──
   if (!state.reportView) {
-    return `
-    <div>
-      <div style="margin-bottom:24px;">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#777;margin-bottom:16px;">Оберіть звіт</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
-          <div onclick="state.reportView='warehouses';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
-            <div style="font-size:32px;margin-bottom:12px;">📦</div>
-            <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Залишки по складах</div>
-            <div style="font-size:12px;color:#666;">Загальний звіт по всіх складах з пошуком</div>
-          </div>
-          <div onclick="state.reportView='warehouse_single';state.reportWarehouse='';state.reportSortDir='desc';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
-            <div style="font-size:32px;margin-bottom:12px;">🏭</div>
-            <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Залишки по складу</div>
-            <div style="font-size:12px;color:#666;">Вибір складу, сортування від меншого до більшого</div>
-          </div>
+    return `<div>
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#777;margin-bottom:16px;">Оберіть звіт</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+        <div onclick="state.reportView='warehouses';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:32px;margin-bottom:12px;">📦</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Залишки по складах</div>
+          <div style="font-size:12px;color:#666;">Загальний звіт по всіх складах з пошуком</div>
+        </div>
+        <div onclick="state.reportView='warehouse_single';state.reportWarehouse='';state.reportSortDir='desc';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:32px;margin-bottom:12px;">🏭</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Залишки по складу</div>
+          <div style="font-size:12px;color:#666;">Вибір складу, сортування, резерв</div>
+        </div>
+        <div onclick="state.reportView='transfer';state.reportWarehouse='';state.transferTo='';state.transferItems={};state.reportSearch='';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:32px;margin-bottom:12px;">🔄</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Переміщення товарів</div>
+          <div style="font-size:12px;color:#666;">Вибір складу, товарів і кількості — накладна в Telegram</div>
         </div>
       </div>
     </div>`;
   }
 
-  // Звіт 1 — по всіх складах (старий)
+  // ── Звіт 1: по всіх складах ──
   if (state.reportView === 'warehouses') {
     var tableHtml = "";
     if (reportData.length > 0) tableHtml = buildReportTableHtml(reportData);
     else if (state.reportLoading) tableHtml = '<div style="text-align:center;padding:40px;color:#c9a84c;">⟳ Завантаження...</div>';
     else if (state.reportError) tableHtml = '<div style="text-align:center;padding:40px;color:#f44336;">❌ ' + state.reportError + '</div>';
-    else tableHtml = '<div style="text-align:center;padding:40px;color:#555;">Натисніть "Оновити" щоб завантажити звіт</div>';
-
-    return `
-    <div>
+    else tableHtml = '<div style="text-align:center;padding:40px;color:#555;">Натисніть "Оновити"</div>';
+    return `<div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
         <button onclick="state.reportView=null;render();" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;">← Назад</button>
         <span style="font-size:15px;font-weight:700;">📦 Залишки по складах</span>
@@ -623,106 +625,248 @@ function renderReports() {
     </div>`;
   }
 
-  // Звіт 2 — по одному складу
+  // ── Звіт 2: по одному складу ──
   if (state.reportView === 'warehouse_single') {
-    var whCols = reportHeaders.filter(function(h) {
-      return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1;
-    });
-
+    var whCols = reportHeaders.filter(function(h) { return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1; });
     var selectedWh = state.reportWarehouse || (whCols.length > 0 ? whCols[0] : "");
     var sortDir = state.reportSortDir || "desc";
-
-    // Будуємо таблицю
-    var tableHtml2 = "";
-    if (reportData.length > 0 && selectedWh) {
-      var search = (state.reportSearch || "").toLowerCase();
-      var rows2 = reportData.filter(function(r) {
-        return !search ||
-          String(r["Артикул"]||"").toLowerCase().includes(search) ||
-          String(r["Назва"]||"").toLowerCase().includes(search);
-      });
-
-      rows2.sort(function(a, b) {
-        var va = parseFloat(a[selectedWh]) || 0;
-        var vb = parseFloat(b[selectedWh]) || 0;
-        return sortDir === "asc" ? va - vb : vb - va;
-      });
-
-      var html2 = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-      html2 += '<thead><tr style="background:#1a1a1a;">';
-      html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Артикул</th>';
-      html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Назва</th>';
-      html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Од.</th>';
-      html2 += '<th style="padding:10px 12px;text-align:right;color:#e57373;font-weight:700;border-bottom:1px solid #2a2a2a;">Резерв</th>';
-      html2 += '<th style="padding:10px 12px;text-align:right;color:#c9a84c;font-weight:700;border-bottom:1px solid #2a2a2a;cursor:pointer;" onclick="state.reportSortDir=state.reportSortDir===\'asc\'?\'desc\':\'asc\';render();">Залишок ' + (sortDir === "asc" ? "↑" : "↓") + '</th>';
-      html2 += '</tr></thead><tbody>';
-
-      rows2.forEach(function(row, i) {
-        var val = parseFloat(row[selectedWh]) || 0;
-        var color = val === 0 ? "#f4433644" : val < 5 ? "#ff980022" : "#4caf5022";
-        var textColor = val === 0 ? "#f44336" : val < 5 ? "#ff9800" : "#4caf50";
-        html2 += '<tr style="background:' + (i % 2 === 0 ? "#0d0d0d" : "#0a0a0a") + ';border-bottom:1px solid #141414;">';
-        html2 += '<td style="padding:10px 12px;color:#555;font-size:11px;">' + String(row["Артикул"]||"") + '</td>';
-        html2 += '<td style="padding:10px 12px;color:#ddd;">' + String(row["Назва"]||"") + '</td>';
-        html2 += '<td style="padding:10px 12px;color:#666;font-size:11px;">' + String(row["Од. вим."]||"м²") + '</td>';
-        var reserve = parseFloat(row["Резерв"]) || 0;
-        html2 += '<td style="padding:10px 12px;text-align:right;">' + (reserve > 0 ? '<span style="background:#f4433622;color:#e57373;padding:3px 10px;border-radius:8px;font-weight:700;">' + reserve.toFixed(2) + '</span>' : '<span style="color:#333;">—</span>') + '</td>';
-        html2 += '<td style="padding:10px 12px;text-align:right;"><span style="background:' + color + ';color:' + textColor + ';padding:3px 10px;border-radius:8px;font-weight:700;">' + val.toFixed(2) + '</span></td>';
-        html2 += '</tr>';
-      });
-      html2 += '</tbody></table>';
-
-      // Підсумок
-      var total = rows2.reduce(function(s, r) { return s + (parseFloat(r[selectedWh]) || 0); }, 0);
-      var inStock = rows2.filter(function(r) { return (parseFloat(r[selectedWh]) || 0) > 0; }).length;
-      html2 += '<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">';
-      html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Позицій в наявності: </span><span style="color:#4caf50;font-weight:700;">' + inStock + '</span></div>';
-      html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Загальний залишок: </span><span style="color:#c9a84c;font-weight:700;">' + total.toFixed(2) + ' м²</span></div>';
-      html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Без залишків: </span><span style="color:#f44336;font-weight:700;">' + (rows2.length - inStock) + '</span></div>';
-      html2 += '</div>';
-
-      tableHtml2 = html2;
-    } else if (state.reportLoading) {
-      tableHtml2 = '<div style="text-align:center;padding:40px;color:#c9a84c;">⟳ Завантаження...</div>';
-    } else if (!selectedWh) {
-      tableHtml2 = '<div style="text-align:center;padding:40px;color:#555;">Оберіть склад</div>';
-    } else {
-      tableHtml2 = '<div style="text-align:center;padding:40px;color:#555;">Натисніть "Оновити"</div>';
-    }
-
-    // Кнопки складів
     var whButtons = whCols.map(function(wh) {
-      var isActive = (state.reportWarehouse || whCols[0]) === wh;
-      var shortName = wh.replace("Склад ", "");
-      return '<button onclick="state.reportWarehouse=\'' + wh + '\';state.reportSearch=\'\';render();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive ? '#c9a84c' : '#2a2a2a') + ';background:' + (isActive ? '#c9a84c22' : 'transparent') + ';color:' + (isActive ? '#c9a84c' : '#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + shortName + '</button>';
+      var isActive = selectedWh === wh;
+      return '<button onclick="state.reportWarehouse=\'' + wh + '\';state.reportSearch=\'\';render();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#c9a84c':'#2a2a2a') + ';background:' + (isActive?'#c9a84c22':'transparent') + ';color:' + (isActive?'#c9a84c':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
     }).join("");
-
-    return `
-    <div>
+    return `<div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
         <button onclick="state.reportView=null;render();" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;">← Назад</button>
         <span style="font-size:15px;font-weight:700;">🏭 Залишки по складу</span>
         <button class="btn-gold" style="margin-left:auto;" onclick="loadWarehouseReport()">🔄 Оновити</button>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-        ${whButtons}
-      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">${whButtons}</div>
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
-        <input type="text" id="report-search-input2"
-          oninput="state.reportSearch=this.value;rebuildWarehouseSingleTable();"
+        <input type="text" id="report-search-input2" oninput="state.reportSearch=this.value;rebuildWarehouseSingleTable();"
           placeholder="🔍 Пошук..." value="${state.reportSearch||''}"
           style="flex:1;padding:9px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
         <button onclick="state.reportSortDir=state.reportSortDir==='asc'?'desc':'asc';rebuildWarehouseSingleTable();"
           style="padding:9px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#c9a84c;cursor:pointer;font-size:13px;white-space:nowrap;">
-          ${sortDir === 'asc' ? '↑ Від меншого' : '↓ Від більшого'}
+          ${sortDir==='asc'?'↑ Від меншого':'↓ Від більшого'}
         </button>
       </div>
-      <div id="warehouse-single-table" style="overflow-x:auto;">${tableHtml2}</div>
+      <div id="warehouse-single-table" style="overflow-x:auto;"></div>
+    </div>`;
+  }
+
+  // ── Звіт 3: Переміщення ──
+  if (state.reportView === 'transfer') {
+    var whCols2 = reportHeaders.filter(function(h) { return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1; });
+    var fromWh = state.reportWarehouse || "";
+    var toWh = state.transferTo || "";
+    var checkedCount = Object.keys(state.transferItems || {}).filter(function(k) { return state.transferItems[k] && state.transferItems[k].checked; }).length;
+
+    var whFromBtns = whCols2.map(function(wh) {
+      var isActive = fromWh === wh;
+      return '<button onclick="state.reportWarehouse=\'' + wh + '\';state.transferItems={};state.reportSearch=\'\';rebuildTransferTable();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#c9a84c':'#2a2a2a') + ';background:' + (isActive?'#c9a84c22':'transparent') + ';color:' + (isActive?'#c9a84c':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
+    }).join("");
+
+    var whToBtns = whCols2.filter(function(wh) { return wh !== fromWh; }).map(function(wh) {
+      var isActive = toWh === wh;
+      return '<button onclick="state.transferTo=\'' + wh + '\';render();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#7b68ee':'#2a2a2a') + ';background:' + (isActive?'#7b68ee22':'transparent') + ';color:' + (isActive?'#7b68ee':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
+    }).join("");
+
+    return `<div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <button onclick="state.reportView=null;render();" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;">← Назад</button>
+        <span style="font-size:15px;font-weight:700;">🔄 Переміщення товарів</span>
+        <button class="btn-gold" style="margin-left:auto;" onclick="loadWarehouseReport()">🔄 Оновити</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:12px;padding:16px;">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c9a84c;margin-bottom:10px;">З якого складу</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${whFromBtns}</div>
+        </div>
+        <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:12px;padding:16px;">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7b68ee;margin-bottom:10px;">На який склад</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${fromWh ? whToBtns : '<span style="color:#555;font-size:13px;">Спочатку оберіть звідки</span>'}</div>
+        </div>
+      </div>
+
+      ${fromWh ? `
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <input type="text" id="transfer-search" oninput="state.reportSearch=this.value;rebuildTransferTable();"
+          placeholder="🔍 Пошук товару..." value="${state.reportSearch||''}"
+          style="flex:1;padding:9px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+        ${checkedCount > 0 ? `<span style="color:#c9a84c;font-size:13px;white-space:nowrap;">✓ Обрано: ${checkedCount}</span>` : ''}
+      </div>
+      <div id="transfer-table" style="overflow-x:auto;"></div>
+      ${checkedCount > 0 && toWh ? `
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a;">
+        <button onclick="sendTransferTelegram();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">
+          📤 Надіслати накладну в Telegram (${checkedCount} позицій)
+        </button>
+      </div>` : checkedCount > 0 ? `
+      <div style="margin-top:16px;padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">
+        ⬆️ Оберіть склад призначення щоб надіслати
+      </div>` : ''}
+      ` : '<div style="text-align:center;padding:40px;color:#555;">Оберіть склад-джерело щоб побачити товари</div>'}
     </div>`;
   }
 }
 
 // Голосовий пошук
+function rebuildWarehouseSingleTable() {
+  var container = document.getElementById("warehouse-single-table");
+  if (!container || !reportData.length) return;
+  var whCols = reportHeaders.filter(function(h) { return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1; });
+  var selectedWh = state.reportWarehouse || (whCols.length > 0 ? whCols[0] : "");
+  var sortDir = state.reportSortDir || "desc";
+  var search = (state.reportSearch || "").toLowerCase();
+  var rows2 = reportData.filter(function(r) {
+    return !search || String(r["Артикул"]||"").toLowerCase().includes(search) || String(r["Назва"]||"").toLowerCase().includes(search);
+  });
+  rows2.sort(function(a, b) {
+    var va = parseFloat(a[selectedWh]) || 0, vb = parseFloat(b[selectedWh]) || 0;
+    return sortDir === "asc" ? va - vb : vb - va;
+  });
+  var html2 = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html2 += '<thead><tr style="background:#1a1a1a;">';
+  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Артикул</th>';
+  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Назва</th>';
+  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Од.</th>';
+  html2 += '<th style="padding:10px 12px;text-align:right;color:#e57373;font-weight:700;border-bottom:1px solid #2a2a2a;">Резерв</th>';
+  html2 += '<th style="padding:10px 12px;text-align:right;color:#c9a84c;font-weight:700;border-bottom:1px solid #2a2a2a;cursor:pointer;" onclick="state.reportSortDir=state.reportSortDir===\'asc\'?\'desc\':\'asc\';rebuildWarehouseSingleTable();">Залишок ' + (sortDir==="asc"?"↑":"↓") + '</th>';
+  html2 += '</tr></thead><tbody>';
+  rows2.forEach(function(row, i) {
+    var val = parseFloat(row[selectedWh]) || 0;
+    var color = val === 0 ? "#f4433644" : val < 5 ? "#ff980022" : "#4caf5022";
+    var textColor = val === 0 ? "#f44336" : val < 5 ? "#ff9800" : "#4caf50";
+    var reserve = parseFloat(row["Резерв"]) || 0;
+    html2 += '<tr style="background:' + (i%2===0?"#0d0d0d":"#0a0a0a") + ';border-bottom:1px solid #141414;">';
+    html2 += '<td style="padding:10px 12px;color:#555;font-size:11px;">' + String(row["Артикул"]||"") + '</td>';
+    html2 += '<td style="padding:10px 12px;color:#ddd;">' + String(row["Назва"]||"") + '</td>';
+    html2 += '<td style="padding:10px 12px;color:#666;font-size:11px;">' + String(row["Од. вим."]||"м²") + '</td>';
+    html2 += '<td style="padding:10px 12px;text-align:right;">' + (reserve > 0 ? '<span style="background:#f4433622;color:#e57373;padding:3px 10px;border-radius:8px;font-weight:700;">' + reserve.toFixed(2) + '</span>' : '<span style="color:#333;">—</span>') + '</td>';
+    html2 += '<td style="padding:10px 12px;text-align:right;"><span style="background:' + color + ';color:' + textColor + ';padding:3px 10px;border-radius:8px;font-weight:700;">' + val.toFixed(2) + '</span></td>';
+    html2 += '</tr>';
+  });
+  html2 += '</tbody></table>';
+  var total = rows2.reduce(function(s,r) { return s + (parseFloat(r[selectedWh])||0); }, 0);
+  var inStock = rows2.filter(function(r) { return (parseFloat(r[selectedWh])||0) > 0; }).length;
+  html2 += '<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">';
+  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">В наявності: </span><span style="color:#4caf50;font-weight:700;">' + inStock + '</span></div>';
+  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Загальний залишок: </span><span style="color:#c9a84c;font-weight:700;">' + total.toFixed(2) + ' м²</span></div>';
+  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Без залишків: </span><span style="color:#f44336;font-weight:700;">' + (rows2.length - inStock) + '</span></div>';
+  html2 += '</div>';
+  container.innerHTML = html2;
+  var input = document.getElementById("report-search-input2");
+  if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+}
+
+function rebuildTransferTable() {
+  var container = document.getElementById("transfer-table");
+  if (!container || !reportData.length) return;
+  var fromWh = state.reportWarehouse || "";
+  if (!fromWh) return;
+  var search = (state.reportSearch || "").toLowerCase();
+  var rows = reportData.filter(function(r) {
+    var val = parseFloat(r[fromWh]) || 0;
+    var matchSearch = !search || String(r["Артикул"]||"").toLowerCase().includes(search) || String(r["Назва"]||"").toLowerCase().includes(search);
+    return val > 0 && matchSearch;
+  });
+  rows.sort(function(a,b) { return (parseFloat(b[fromWh])||0) - (parseFloat(a[fromWh])||0); });
+  if (!state.transferItems) state.transferItems = {};
+  var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html += '<thead><tr style="background:#1a1a1a;">';
+  html += '<th style="padding:10px 12px;width:40px;border-bottom:1px solid #2a2a2a;"><input type="checkbox" id="transfer-check-all" onchange="transferCheckAll(this.checked)" style="accent-color:#c9a84c;width:16px;height:16px;cursor:pointer;"></th>';
+  html += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Назва</th>';
+  html += '<th style="padding:10px 12px;text-align:right;color:#c9a84c;font-weight:700;border-bottom:1px solid #2a2a2a;">Залишок</th>';
+  html += '<th style="padding:10px 12px;text-align:right;color:#7b68ee;font-weight:700;border-bottom:1px solid #2a2a2a;">Кількість</th>';
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(row, i) {
+    var article = String(row["Артикул"]||"");
+    var val = parseFloat(row[fromWh]) || 0;
+    var item = state.transferItems[article] || { checked: false, qty: val };
+    var checked = item.checked;
+    html += '<tr style="background:' + (i%2===0?"#0d0d0d":"#0a0a0a") + ';border-bottom:1px solid #141414;">';
+    html += '<td style="padding:10px 12px;"><input type="checkbox" ' + (checked?"checked":"") + ' onchange="transferToggle(\'' + article + '\',this.checked,' + val + ')" style="accent-color:#c9a84c;width:16px;height:16px;cursor:pointer;"></td>';
+    html += '<td style="padding:10px 12px;"><div style="color:#ddd;font-size:13px;">' + String(row["Назва"]||"") + '</div><div style="color:#555;font-size:11px;">' + article + '</div></td>';
+    html += '<td style="padding:10px 12px;text-align:right;"><span style="color:#c9a84c;font-weight:700;">' + val.toFixed(2) + '</span> <span style="color:#555;font-size:11px;">' + String(row["Од. вим."]||"м²") + '</span></td>';
+    html += '<td style="padding:10px 12px;text-align:right;"><input type="number" value="' + (item.qty||val) + '" min="0.01" max="' + val + '" step="0.01" ' + (checked?"":"disabled") + ' onchange="transferQty(\'' + article + '\',this.value)" style="width:80px;padding:6px;background:' + (checked?"#1a1a1a":"#111") + ';border:1px solid ' + (checked?"#c9a84c":"#222") + ';color:' + (checked?"#fff":"#555") + ';border-radius:8px;font-size:13px;text-align:right;outline:none;"></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  if (rows.length === 0) html = '<div style="text-align:center;padding:40px;color:#555;">Немає товарів з залишками на цьому складі</div>';
+  container.innerHTML = html;
+  var input = document.getElementById("transfer-search");
+  if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+}
+
+function transferToggle(article, checked, maxVal) {
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: maxVal };
+  state.transferItems[article].checked = checked;
+  if (checked && !state.transferItems[article].qty) state.transferItems[article].qty = maxVal;
+  render();
+  setTimeout(rebuildTransferTable, 10);
+}
+
+function transferQty(article, val) {
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: parseFloat(val) };
+  state.transferItems[article].qty = parseFloat(val) || 0;
+}
+
+function transferCheckAll(checked) {
+  var fromWh = state.reportWarehouse || "";
+  if (!fromWh) return;
+  if (!state.transferItems) state.transferItems = {};
+  reportData.forEach(function(row) {
+    var article = String(row["Артикул"]||"");
+    var val = parseFloat(row[fromWh]) || 0;
+    if (val > 0) {
+      if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: val };
+      state.transferItems[article].checked = checked;
+    }
+  });
+  render();
+  setTimeout(rebuildTransferTable, 10);
+}
+
+async function sendTransferTelegram() {
+  var fromWh = state.reportWarehouse || "";
+  var toWh = state.transferTo || "";
+  if (!fromWh || !toWh) { showToast("Оберіть склади", "error"); return; }
+  var items = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked && state.transferItems[k].qty > 0;
+  });
+  if (items.length === 0) { showToast("Оберіть товари", "error"); return; }
+  var now = new Date().toLocaleString("uk", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+  var lines = items.map(function(article) {
+    var row = reportData.find(function(r) { return String(r["Артикул"]||"").trim() === article; }) || {};
+    var qty = state.transferItems[article].qty || 0;
+    var unit = String(row["Од. вим."]||"м²");
+    return "• " + String(row["Назва"]||article) + "\n  " + article + " — " + qty.toFixed(2) + " " + unit;
+  });
+  var msg = "🔄 ПЕРЕМІЩЕННЯ ТОВАРІВ\n\n"
+    + "📤 З: " + fromWh + "\n"
+    + "📥 На: " + toWh + "\n"
+    + "🕐 " + now + "\n"
+    + "📦 Позицій: " + items.length + "\n\n"
+    + lines.join("\n\n");
+  try {
+    const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+      body: JSON.stringify({ action: "sendMessage", text: msg })
+    });
+    showToast("✅ Накладну надіслано в Telegram!", "success");
+    state.transferItems = {};
+    state.transferTo = "";
+    render();
+    setTimeout(rebuildTransferTable, 10);
+  } catch(e) {
+    showToast("❌ Помилка: " + e.message, "error");
+  }
+}
+
 function startVoiceSearch(onResult) {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     showToast("Голосовий пошук не підтримується в цьому браузері", "error");
@@ -870,97 +1014,40 @@ function buildReportTableHtml(rows) {
 let reportData = [];
 let reportHeaders = [];
 
-function rebuildWarehouseSingleTable() {
-  var container = document.getElementById("warehouse-single-table");
-  if (!container || !reportData.length) return;
-
-  var selectedWh = state.reportWarehouse || reportHeaders.filter(function(h) {
-    return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1;
-  })[0] || "";
-  var sortDir = state.reportSortDir || "desc";
-  var search = (state.reportSearch || "").toLowerCase();
-
-  var rows2 = reportData.filter(function(r) {
-    return !search ||
-      String(r["Артикул"]||"").toLowerCase().includes(search) ||
-      String(r["Назва"]||"").toLowerCase().includes(search);
-  });
-
-  rows2.sort(function(a, b) {
-    var va = parseFloat(a[selectedWh]) || 0;
-    var vb = parseFloat(b[selectedWh]) || 0;
-    return sortDir === "asc" ? va - vb : vb - va;
-  });
-
-  var html2 = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-  html2 += '<thead><tr style="background:#1a1a1a;">';
-  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Артикул</th>';
-  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Назва</th>';
-  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Од.</th>';
-  html2 += '<th style="padding:10px 12px;text-align:right;color:#e57373;font-weight:700;border-bottom:1px solid #2a2a2a;">Резерв</th>';
-  html2 += '<th style="padding:10px 12px;text-align:right;color:#c9a84c;font-weight:700;border-bottom:1px solid #2a2a2a;cursor:pointer;" onclick="state.reportSortDir=state.reportSortDir===\'asc\'?\'desc\':\'asc\';rebuildWarehouseSingleTable();">Залишок ' + (sortDir === "asc" ? "↑" : "↓") + '</th>';
-  html2 += '</tr></thead><tbody>';
-
-  rows2.forEach(function(row, i) {
-    var val = parseFloat(row[selectedWh]) || 0;
-    var color = val === 0 ? "#f4433644" : val < 5 ? "#ff980022" : "#4caf5022";
-    var textColor = val === 0 ? "#f44336" : val < 5 ? "#ff9800" : "#4caf50";
-    var reserve = parseFloat(row["Резерв"]) || 0;
-    html2 += '<tr style="background:' + (i % 2 === 0 ? "#0d0d0d" : "#0a0a0a") + ';border-bottom:1px solid #141414;">';
-    html2 += '<td style="padding:10px 12px;color:#555;font-size:11px;">' + String(row["Артикул"]||"") + '</td>';
-    html2 += '<td style="padding:10px 12px;color:#ddd;">' + String(row["Назва"]||"") + '</td>';
-    html2 += '<td style="padding:10px 12px;color:#666;font-size:11px;">' + String(row["Од. вим."]||"м²") + '</td>';
-    html2 += '<td style="padding:10px 12px;text-align:right;">' + (reserve > 0 ? '<span style="background:#f4433622;color:#e57373;padding:3px 10px;border-radius:8px;font-weight:700;">' + reserve.toFixed(2) + '</span>' : '<span style="color:#333;">—</span>') + '</td>';
-    html2 += '<td style="padding:10px 12px;text-align:right;"><span style="background:' + color + ';color:' + textColor + ';padding:3px 10px;border-radius:8px;font-weight:700;">' + val.toFixed(2) + '</span></td>';
-    html2 += '</tr>';
-  });
-  html2 += '</tbody></table>';
-
-  var total = rows2.reduce(function(s, r) { return s + (parseFloat(r[selectedWh]) || 0); }, 0);
-  var inStock = rows2.filter(function(r) { return (parseFloat(r[selectedWh]) || 0) > 0; }).length;
-  html2 += '<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">';
-  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">В наявності: </span><span style="color:#4caf50;font-weight:700;">' + inStock + '</span></div>';
-  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Загальний залишок: </span><span style="color:#c9a84c;font-weight:700;">' + total.toFixed(2) + ' м²</span></div>';
-  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Без залишків: </span><span style="color:#f44336;font-weight:700;">' + (rows2.length - inStock) + '</span></div>';
-  html2 += '</div>';
-
-  container.innerHTML = html2;
-
-  // Відновлюємо фокус на полі пошуку
-  var input = document.getElementById("report-search-input2");
-  if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
-}
-
 async function loadWarehouseReport() {
   state.reportLoading = true;
   state.reportError = null;
   reportData = [];
   render();
   try {
-    // Завантажуємо звіт по складах
     const res = await fetch("https://script.google.com/macros/s/AKfycbymfDIx4fu4j_nROvQ5PTgPPz6QPRUNzu1iu8WSGQed74XUDIZA2OAc0i7x0Rb-X-Ed/exec");
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     reportHeaders = data.headers || [];
     reportData = data.rows || [];
 
-    // Завантажуємо резерв з Supabase
-    const resSupabase = await api("GET", "collections?select=article,reserve&is_visible=not.is.null");
-    if (Array.isArray(resSupabase)) {
-      const reserveMap = {};
-      resSupabase.forEach(function(item) {
-        if (item.article) reserveMap[item.article.trim()] = item.reserve || 0;
-      });
-      // Додаємо резерв до кожного рядка
-      reportData = reportData.map(function(row) {
-        var article = String(row["Артикул"] || "").trim();
-        row["Резерв"] = reserveMap[article] || 0;
-        return row;
-      });
-    }
+    // Додаємо резерв з Supabase
+    try {
+      const resSupabase = await api("GET", "collections?select=article,reserve&is_visible=not.is.null");
+      if (Array.isArray(resSupabase)) {
+        const reserveMap = {};
+        resSupabase.forEach(function(item) {
+          if (item.article) reserveMap[item.article.trim()] = item.reserve || 0;
+        });
+        reportData = reportData.map(function(row) {
+          var article = String(row["Артикул"] || "").trim();
+          row["Резерв"] = reserveMap[article] || 0;
+          return row;
+        });
+      }
+    } catch(e2) { console.log("Резерв не завантажено:", e2.message); }
 
     state.reportLoading = false;
     render();
+    setTimeout(function() {
+      rebuildWarehouseSingleTable();
+      rebuildTransferTable();
+    }, 50);
   } catch(e) {
     state.reportLoading = false;
     state.reportError = e.message;
