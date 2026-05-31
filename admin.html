@@ -698,7 +698,7 @@ function renderReports() {
       </div>
       <div id="transfer-table" style="overflow-x:auto;"></div>
       <div id="transfer-send-area" style="margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a;">
-        ${checkedCount > 0 && toWh ? '<button onclick="sendTransferTelegram();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">📤 Надіслати накладну в Telegram (' + checkedCount + ' позицій)</button>' : checkedCount > 0 ? '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>' : ''}
+        ${checkedCount > 0 && toWh ? '<button onclick="showTransferPreview();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">👁 Переглянути і надіслати (' + checkedCount + ' позицій)</button>' : checkedCount > 0 ? '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>' : ''}
       </div>
       ` : '<div style="text-align:center;padding:40px;color:#555;">Оберіть склад-джерело щоб побачити товари</div>'}
     </div>`;
@@ -774,7 +774,7 @@ function updateTransferSendBtn() {
   var sendArea = document.getElementById("transfer-send-area");
   if (!sendArea) return;
   if (checkedCount > 0 && toWh) {
-    sendArea.innerHTML = '<button onclick="sendTransferTelegram();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">📤 Надіслати накладну в Telegram (' + checkedCount + ' позицій)</button>';
+    sendArea.innerHTML = '<button onclick="showTransferPreview();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">👁 Переглянути і надіслати (' + checkedCount + ' позицій)</button>';
   } else if (checkedCount > 0) {
     sendArea.innerHTML = '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>';
   } else {
@@ -846,12 +846,9 @@ function rebuildTransferTable() {
       html += '</div></div>';
 
       // м² вручну
-      var calcQty = Math.round((item.pallets || 1) * 44.64 * 100) / 100;
-      var displayQty = item.qty || calcQty;
       html += '<div style="display:flex;flex-direction:column;gap:4px;">';
-      html += '<label style="color:#777;font-size:10px;letter-spacing:1px;">КІЛ-ТЬ (М²) <span style="color:#555;">≈' + calcQty + ' авто</span></label>';
-      html += '<input type="number" data-article="' + article + '" value="' + displayQty + '" min="0.01" step="0.01" onchange="transferQty(\'' + article + '\',this.value)" style="width:100px;padding:7px;background:#1a1a1a;border:1px solid ' + (item.qtyManual ? '#ff9800' : '#c9a84c') + ';color:#fff;border-radius:8px;font-size:13px;text-align:right;outline:none;" title="' + (item.qtyManual ? "Скориговано вручну" : "Автоматично за палетами") + '">';
-      if (item.qtyManual) html += '<span style="color:#ff9800;font-size:10px;">✏️ скориговано</span>';
+      html += '<label style="color:#777;font-size:10px;letter-spacing:1px;">КІЛ-ТЬ (М²)</label>';
+      html += '<input type="number" data-article="' + article + '" value="' + (item.qty||val) + '" min="0.01" max="' + val + '" step="0.01" onchange="transferQty(\'' + article + '\',this.value)" style="width:90px;padding:7px;background:#1a1a1a;border:1px solid #c9a84c;color:#fff;border-radius:8px;font-size:13px;text-align:right;outline:none;">';
       html += '</div>';
 
       // Фото
@@ -886,20 +883,28 @@ function rebuildTransferTable() {
 
 function transferToggle(article, checked, maxVal) {
   if (!state.transferItems) state.transferItems = {};
-  if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: maxVal };
-  state.transferItems[article].checked = checked;
-  if (checked && !state.transferItems[article].qty) state.transferItems[article].qty = maxVal;
-  // Оновлюємо input поруч
-  var row = document.querySelector('input[data-article="' + article + '"]');
-  if (row) { row.disabled = !checked; row.style.background = checked ? '#1a1a1a' : '#111'; row.style.borderColor = checked ? '#c9a84c' : '#222'; row.style.color = checked ? '#fff' : '#555'; }
+  if (checked) {
+    // При новій відмітці — завжди скидаємо до дефолту (1 палета = 44.64 м²)
+    var existing = state.transferItems[article] || {};
+    state.transferItems[article] = {
+      checked: true,
+      qty: existing.qtyManual ? existing.qty : 44.64,
+      pallets: existing.pallets || 1,
+      qtyManual: existing.qtyManual || false,
+      photoFile: existing.photoFile || null,
+      photoName: existing.photoName || null
+    };
+  } else {
+    if (state.transferItems[article]) state.transferItems[article].checked = false;
+  }
+  rebuildTransferTable();
   updateTransferSendBtn();
 }
 
 function transferPallets(article, n) {
   if (!state.transferItems) state.transferItems = {};
-  if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: 0, pallets: 1 };
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: 44.64, pallets: 1, qtyManual: false };
   state.transferItems[article].pallets = n;
-  // Автоматично рахуємо м² (1 палета = 44.64 м²), якщо не коригували вручну
   if (!state.transferItems[article].qtyManual) {
     state.transferItems[article].qty = Math.round(n * 44.64 * 100) / 100;
   }
@@ -911,7 +916,6 @@ function transferPhoto(article, input) {
   var file = input.files[0];
   if (!state.transferItems) state.transferItems = {};
   if (!state.transferItems[article]) state.transferItems[article] = { checked: true };
-  // Зберігаємо файл і ім'я
   state.transferItems[article].photoFile = file;
   state.transferItems[article].photoName = file.name;
   rebuildTransferTable();
@@ -923,6 +927,87 @@ function transferRemovePhoto(article) {
   state.transferItems[article].photoFile = null;
   state.transferItems[article].photoName = null;
   rebuildTransferTable();
+}
+
+function transferQty(article, val) {
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: parseFloat(val) };
+  state.transferItems[article].qty = parseFloat(val) || 0;
+  state.transferItems[article].qtyManual = true;
+}
+
+// Попередній перегляд перед відправкою
+function showTransferPreview() {
+  var fromWh = state.reportWarehouse || "";
+  var toWh = state.transferTo || "";
+  if (!fromWh || !toWh) { showToast("Оберіть склади", "error"); return; }
+
+  var items = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked && state.transferItems[k].qty > 0;
+  });
+  if (items.length === 0) { showToast("Оберіть товари", "error"); return; }
+
+  var now = new Date().toLocaleString("uk", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+
+  var rows = items.map(function(article) {
+    var row = reportData.find(function(r) { return String(r["Артикул"]||"").trim() === article; }) || {};
+    var item = state.transferItems[article];
+    var qty = (item.qty || 0).toFixed(2);
+    var pallets = item.pallets || 1;
+    var unit = String(row["Од. вим."]||"м²");
+    var hasPhoto = item.photoFile ? '📷' : '';
+    return '<tr style="border-bottom:1px solid #1a1a1a;">'
+      + '<td style="padding:8px 10px;color:#ddd;font-size:13px;">' + String(row["Назва"]||article) + '</td>'
+      + '<td style="padding:8px 10px;text-align:center;color:#c9a84c;font-weight:700;">' + pallets + '</td>'
+      + '<td style="padding:8px 10px;text-align:right;color:#fff;font-weight:700;">' + qty + ' ' + unit + '</td>'
+      + '<td style="padding:8px 10px;text-align:center;">' + hasPhoto + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var modal = document.createElement('div');
+  modal.id = 'transfer-preview-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:#131313;border:1px solid #2a2a2a;border-radius:16px;padding:24px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="font-size:18px;font-weight:700;margin-bottom:16px;">📋 Попередній перегляд накладної</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:#0d0d0d;border-radius:10px;padding:12px;">
+          <div style="color:#777;font-size:11px;margin-bottom:4px;">З СКЛАДУ</div>
+          <div style="color:#c9a84c;font-weight:700;">${fromWh}</div>
+        </div>
+        <div style="background:#0d0d0d;border-radius:10px;padding:12px;">
+          <div style="color:#777;font-size:11px;margin-bottom:4px;">НА СКЛАД</div>
+          <div style="color:#7b68ee;font-weight:700;">${toWh}</div>
+        </div>
+      </div>
+
+      <div style="color:#777;font-size:12px;margin-bottom:12px;">🕐 ${now} · 📦 ${items.length} позицій</div>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+        <thead>
+          <tr style="background:#1a1a1a;">
+            <th style="padding:8px 10px;text-align:left;color:#777;font-size:11px;">Назва</th>
+            <th style="padding:8px 10px;text-align:center;color:#777;font-size:11px;">Палет</th>
+            <th style="padding:8px 10px;text-align:right;color:#777;font-size:11px;">Кількість</th>
+            <th style="padding:8px 10px;text-align:center;color:#777;font-size:11px;">Фото</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('transfer-preview-modal').remove();"
+          style="flex:1;padding:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#aaa;border-radius:10px;cursor:pointer;font-size:14px;">
+          ✏️ Редагувати
+        </button>
+        <button onclick="document.getElementById('transfer-preview-modal').remove();sendTransferTelegram();"
+          class="btn-gold" style="flex:2;padding:12px;font-size:14px;border-radius:10px;">
+          📤 Надіслати в Telegram
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
 }
 
 async function sendTransferTelegram() {
@@ -954,15 +1039,21 @@ async function sendTransferTelegram() {
     + "📦 Позицій: " + items.length + "\n\n"
     + lines.join("\n\n");
 
+  const TG_URL = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
+  const TG_HEADERS = {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY
+  };
+
   try {
-    // Надсилаємо текст
-    await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
+    await fetch(TG_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+      headers: TG_HEADERS,
       body: JSON.stringify({ action: "sendMessage", text: msg })
     });
 
-    // Надсилаємо фото для кожного товару
+    // Надсилаємо фото
     for (var i = 0; i < items.length; i++) {
       var article = items[i];
       var item = state.transferItems[article];
@@ -971,15 +1062,14 @@ async function sendTransferTelegram() {
       var name = String(row["Назва"]||article);
       var caption = "📷 " + name + " [" + article + "]\nПалет: " + (item.pallets||1) + " · " + (item.qty||0).toFixed(2) + " " + String(row["Од. вим."]||"м²");
 
-      // Конвертуємо фото в base64
-      await new Promise(function(resolve, reject) {
+      await new Promise(function(resolve) {
         var reader = new FileReader();
         reader.onload = async function(e) {
           var base64 = e.target.result.split(',')[1];
           try {
-            await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy", {
+            await fetch(TG_URL, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY },
+              headers: TG_HEADERS,
               body: JSON.stringify({ action: "sendPhoto", photo: base64, caption: caption })
             });
           } catch(err) { console.log("Помилка фото:", err); }
@@ -990,7 +1080,7 @@ async function sendTransferTelegram() {
       });
     }
 
-    showToast("✅ Накладну надіслано в Telegram!", "success");
+    showToast("✅ Накладну надіслано!", "success");
     state.transferItems = {};
     state.transferTo = "";
     render();
@@ -998,28 +1088,6 @@ async function sendTransferTelegram() {
   } catch(e) {
     showToast("❌ Помилка: " + e.message, "error");
   }
-}
-
-function transferQty(article, val) {
-  if (!state.transferItems) state.transferItems = {};
-  if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: parseFloat(val) };
-  state.transferItems[article].qty = parseFloat(val) || 0;
-  state.transferItems[article].qtyManual = true; // позначаємо що вручну скориговано
-}
-
-function transferToggle(article, checked, maxVal) {
-  if (!state.transferItems) state.transferItems = {};
-  if (!state.transferItems[article]) {
-    // При першій відмітці — 1 палета = 44.64 м²
-    state.transferItems[article] = { checked: false, qty: 44.64, pallets: 1, qtyManual: false };
-  }
-  state.transferItems[article].checked = checked;
-  if (checked && !state.transferItems[article].qtyManual) {
-    // Оновлюємо м² за кількістю палет
-    state.transferItems[article].qty = Math.round((state.transferItems[article].pallets || 1) * 44.64 * 100) / 100;
-  }
-  rebuildTransferTable();
-  updateTransferSendBtn();
 }
 
 function transferCheckAll(checked) {
