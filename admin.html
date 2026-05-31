@@ -661,10 +661,10 @@ function renderReports() {
     var toWh = state.transferTo || "";
     var checkedCount = Object.keys(state.transferItems || {}).filter(function(k) { return state.transferItems[k] && state.transferItems[k].checked; }).length;
 
-    var whFromBtns = whCols2.map(function(wh) {
+    var whFromBtns = whCols2.length > 0 ? whCols2.map(function(wh) {
       var isActive = fromWh === wh;
-      return '<button onclick="state.reportWarehouse=\'' + wh + '\';state.transferItems={};state.reportSearch=\'\';rebuildTransferTable();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#c9a84c':'#2a2a2a') + ';background:' + (isActive?'#c9a84c22':'transparent') + ';color:' + (isActive?'#c9a84c':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
-    }).join("");
+      return '<button onclick="state.reportWarehouse=\'' + wh + '\';state.transferItems={};state.reportSearch=\'\';render();setTimeout(rebuildTransferTable,50);" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#c9a84c':'#2a2a2a') + ';background:' + (isActive?'#c9a84c22':'transparent') + ';color:' + (isActive?'#c9a84c':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
+    }).join("") : '<span style="color:#555;font-size:13px;">Натисніть "Оновити" щоб завантажити склади</span>';
 
     var whToBtns = whCols2.filter(function(wh) { return wh !== fromWh; }).map(function(wh) {
       var isActive = toWh === wh;
@@ -675,7 +675,7 @@ function renderReports() {
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
         <button onclick="state.reportView=null;render();" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;">← Назад</button>
         <span style="font-size:15px;font-weight:700;">🔄 Переміщення товарів</span>
-        <button class="btn-gold" style="margin-left:auto;" onclick="loadWarehouseReport()">🔄 Оновити</button>
+        <button class="btn-gold" style="margin-left:auto;" onclick="loadWarehouseReport()">🔄 ${state.reportLoading ? 'Завантаження...' : reportData.length > 0 ? 'Оновити' : 'Завантажити дані'}</button>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
