@@ -1694,20 +1694,26 @@ function ShareButton({ tile }) {
 
   const handleShare = async (e) => {
     e.stopPropagation();
-    const url = window.location.origin + window.location.pathname + "?tile=" + encodeURIComponent(tile.id);
-    const shareData = {
-      title: tile.name + " — МитнийSklad",
-      text: tile.name + " · " + tile.size + " · " + tile.price.toLocaleString() + " грн/м²",
-      url,
-    };
+    const url = window.location.origin + window.location.pathname + "?tile=" + String(tile.id);
     if (navigator.share) {
-      try { await navigator.share(shareData); } catch(e) {}
+      try {
+        await navigator.share({
+          title: tile.name + " — МитнийSklad",
+          text: tile.name + " · " + (tile.size || "") + " · " + tile.price.toLocaleString() + " грн/м²",
+          url,
+        });
+      } catch(err) {
+        // Користувач скасував або браузер відхилив — просто копіюємо
+        if (err.name !== "AbortError") {
+          try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch(_) {}
+        }
+      }
     } else {
       try {
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-      } catch(e) {}
+      } catch(_) {}
     }
   };
 
@@ -2387,17 +2393,24 @@ function TileCatalog() {
   // Автоскрол до товару з URL ?tile=ID
   useEffect(() => {
     if (loading) return;
-    const params = new URLSearchParams(window.location.search);
-    const tileId = params.get("tile");
-    if (!tileId) return;
-    const id = isNaN(tileId) ? tileId : Number(tileId);
-    setTimeout(() => {
-      const el = cardRefs.current[id];
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        setActiveCard(id);
-      }
-    }, 400);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tileParam = params.get("tile");
+      if (!tileParam) return;
+      // Очищаємо параметр з URL одразу, щоб не впливав на подальшу роботу
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+      const id = isNaN(tileParam) ? tileParam : Number(tileParam);
+      setTimeout(() => {
+        try {
+          const el = cardRefs.current[id];
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            setActiveCard(id);
+          }
+        } catch(_) {}
+      }, 500);
+    } catch(_) {}
   }, [loading]);
   // Динамічні фільтри з усіх тегів + Панно окремо
   const allTags = Array.from(new Set(
@@ -2405,9 +2418,9 @@ function TileCatalog() {
   )).filter(t => t).sort();
   const filters = ["Всі", "Панно", ...allTags.filter(t => t !== "Панно")];
   const allItems = [...collections, ...pannos];
-  const allPrices = allItems.map(t => t.price);
-  const minPrice = Math.min(...allPrices);
-  const maxPrice = Math.max(...allPrices);
+  const allPrices = allItems.map(t => t.price).filter(p => p > 0);
+  const minPrice = allPrices.length ? Math.min(...allPrices) : 0;
+  const maxPrice = allPrices.length ? Math.max(...allPrices) : 99999;
 
   // Перемикання тегу: "Всі" скидає вибір, інші додаються/знімаються
   const toggleFilter = (f) => {
