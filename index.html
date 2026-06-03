@@ -2390,28 +2390,31 @@ function TileCatalog() {
     }
   };
 
-  // Автоскрол до товару з URL ?tile=ID
-  useEffect(() => {
-    if (loading) return;
+  // Читаємо ?tile= один раз при монтуванні і зберігаємо
+  const targetTileId = useRef((() => {
     try {
-      const params = new URLSearchParams(window.location.search);
-      const tileParam = params.get("tile");
-      if (!tileParam) return;
-      // Очищаємо параметр з URL одразу, щоб не впливав на подальшу роботу
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, "", cleanUrl);
-      const id = isNaN(tileParam) ? tileParam : Number(tileParam);
+      const p = new URLSearchParams(window.location.search).get("tile");
+      if (p) window.history.replaceState({}, "", window.location.pathname);
+      return p ? (isNaN(p) ? p : Number(p)) : null;
+    } catch(_) { return null; }
+  })());
+  const scrolledRef = useRef(false);
+
+  // Скролимо щойно потрібний ref з'явився в DOM (перевіряємо після кожного рендеру)
+  useEffect(() => {
+    if (!targetTileId.current || scrolledRef.current) return;
+    const id = targetTileId.current;
+    const el = cardRefs.current[id];
+    if (el) {
+      scrolledRef.current = true;
       setTimeout(() => {
         try {
-          const el = cardRefs.current[id];
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "center" });
-            setActiveCard(id);
-          }
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          setActiveCard(id);
         } catch(_) {}
-      }, 500);
-    } catch(_) {}
-  }, [loading]);
+      }, 100);
+    }
+  });
   // Динамічні фільтри з усіх тегів + Панно окремо
   const allTags = Array.from(new Set(
     [...collections, ...pannos].flatMap(c => c.tags || [])
