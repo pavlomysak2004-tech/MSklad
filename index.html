@@ -2407,12 +2407,15 @@ function TileCatalog() {
     const el = cardRefs.current[id];
     if (el) {
       scrolledRef.current = true;
+      setActiveCard(id);
+      // iOS Safari ламає scrollIntoView — використовуємо window.scrollTo з затримкою
       setTimeout(() => {
         try {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          setActiveCard(id);
+          const rect = el.getBoundingClientRect();
+          const scrollY = window.pageYOffset + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+          window.scrollTo({ top: Math.max(0, scrollY), behavior: "smooth" });
         } catch(_) {}
-      }, 100);
+      }, 800);
     }
   });
   // Динамічні фільтри з усіх тегів + Панно окремо
