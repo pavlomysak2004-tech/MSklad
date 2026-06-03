@@ -2004,8 +2004,10 @@ function HeroBanner() {
     });
   };
 
-  // Якщо немає фото — банер не показуємо
-  if (slides.length === 0) return null;
+  // Якщо немає фото — показуємо placeholder тієї ж висоти щоб layout не стрибав
+  if (slides.length === 0) return (
+    <div style={{ width: "100%", height: "56vw", maxHeight: 440, minHeight: 200, background: "#0a0a0a" }} />
+  );
 
   // ── ДЕСКТОП: великий + два маленьких ──
   if (isDesk && slides.length >= 1) {
@@ -2399,25 +2401,38 @@ function TileCatalog() {
     } catch(_) { return null; }
   })());
   const scrolledRef = useRef(false);
+  const scrollTimers = useRef([]);
 
-  // Скролимо щойно потрібний ref з'явився в DOM (перевіряємо після кожного рендеру)
+  // Скролимо тільки після повного завантаження (loading=false) і коли ref є в DOM
   useEffect(() => {
-    if (!targetTileId.current || scrolledRef.current) return;
+    if (!targetTileId.current || scrolledRef.current || loading) return;
     const id = targetTileId.current;
-    const el = cardRefs.current[id];
-    if (el) {
+    // Невеликий timeout щоб React встиг оновити DOM після останнього setState
+    const t = setTimeout(() => {
+      const el = cardRefs.current[id];
+      if (!el) return;
       scrolledRef.current = true;
       setActiveCard(id);
-      // iOS Safari ламає scrollIntoView — використовуємо window.scrollTo з затримкою
-      setTimeout(() => {
+
+      const doScroll = () => {
+        const el2 = cardRefs.current[id];
+        if (!el2) return;
         try {
-          const rect = el.getBoundingClientRect();
+          const rect = el2.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) return;
           const scrollY = window.pageYOffset + rect.top - (window.innerHeight / 2) + (rect.height / 2);
-          window.scrollTo({ top: Math.max(0, scrollY), behavior: "smooth" });
+          window.scrollTo({ top: Math.max(0, scrollY) });
         } catch(_) {}
-      }, 800);
-    }
-  });
+      };
+
+      // Два скроли: одразу + після завантаження зображень
+      doScroll();
+      scrollTimers.current.push(setTimeout(doScroll, 1500));
+    }, 100);
+    scrollTimers.current.push(t);
+
+    return () => { scrollTimers.current.forEach(clearTimeout); scrollTimers.current = []; };
+  }, [loading]);
   // Динамічні фільтри з усіх тегів + Панно окремо
   const allTags = Array.from(new Set(
     [...collections, ...pannos].flatMap(c => c.tags || [])
@@ -2605,7 +2620,7 @@ function TileCatalog() {
           </div>
         )}
         {filtered.map((tile, i) => (
-          <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: `${i * 0.08}s` }}>
+          <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${i * 0.08}s` }}>
             <TileCard tile={tile} onVisualize={setVisualizing} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} />
           </div>
         ))}
