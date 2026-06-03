@@ -1689,6 +1689,49 @@ function PannoModal({ panno, collections, onClose }) {
   );
 }
 
+function ShareButton({ tile }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const url = window.location.origin + window.location.pathname + "?tile=" + encodeURIComponent(tile.id);
+    const shareData = {
+      title: tile.name + " — МитнийSklad",
+      text: tile.name + " · " + tile.size + " · " + tile.price.toLocaleString() + " грн/м²",
+      url,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch(e) {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch(e) {}
+    }
+  };
+
+  return (
+    <button
+      onClick={handleShare}
+      title="Поділитись товаром"
+      style={{
+        width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+        background: copied ? "#4caf5022" : "#1a1a1a",
+        border: "1px solid " + (copied ? "#4caf50" : "#2a2a2a"),
+        color: copied ? "#4caf50" : "#666",
+        cursor: "pointer", fontSize: 15,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.2s",
+      }}
+      onMouseOver={e => { if (!copied) { e.currentTarget.style.borderColor="#c9a84c"; e.currentTarget.style.color="#c9a84c"; } }}
+      onMouseOut={e => { if (!copied) { e.currentTarget.style.borderColor="#2a2a2a"; e.currentTarget.style.color="#666"; } }}
+    >
+      {copied ? "✓" : "⎙"}
+    </button>
+  );
+}
+
 function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -1756,6 +1799,7 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, wareh
               );
             })()}
           </div>
+          <ShareButton tile={tile} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {/* Кнопка запитати */}
@@ -2339,6 +2383,22 @@ function TileCatalog() {
       setActiveCard(id);
     }
   };
+
+  // Автоскрол до товару з URL ?tile=ID
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const tileId = params.get("tile");
+    if (!tileId) return;
+    const id = isNaN(tileId) ? tileId : Number(tileId);
+    setTimeout(() => {
+      const el = cardRefs.current[id];
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setActiveCard(id);
+      }
+    }, 400);
+  }, [loading]);
   // Динамічні фільтри з усіх тегів + Панно окремо
   const allTags = Array.from(new Set(
     [...collections, ...pannos].flatMap(c => c.tags || [])
