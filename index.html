@@ -2767,10 +2767,7 @@ function SiteFooter({ onOpenPage }) {
             borderRadius: 10, padding: "9px 10px",
             color: "#555", fontSize: 12, cursor: "pointer",
             textAlign: "left", transition: "all 0.15s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.color="#c9a84c"; e.currentTarget.style.borderColor="#c9a84c44"; }}
-          onMouseLeave={e => { e.currentTarget.style.color="#555"; e.currentTarget.style.borderColor="#1a1a1a"; }}
-          >{label}</button>
+          }}>{label}</button>
         ))}
       </div>
 
@@ -2790,7 +2787,7 @@ function SiteFooter({ onOpenPage }) {
 
       {/* Значки оплати */}
       <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        {["Visa", "Mastercard", "IBAN", "Нова\nПошта", "Накладний\nплатіж"].map((label, i) => (
+        {["Visa", "Mastercard", "IBAN", "Нова Пошта", "Накладний платіж"].map((label, i) => (
           <div key={i} style={{
             background: "#111", border: "1px solid #1e1e1e",
             borderRadius: 8, padding: "5px 10px",
