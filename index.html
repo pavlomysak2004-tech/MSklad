@@ -2452,7 +2452,7 @@ function InfoModal({ page, onClose }) {
             {
               icon: "🏪", title: "Самовивіз", badge: "Безкоштовно",
               rows: [
-                ["Адреса", "м. Львів, вул. Городоцька 174"],
+                ["Адреса", "м. Радехів, вул. Броварська 24"],
                 ["Графік", "Пн–Пт 9:00–19:00"],
                 ["Субота", "9:00–18:00"],
                 ["Неділя", "11:00–17:00"],
@@ -2518,7 +2518,7 @@ function InfoModal({ page, onClose }) {
             },
             {
               icon: "💰", title: "Готівка", badge: null,
-              body: <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6, marginTop: 6 }}>Оплата готівкою при самовивозі за адресою: м. Львів, вул. Городоцька 174.</div>
+              body: <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6, marginTop: 6 }}>Оплата готівкою при самовивозі за адресою: м. Радехів, вул. Броварська 24.</div>
             },
           ].map((s, i) => (
             <div key={i} style={{ background: "#111", borderRadius: 14, padding: "16px", marginBottom: 12, border: "1px solid #1e1e1e" }}>
@@ -2584,7 +2584,7 @@ function InfoModal({ page, onClose }) {
               "Зв'яжіться з менеджером: +380979000398 або pavlomysak2004@gmail.com",
               "Опишіть причину та прикріпіть фото товару",
               "Отримайте підтвердження та інструкції щодо відправки",
-              "Надішліть товар на адресу: м. Львів, вул. Городоцька 174",
+              "Надішліть товар на адресу: м. Радехів, вул. Броварська 24",
               "Після отримання та перевірки — повернення коштів протягом 3–5 робочих днів",
             ].map((step, j) => (
               <div key={j} style={{ display: "flex", gap: 10, padding: "5px 0", borderBottom: j < 4 ? "1px solid #1a1a1a" : "none" }}>
@@ -2625,7 +2625,7 @@ function InfoModal({ page, onClose }) {
           {[
             { icon: "📞", label: "Телефон", value: "+38 097 900 03 98", href: "tel:+380979000398" },
             { icon: "✉️", label: "Email", value: "pavlomysak2004@gmail.com", href: "mailto:pavlomysak2004@gmail.com" },
-            { icon: "📍", label: "Адреса", value: "м. Львів, вул. Городоцька 174", href: "https://maps.google.com/?q=Львів,+Городоцька+174" },
+            { icon: "📍", label: "Адреса", value: "м. Радехів, вул. Броварська 24", href: "https://maps.google.com/?q=Радехів,+Броварська+24" },
           ].map((c, i) => (
             <a key={i} href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 14, background: "#111", borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: "1px solid #1e1e1e", textDecoration: "none" }}>
               <span style={{ fontSize: 22, flexShrink: 0 }}>{c.icon}</span>
@@ -2694,7 +2694,7 @@ function InfoModal({ page, onClose }) {
           <div style={{ background: "#111", borderRadius: 12, padding: 14, border: "1px solid #1a1a1a" }}>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 6 }}>7. Контакт</div>
             <div>З питань конфіденційності: <a href="mailto:pavlomysak2004@gmail.com" style={{ color: "#c9a84c" }}>pavlomysak2004@gmail.com</a></div>
-            <div style={{ marginTop: 4 }}>ФОП Мисак Павло Володимирович, м. Львів, вул. Городоцька 174</div>
+            <div style={{ marginTop: 4 }}>ФОП Мисак Павло Володимирович, м. Радехів, вул. Броварська 24</div>
           </div>
         </div>
       )
@@ -2778,7 +2778,7 @@ function SiteFooter({ onOpenPage }) {
           <span style={{ color: "#222" }}>·</span>
           <a href="mailto:pavlomysak2004@gmail.com" style={{ color: "#555", fontSize: 12, textDecoration: "none" }}>✉️ pavlomysak2004@gmail.com</a>
           <span style={{ color: "#222" }}>·</span>
-          <span style={{ color: "#444", fontSize: 12 }}>📍 Львів, Городоцька 174</span>
+          <span style={{ color: "#444", fontSize: 12 }}>📍 м. Радехів, вул. Броварська 24</span>
         </div>
         <div style={{ textAlign: "center", color: "#2a2a2a", fontSize: 11, marginTop: 8 }}>
           Пн–Пт 9:00–19:00 · Сб 9:00–18:00 · Нд 11:00–17:00
