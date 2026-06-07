@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex">
-<title>Правила повернення — MS Ceramica</title>
+<meta name="robots" content="index, follow">
+<meta name="description" content="Правила повернення та обміну товару — MS Ceramica. 14 днів на повернення. Умови, порядок, повернення коштів.">
+<title>Правила повернення — MS Ceramica · mysak.com.ua</title>
+<link rel="canonical" href="https://mysak.com.ua/returns.html">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -126,6 +128,21 @@ h1 {
   font-size: 14px;
 }
 
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 36px;
+}
+.info-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  padding: 16px;
+}
+.info-card .label { color: #555; font-size: 11px; margin-bottom: 4px; }
+.info-card .value { color: #c9a84c; font-size: 15px; font-weight: 700; }
+
 .contact-box {
   background: #0d0d0d;
   border: 1px solid #2a2a2a;
@@ -135,17 +152,38 @@ h1 {
   align-items: center;
   gap: 20px;
   flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 .contact-box .icon { font-size: 36px; }
 .contact-box h3 { font-size: 16px; margin-bottom: 6px; }
-.contact-box p { color: #777; font-size: 14px; }
+.contact-box p { color: #777; font-size: 14px; margin-bottom: 8px; }
 .contact-box a {
   color: #c9a84c;
   text-decoration: none;
   font-weight: 700;
   font-size: 18px;
+  display: block;
+}
+.contact-box .email {
+  color: #888;
+  font-size: 13px;
+  font-weight: 400;
 }
 .contact-box a:hover { text-decoration: underline; }
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.footer-links a {
+  color: #444;
+  font-size: 12px;
+  text-decoration: none;
+}
+.footer-links a:hover { color: #c9a84c; }
 
 footer {
   text-align: center;
@@ -159,28 +197,48 @@ footer {
 <body>
 
 <header>
-  <a href="index.html" class="logo">MS CERAMICA</a>
-  <a href="index.html" class="back">← Каталог</a>
+  <a href="/" class="logo">MS CERAMICA</a>
+  <a href="/" class="back">← Каталог</a>
 </header>
 
 <main>
-  <h1>Правила повернення товару</h1>
-  <p class="subtitle">Останнє оновлення: травень 2026 · mysak.com.ua</p>
+  <h1>Правила повернення та обміну</h1>
+  <p class="subtitle">Останнє оновлення: червень 2026 · mysak.com.ua · ФОП Мисак Павло Володимирович</p>
 
   <div class="highlight-box">
     <div class="days">14</div>
     <div class="days-label">днів на повернення товару належної якості</div>
-    <p style="margin-top:12px;">відповідно до Закону України "Про захист прав споживачів"</p>
+    <p style="margin-top:12px;">відповідно до Закону України «Про захист прав споживачів»</p>
+  </div>
+
+  <!-- Ключові параметри -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="label">Термін повернення</div>
+      <div class="value">14 календарних днів</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Повернення коштів</div>
+      <div class="value">3–7 робочих днів</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Доставка при браку</div>
+      <div class="value">За наш рахунок</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Доставка при відмові</div>
+      <div class="value">За рахунок покупця</div>
+    </div>
   </div>
 
   <div class="section">
     <h2>Умови повернення</h2>
     <p>Ви можете повернути товар протягом 14 календарних днів з дати отримання за умови:</p>
     <ul>
-      <li>Товар не був у використанні</li>
+      <li>Товар не був у використанні та не був укладений</li>
       <li>Збережено оригінальну упаковку та маркування</li>
       <li>Збережено товарний вигляд (без подряпин, сколів, забруднень)</li>
-      <li>Наявний чек або інший документ про покупку</li>
+      <li>Наявний чек, накладна або інший документ про покупку</li>
       <li>Збережено всі комплектуючі та документи</li>
     </ul>
   </div>
@@ -188,10 +246,10 @@ footer {
   <div class="section">
     <h2>Що не підлягає поверненню</h2>
     <ul>
-      <li class="no">Плитка яка була розпакована і використана</li>
+      <li class="no">Плитка яка була розпакована, порізана або укладена</li>
       <li class="no">Товар виготовлений або замовлений під конкретні розміри</li>
       <li class="no">Товар з механічними пошкодженнями з вини покупця</li>
-      <li class="no">Неповна упаковка (часткове повернення упаковки)</li>
+      <li class="no">Неповна упаковка (часткове повернення з упаковки)</li>
     </ul>
   </div>
 
@@ -201,19 +259,20 @@ footer {
     <ul>
       <li>Зафіксуйте дефект фото або відео при отриманні</li>
       <li>Зв'яжіться з нами протягом 2 днів після отримання</li>
-      <li>Ми замінимо товар або повернемо кошти</li>
+      <li>Ми замінимо товар або повернемо кошти в повному обсязі</li>
       <li>Витрати на доставку при поверненні бракованого товару — за наш рахунок</li>
     </ul>
   </div>
 
   <div class="section">
-    <h2>Порядок повернення</h2>
+    <h2>Порядок повернення — покроково</h2>
     <ul>
-      <li>Зв'яжіться з нами за телефоном або в чаті</li>
-      <li>Узгодьте умови та спосіб повернення</li>
+      <li>Зв'яжіться з нами: <strong style="color:#c9a84c">097 900 03 98</strong> або <strong style="color:#c9a84c">pavlomysak2004@gmail.com</strong></li>
+      <li>Опишіть причину та надішліть фото товару</li>
+      <li>Отримайте підтвердження та інструкції щодо відправки</li>
       <li>Упакуйте товар в оригінальну упаковку</li>
-      <li>Доставте самостійно або надішліть Новою Поштою (за рахунок покупця)</li>
-      <li>Після перевірки товару — повернення коштів протягом 7 робочих днів</li>
+      <li>Доставте самостійно або надішліть Новою Поштою на адресу: <strong style="color:#c9a84c">м. Львів, вул. Городоцька 174</strong></li>
+      <li>Після отримання та перевірки — повернення коштів протягом 3–7 робочих днів</li>
     </ul>
   </div>
 
@@ -221,9 +280,9 @@ footer {
     <h2>Повернення коштів</h2>
     <p>Кошти повертаються тим самим способом яким була здійснена оплата:</p>
     <ul>
-      <li>Готівка — при самовивозі</li>
-      <li>Банківський переказ — протягом 7 робочих днів</li>
-      <li>На картку — протягом 3-5 робочих днів</li>
+      <li>Готівка — при самовивозі за адресою м. Львів, вул. Городоцька 174</li>
+      <li>Банківський переказ (IBAN) — протягом 3–5 робочих днів</li>
+      <li>Накладений платіж — повернення через відділення Нової Пошти</li>
     </ul>
   </div>
 
@@ -231,14 +290,20 @@ footer {
     <div class="icon">📞</div>
     <div>
       <h3>Маєте питання щодо повернення?</h3>
-      <p>Зв'яжіться з нами — вирішимо швидко</p>
+      <p>Зв'яжіться з нами — вирішимо швидко. Відповідаємо протягом 15–30 хв у робочий час.</p>
       <a href="tel:+380979000398">097 900 03 98</a>
+      <a href="mailto:pavlomysak2004@gmail.com" class="email">pavlomysak2004@gmail.com</a>
     </div>
   </div>
+
 </main>
 
 <footer>
-  © 2026 MS Ceramica · mysak.com.ua · Всі права захищені
+  <div class="footer-links">
+    <a href="/">Каталог</a>
+    <a href="/returns.html">Повернення</a>
+  </div>
+  <div>© 2026 ФОП Мисак Павло Володимирович · MS Ceramica · mysak.com.ua</div>
 </footer>
 
 </body>
