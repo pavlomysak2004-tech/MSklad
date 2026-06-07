@@ -2756,18 +2756,25 @@ function SiteFooter({ onOpenPage }) {
       {/* Посилання */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", marginBottom: 20 }}>
         {[
-          { key: "delivery", label: "🚚 Доставка" },
-          { key: "payment", label: "💳 Оплата" },
-          { key: "returns", label: "🔄 Повернення" },
-          { key: "contacts", label: "📞 Контакти" },
+          { href: "/delivery.html", label: "🚚 Доставка" },
+          { href: "/payment.html", label: "💳 Оплата" },
+          { href: "/returns.html", label: "🔄 Повернення" },
+          { href: "/contacts.html", label: "📞 Контакти" },
           { key: "privacy", label: "🔒 Конфіденційність" },
-        ].map(({ key, label }) => (
-          <button key={key} onClick={() => onOpenPage(key)} style={{
-            background: "transparent", border: "1px solid #1a1a1a",
-            borderRadius: 10, padding: "9px 10px",
-            color: "#555", fontSize: 12, cursor: "pointer",
-            textAlign: "left", transition: "all 0.15s",
-          }}>{label}</button>
+        ].map((item) => (
+          item.href
+            ? <a key={item.href} href={item.href} style={{
+                background: "transparent", border: "1px solid #1a1a1a",
+                borderRadius: 10, padding: "9px 10px",
+                color: "#555", fontSize: 12,
+                textAlign: "left", textDecoration: "none", display: "block",
+              }}>{item.label}</a>
+            : <button key={item.key} onClick={() => onOpenPage(item.key)} style={{
+                background: "transparent", border: "1px solid #1a1a1a",
+                borderRadius: 10, padding: "9px 10px",
+                color: "#555", fontSize: 12, cursor: "pointer",
+                textAlign: "left",
+              }}>{item.label}</button>
         ))}
       </div>
 
@@ -3161,16 +3168,16 @@ function TileCatalog() {
               <div style={{ color: "#333", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Інформація</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {[
-                  { key: "delivery", label: "🚚 Доставка" },
-                  { key: "payment", label: "💳 Оплата" },
-                  { key: "returns", label: "🔄 Повернення" },
-                  { key: "contacts", label: "📞 Контакти" },
-                ].map(({ key, label }) => (
-                  <button key={key} onClick={() => { setNavOpen(false); setInfoPage(key); }} style={{
+                  { href: "/delivery.html", label: "🚚 Доставка" },
+                  { href: "/payment.html", label: "💳 Оплата" },
+                  { href: "/returns.html", label: "🔄 Повернення" },
+                  { href: "/contacts.html", label: "📞 Контакти" },
+                ].map(({ href, label }) => (
+                  <a key={href} href={href} style={{
                     background: "#111", border: "1px solid #1e1e1e",
                     borderRadius: 10, padding: "8px 10px",
-                    color: "#666", fontSize: 11, cursor: "pointer", textAlign: "left",
-                  }}>{label}</button>
+                    color: "#666", fontSize: 11, textDecoration: "none", display: "block",
+                  }}>{label}</a>
                 ))}
               </div>
             </div>
