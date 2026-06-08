@@ -1,0 +1,3205 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18188380707"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "AW-18188380707");
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>MS Ceramica — Гуртовий продаж плитки, сантехніки та ламінату по всій Україні</title>
+  <meta name="description" content="Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні. Широкий вибір колекцій, доступні ціни, доставка по Україні.">
+  <meta name="keywords" content="плитка гурт, керамічна плитка купити, плитка Україна, гуртовий продаж плитки, сантехніка гурт, ламінат гурт">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://mysak.com.ua/">
+  <meta property="og:title" content="MS Ceramica — Гуртовий продаж плитки по всій Україні">
+  <meta property="og:description" content="Широкий вибір керамічної плитки, сантехніки та ламінату. Гуртові ціни, доставка по Україні.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mysak.com.ua/">
+  <meta property="og:locale" content="uk_UA">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Store","name":"MS Ceramica","description":"Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні","url":"https://mysak.com.ua","areaServed":"UA"}
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; color: #fff; font-family: sans-serif; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+    const { useState, useRef, useCallback, useEffect } = React;
+
+
+// Рахує площу однієї плитки (м²) з поля розміру типу "120*60", "120x60", "120х60"
+function parseTileArea(size) {
+  if (!size) return 0;
+  const m = String(size).match(/(\d+(?:[.,]\d+)?)\s*[*xXхХ×]\s*(\d+(?:[.,]\d+)?)/);
+  if (!m) return 0;
+  const a = parseFloat(m[1].replace(",", "."));
+  const b = parseFloat(m[2].replace(",", "."));
+  if (!a || !b) return 0;
+  // Розміри в см → переводимо в м² (ділимо на 10000)
+  return parseFloat(((a * b) / 10000).toFixed(4));
+}
+
+const SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTr0m9YOJOveKYYO5a7NeLBoKW5upwPwNb9amlieWbufwGEz6WaD1C_PaUuqMwmHJWqvUic7dNNr87l/pub?gid=501252041&single=true&output=csv";
+
+
+
+
+
+
+const TG_PROXY = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+
+function LiveChat() {
+  const [open, setOpen] = useState(false);
+  React.useEffect(() => { window.__openChat = () => setOpen(true); }, []);
+  const [messages, setMessages] = useState([
+    { id: 1, from: "bot", text: "Привіт! 👋 Я менеджер #MS Ceramica. Задайте будь-яке питання про плитку!", time: new Date().toLocaleTimeString("uk", {hour:"2-digit",minute:"2-digit"}) }
+  ]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [clientId] = useState(() => "c" + Math.random().toString(36).substr(2,6));
+  const messagesEndRef = useRef(null);
+  const lastUpdateRef = useRef(0);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!open) return;
+    const poll = async () => {
+      try {
+        const res = await fetch(TG_PROXY, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o" },
+          body: JSON.stringify({ action: "getUpdates", offset: lastUpdateRef.current + 1 })
+        });
+        const data = await res.json();
+        if (data.ok && data.result.length > 0) {
+          data.result.forEach(update => {
+            lastUpdateRef.current = update.update_id;
+            const msg = update.message;
+            if (msg && msg.text) {
+              setMessages(prev => [...prev, {
+                id: Date.now() + Math.random(),
+                from: "bot",
+                text: msg.text,
+                time: new Date().toLocaleTimeString("uk", {hour:"2-digit",minute:"2-digit"})
+              }]);
+            }
+          });
+        }
+      } catch(e) {}
+    };
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [open]);
+
+  const sendMessage = async () => {
+    if (!input.trim() || sending) return;
+    const text = input.trim();
+    setInput("");
+    setSending(true);
+    setMessages(prev => [...prev, {
+      id: Date.now(),
+      from: "user",
+      text,
+      time: new Date().toLocaleTimeString("uk", {hour:"2-digit",minute:"2-digit"})
+    }]);
+    try {
+      await fetch(TG_PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o" },
+        body: JSON.stringify({ action: "sendMessage", text: "💬 Клієнт [" + clientId + "] пише:\n" + text })
+      });
+    } catch(e) {}
+    setSending(false);
+  };
+
+  return (
+    <>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{
+            position: "fixed", inset: 0, zIndex: 700,
+            background: "rgba(0,0,0,0.4)",
+          }} />
+          <div style={{
+            position: "fixed", bottom: 0, right: 0, zIndex: 800,
+            width: "min(380px, 100vw)",
+            height: "min(520px, 80vh)",
+            background: "#0f0f0f",
+            borderRadius: "20px 20px 0 0",
+            border: "1px solid #2a2a2a",
+            display: "flex", flexDirection: "column",
+            animation: "slideUp 0.3s ease",
+            boxShadow: "0 -10px 40px rgba(0,0,0,0.6)",
+          }}>
+            {/* Шапка */}
+            <div style={{ padding: "16px 18px", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg, #c9a84c, #b8860b)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏪</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>Менеджер #MS Ceramica</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4caf50" }} />
+                  <span style={{ color: "#4caf50", fontSize: 11 }}>Онлайн</span>
+                </div>
+              </div>
+              <button onClick={() => setOpen(false)} style={{ background: "#1a1a1a", border: "none", color: "#555", cursor: "pointer", width: 32, height: 32, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+            </div>
+
+            {/* Повідомлення */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+              {messages.map(msg => (
+                <div key={msg.id} style={{ display: "flex", justifyContent: msg.from === "user" ? "flex-end" : "flex-start" }}>
+                  <div style={{
+                    maxWidth: "78%", padding: "9px 13px",
+                    borderRadius: msg.from === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                    background: msg.from === "user" ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
+                    color: msg.from === "user" ? "#000" : "#ddd",
+                    fontSize: 13, lineHeight: 1.5,
+                  }}>
+                    <div>{msg.text}</div>
+                    <div style={{ fontSize: 10, opacity: 0.6, marginTop: 3, textAlign: "right" }}>{msg.time}</div>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Введення */}
+            <div style={{ padding: "12px 16px", borderTop: "1px solid #1a1a1a", display: "flex", gap: 8, flexShrink: 0 }}>
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && sendMessage()}
+                placeholder="Напишіть питання..."
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 20, background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#fff", fontSize: 13, outline: "none" }}
+              />
+              <button onClick={sendMessage} disabled={sending} style={{
+                width: 42, height: 42, borderRadius: "50%",
+                background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+                border: "none", cursor: "pointer", fontSize: 18,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                opacity: sending ? 0.5 : 1,
+              }}>➤</button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+
+const staticCollections = [
+  {
+    id: 1,
+    name: "Oro Nebula",
+    subtitle: "Золота туманність",
+    size: "60×120 см",
+    finish: "Полірована",
+    price: 1240,
+    unit: "м²",
+    stock: 387,
+    tags: ["Преміум", "Золото", "Мармур"],
+    description: "Білий мармур з золотими прожилками та сірими хмарними переходами. Ефект глибини та розкоші.",
+    image: "",
+    images: [],
+    interiors: [
+      { room: "Ванна кімната", url: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=800&q=80" },
+      { room: "Вітальня", url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80" },
+      { room: "Кухня", url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80" },
+    ],
+  },
+  {
+    id: 2,
+    name: "Calacatta Imperiale",
+    subtitle: "Імператорський калакатта",
+    size: "80×160 см",
+    finish: "Матова",
+    price: 1680,
+    unit: "м²",
+    stock: 214,
+    tags: ["Люкс", "Білий", "Великий формат"],
+    description: "Класичний білий з тонкими бежевими прожилками. Ідеально для великих просторів.",
+    image: "https://images.unsplash.com/photo-1571005892-49f8f8a39f17?w=800&q=80",
+    interiors: [
+      { room: "Ванна кімната", url: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80" },
+      { room: "Хол", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80" },
+      { room: "Спальня", url: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=800&q=80" },
+    ],
+  },
+  {
+    id: 3,
+    name: "Nero Deserto",
+    subtitle: "Чорна пустеля",
+    size: "60×120 см",
+    finish: "Полірована",
+    price: 1420,
+    unit: "м²",
+    stock: 156,
+    tags: ["Преміум", "Чорний", "Контраст"],
+    description: "Глибокий антрацит із золотими вкрапленнями. Максимальний контраст та драматичність.",
+    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80",
+    interiors: [
+      { room: "Ванна кімната", url: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80" },
+      { room: "Ресторан", url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80" },
+      { room: "Офіс", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" },
+    ],
+  },
+];
+
+
+const staticPannos = [];
+
+function useCollections() {
+  const [collections, setCollections] = useState(staticCollections);
+  const [pannos, setPannos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFromSupabase = async () => {
+      try {
+        const res = await fetch(
+          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.false&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at",
+          {
+            headers: {
+              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+              "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+            }
+          }
+        );
+        const data = await res.json();
+        if (!data || !Array.isArray(data)) return;
+
+        const parsed = data.map((item, i) => {
+          const photos = (item.collection_photos || [])
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map(p => p.url);
+
+          const existing = staticCollections.find(c => c.id === i + 1) || staticCollections[0];
+
+          return {
+            ...existing,
+            id: item.id,
+            article: item.article || "",
+            name: item.name || existing.name,
+            subtitle: item.article || existing.subtitle,
+            size: item.size || existing.size,
+            price: item.price_uah || existing.price,
+            stock: item.stock || 0,
+            reserve: item.reserve || 0,
+            totalStock: (item.stock || 0) + (item.reserve || 0),
+            unit: item.unit || "м²",
+            tileArea: item.tile_area || parseTileArea(item.size) || 0,
+            description: item.description || existing.description,
+            tags: item.tags || existing.tags || [],
+            finish: item.finish || existing.finish || "",
+            finishTags: item.finish_tags || [],
+            salePrice: item.sale_price || 0,
+            salePercent: item.sale_percent || 0,
+            saleUntil: item.sale_until || null,
+            reviews: item.reviews || [],
+            bundleArticles: item.bundle_articles || [],
+            image: photos[0] || existing.image,
+            images: photos.length > 0 ? photos : existing.images || [existing.image],
+            isPanno: false,
+          };
+        });
+
+        setCollections(parsed);
+
+        // Завантажуємо панно
+        const resP = await fetch(
+          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.true&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at",
+          {
+            headers: {
+              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+              "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+            }
+          }
+        );
+        const pannosData = await resP.json();
+        if (Array.isArray(pannosData)) {
+          const parsedPannos = pannosData.map((item, i) => {
+            const photos = (item.collection_photos || [])
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map(p => p.url);
+            return {
+              id: item.id,
+              article: item.article || "",
+              name: item.name || "",
+              subtitle: item.article || "Декоративне панно",
+              size: item.size || "",
+              price: item.price_uah || 0,
+              stock: item.stock || 0,
+              reserve: item.reserve || 0,
+              totalStock: (item.stock || 0) + (item.reserve || 0),
+              unit: item.unit || "шт",
+              description: item.description || "",
+              tags: item.tags || ["Панно"],
+              image: photos[0] || "",
+              images: photos.length > 0 ? photos : [""],
+              isPanno: true,
+            };
+          });
+          setPannos(parsedPannos);
+        }
+
+      } catch(e) {
+        console.log("Supabase error, using static data:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFromSupabase();
+    const interval = setInterval(fetchFromSupabase, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return { collections, pannos, loading };
+}
+
+
+
+
+
+function StockBadge({ stock }) {
+  const color = stock > 300 ? "#4caf50" : stock > 100 ? "#ff9800" : "#f44336";
+  const label = stock > 300 ? "В наявності" : stock > 100 ? "Залишок" : "Мало";
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      background: color + "22", color, border: `1px solid ${color}44`,
+      borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700,
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, display: "inline-block" }} />
+      {label}: {stock} м²
+    </span>
+  );
+}
+
+// Fullscreen свайп-галерея
+function TileViewer({ tile, onClose, hideInfo }) {
+  const [current, setCurrent] = useState(0);
+  const images = tile.images || [tile.image];
+  const total = images.length;
+  const [zoom, setZoom] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const imgRef = useRef(null);
+
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  const prev = (e) => { e && e.stopPropagation(); setCurrent(i => (i - 1 + total) % total); setZoom(false); };
+  const next = (e) => { e && e.stopPropagation(); setCurrent(i => (i + 1) % total); setZoom(false); };
+
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    if (Math.abs(dx) > 40 && Math.abs(dx) > dy) {
+      dx < 0 ? next() : prev();
+    }
+    touchStartX.current = null;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!zoom) return;
+    const rect = imgRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    setZoom(z => !z);
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 2000,
+        background: "#000",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        userSelect: "none",
+      }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onClick={onClose}
+    >
+      {/* Фото з zoom */}
+      <div
+        ref={imgRef}
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setZoom(false)}
+        style={{
+          width: "100%", height: "100%",
+          cursor: zoom ? "zoom-out" : "zoom-in",
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        <img
+          key={current}
+          src={images[current]}
+          alt={tile.name}
+          style={{
+            width: "100%", height: "100%",
+            objectFit: "contain",
+            display: "block",
+            animation: "fadeSlide 0.28s ease",
+            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+            transform: zoom ? "scale(2.5)" : "scale(1)",
+            transition: zoom ? "none" : "transform 0.3s ease",
+          }}
+        />
+        {!zoom && (
+          <div style={{
+            position: "absolute", bottom: 70, left: "50%", transform: "translateX(-50%)",
+            background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 20, padding: "6px 14px",
+            color: "#fff", fontSize: 11, fontWeight: 600,
+            pointerEvents: "none",
+          }}>🔍 Клікни для збільшення</div>
+        )}
+      </div>
+
+      {/* Стрілки (для десктопу) */}
+      {total > 1 && (
+        <>
+          <button onClick={prev} style={{
+            position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+            width: 44, height: 44, borderRadius: "50%",
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            color: "#fff", fontSize: 22, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>‹</button>
+          <button onClick={next} style={{
+            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+            width: 44, height: 44, borderRadius: "50%",
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            color: "#fff", fontSize: 22, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>›</button>
+        </>
+      )}
+
+      {/* Закрити + Поділитись */}
+      <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8 }} onClick={e => e.stopPropagation()}>
+        <button onClick={async (e) => {
+          e.stopPropagation();
+          const imgUrl = images[current];
+          if (!imgUrl) return;
+          const shareUrl = window.location.origin + window.location.pathname + "?tile=" + String(tile.id);
+          // Спробуємо поширити зображення як файл (iOS Safari підтримує)
+          if (navigator.share) {
+            try {
+              const res = await fetch(imgUrl);
+              const blob = await res.blob();
+              const ext = blob.type.includes("png") ? ".png" : ".jpg";
+              const file = new File([blob], (tile.name || "tile") + ext, { type: blob.type });
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                  title: tile.name + " — MS Ceramica",
+                  text: tile.name + " · " + (tile.size || "") + " · " + tile.price.toLocaleString() + " грн/м²",
+                  url: shareUrl,
+                  files: [file],
+                });
+                return;
+              }
+            } catch(err) {
+              if (err.name === "AbortError") return;
+            }
+            // Fallback — поширити без файлу
+            try {
+              await navigator.share({
+                title: tile.name + " — MS Ceramica",
+                text: tile.name + " · " + (tile.size || "") + " · " + tile.price.toLocaleString() + " грн/м²",
+                url: shareUrl,
+              });
+            } catch(_) {}
+          }
+        }} style={{
+          width: 40, height: 40, borderRadius: "50%",
+          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          color: "#fff", fontSize: 17, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>⎙</button>
+        <button onClick={onClose} style={{
+          width: 40, height: 40, borderRadius: "50%",
+          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          color: "#fff", fontSize: 20, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>×</button>
+      </div>
+
+      {/* Крапки-індикатори */}
+      {total > 1 && (
+        <div style={{
+          position: "absolute", bottom: 100, left: 0, right: 0,
+          display: "flex", justifyContent: "center", gap: 8,
+        }} onClick={e => e.stopPropagation()}>
+          {images.map((_, i) => (
+            <div key={i} onClick={() => setCurrent(i)} style={{
+              width: i === current ? 22 : 8,
+              height: 8, borderRadius: 4,
+              background: i === current ? "#c9a84c" : "rgba(255,255,255,0.4)",
+              transition: "all 0.3s ease",
+              cursor: "pointer",
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Назва внизу */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        padding: "40px 24px 32px",
+        background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)",
+        pointerEvents: "none",
+      }}>
+        {!hideInfo && <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{tile.subtitle}</div>}
+        {!hideInfo && <div style={{ color: "#fff", fontSize: 22, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>}
+        <div style={{ color: "#aaa", fontSize: 13, marginTop: 4 }}>{tile.size} · {tile.finish} · {current + 1}/{total}</div>
+      </div>
+    </div>
+  );
+}
+
+function AIVisualization({ tile, onClose }) {
+  const [activeRoom, setActiveRoom] = useState("Ванна кімната");
+  const [loading, setLoading] = useState(false);
+  const [generatedImages, setGeneratedImages] = useState({});
+
+  const rooms = ["Ванна кімната", "Кухня", "Коридор", "Вітальня"];
+  const SUPA = "https://svbmamaqrtsknuztxiuq.supabase.co";
+  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+
+  // Завантажуємо збережені фото з бази
+  const loadSaved = async () => {
+    if (!tile.article) return {};
+    try {
+      const res = await fetch(SUPA + "/rest/v1/interior_images?article=eq." + encodeURIComponent(tile.article) + "&order=created_at.desc", {
+        headers: { "apikey": KEY, "Authorization": "Bearer " + KEY }
+      });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const byRoom = {};
+        // Беремо тільки перше (найновіше) фото для кожної кімнати
+        data.forEach(item => {
+          if (!byRoom[item.room]) byRoom[item.room] = item.image_url;
+        });
+        return byRoom;
+      }
+    } catch(e) {
+      console.error("Load saved error:", e.message);
+    }
+    return {};
+  };
+
+  const generateImage = async (room, force = false, currentSaved = null) => {
+    // Використовуємо currentSaved якщо переданий (при першому завантаженні)
+    // або generatedImages зі стану (при ручному виклику)
+    const images = currentSaved !== null ? currentSaved : generatedImages;
+    if (images[room] && !force) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      // Спочатку видаляємо старі записи для цієї кімнати+артикулу (щоб не накопичувались дублікати)
+      if (tile.article) {
+        await fetch(
+          SUPA + "/rest/v1/interior_images?article=eq." + encodeURIComponent(tile.article) + "&room=eq." + encodeURIComponent(room),
+          {
+            method: "DELETE",
+            headers: { "apikey": KEY, "Authorization": "Bearer " + KEY }
+          }
+        );
+      }
+      const res = await fetch(SUPA + "/functions/v1/generate-interior", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + KEY
+        },
+        body: JSON.stringify({ tileName: tile.name, tileImage: tile.image, room, article: tile.article })
+      });
+      const data = await res.json();
+      if (data.imageUrl) {
+        setGeneratedImages(prev => ({ ...prev, [room]: data.imageUrl }));
+      } else {
+        console.error("Interior error:", data.error);
+        setLoading(false);
+      }
+    } catch(e) {
+      console.error("Interior fetch error:", e.message);
+      setLoading(false);
+    }
+  };
+
+  // При відкритті — завантажуємо збережені фото
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const saved = await loadSaved();
+      // Одразу оновлюємо стан і передаємо saved напряму в generateImage
+      // щоб уникнути проблеми з React batching (стан ще не оновився)
+      setGeneratedImages(saved);
+      if (saved["Ванна кімната"]) {
+        setLoading(false);
+      } else {
+        generateImage("Ванна кімната", false, saved);
+      }
+    })();
+  }, []);
+
+  const handleRoomChange = (room) => {
+    setActiveRoom(room);
+    if (!generatedImages[room]) {
+      generateImage(room);
+    } else {
+      setLoading(false);
+    }
+  };
+
+  const currentImage = generatedImages[activeRoom];
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }} onClick={onClose}>
+      <div style={{
+        background: "#0f0f0f", borderRadius: 20, maxWidth: 720, width: "100%",
+        border: "1px solid #2a2a2a", overflow: "hidden",
+        boxShadow: "0 40px 80px rgba(0,0,0,0.8)",
+      }} onClick={e => e.stopPropagation()}>
+
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>✦ AI Візуалізація інтер'єру</div>
+            <div style={{ color: "#fff", fontSize: 20, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#666", cursor: "pointer", width: 36, height: 36, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, padding: "16px 24px 0", flexWrap: "wrap" }}>
+          {rooms.map(room => (
+            <button key={room} onClick={() => handleRoomChange(room)} style={{
+              padding: "7px 16px", borderRadius: 20, border: "1px solid",
+              borderColor: activeRoom === room ? "#c9a84c" : "#2a2a2a",
+              background: activeRoom === room ? "#c9a84c11" : "transparent",
+              color: activeRoom === room ? "#c9a84c" : "#666",
+              cursor: "pointer", fontSize: 12, fontWeight: 600,
+            }}>
+              {room} {generatedImages[room] ? "✓" : ""}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ position: "relative", margin: "16px 24px", borderRadius: 12, overflow: "hidden", height: 300, background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {currentImage ? (
+            <>
+              <img
+                src={currentImage}
+                alt={activeRoom}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onLoad={() => setLoading(false)}
+                onError={() => setLoading(false)}
+              />
+              {loading && (
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}>
+                  <div style={{ color: "#c9a84c", fontSize: 13, animation: "pulse 1.5s infinite" }}>✦ Завантаження...</div>
+                </div>
+              )}
+              <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>{activeRoom}</span>
+                <span style={{ color: "#c9a84c", fontSize: 11, fontWeight: 700 }}>AI Візуалізація</span>
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ color: "#c9a84c", fontSize: 13, marginBottom: 8, animation: "pulse 1.5s infinite" }}>✦ AI генерує інтер'єр...</div>
+              <div style={{ color: "#444", fontSize: 11 }}>~10-20 секунд</div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: "0 24px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ color: "#444", fontSize: 11 }}>Оберіть кімнату</div>
+          {currentImage && !loading && (
+            <button onClick={() => generateImage(activeRoom, true)} style={{
+              padding: "6px 14px", borderRadius: 20, border: "1px solid #c9a84c",
+              background: "#c9a84c11", color: "#c9a84c", cursor: "pointer", fontSize: 11, fontWeight: 600,
+            }}>✦ Згенерувати нове</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function OrderModal({ tile, onClose }) {
+  const tileArea = tile.tileArea || 0;
+  const hasTileData = tileArea > 0;
+  const step = hasTileData ? tileArea : 0.01;
+  const isPanno = tile.isPanno;
+  const [area, setArea] = useState(hasTileData ? tileArea : 1);
+  const [pannoQty, setPannoQty] = useState(1);
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [sent, setSent] = useState(false);
+  const [orderNum, setOrderNum] = useState("");
+  const [sending, setSending] = useState(false);
+  const tileCount = hasTileData ? Math.round(area / tileArea) : null;
+  const total = isPanno ? Math.round(pannoQty * tile.price) : Math.round(area * tile.price);
+  const inputRef = useRef(null);
+
+  // Валідація телефону
+  const validatePhone = (val) => {
+    const digits = val.replace(/\D/g, "");
+    if (!digits) return "Введіть номер телефону";
+    if (digits.length < 10) return "Номер занадто короткий";
+    if (digits.length > 13) return "Номер занадто довгий";
+    return "";
+  };
+
+  const handlePhoneChange = (val) => {
+    // Тільки цифри, +, пробіли, дужки, тире
+    const clean = val.replace(/[^\d+\s\-()]/g, "");
+    setPhone(clean);
+    setPhoneError(validatePhone(clean));
+  };
+
+  const isFormValid = () => {
+    return !validatePhone(phone) && phone.trim();
+  };
+
+  const decrease = () => {
+    const newArea = Math.max(step, parseFloat((area - step).toFixed(4)));
+    setArea(newArea);
+    if (inputRef.current) inputRef.current.value = newArea.toFixed(2);
+  };
+  const increase = () => {
+    const newArea = parseFloat((area + step).toFixed(4));
+    setArea(newArea);
+    if (inputRef.current) inputRef.current.value = newArea.toFixed(2);
+  };
+
+  const getNextOrderNum = async () => {
+    try {
+      const res = await fetch(
+        "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/settings?key=eq.order_counter&select=value",
+        { headers: {
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+        }}
+      );
+      const data = await res.json();
+      const current = parseInt(data[0]?.value || "0");
+      const next = current + 1;
+
+      // Update counter
+      await fetch(
+        "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/settings?key=eq.order_counter",
+        {
+          method: "PATCH",
+          headers: {
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ value: next.toString() })
+        }
+      );
+      return "#МС-" + String(next).padStart(4, "0");
+    } catch(e) {
+      return "#МС-" + Date.now().toString().slice(-4);
+    }
+  };
+
+  const saveOrder = async (num) => {
+    try {
+      await fetch(
+        "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/orders",
+        {
+          method: "POST",
+          headers: {
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify({
+            collection_id: tile.id,
+            client_contact: phone,
+            quantity_m2: area,
+            quantity_pcs: tileCount,
+            total_price: total,
+            status: "new",
+            notes: num
+          })
+        }
+      );
+    } catch(e) {
+      console.log("Order save error:", e);
+    }
+  };
+
+  const handleOrder = async () => {
+    if (!isFormValid()) return;
+    const err = validatePhone(phone);
+    if (err) { setPhoneError(err); return; }
+    setSending(true);
+    const num = await getNextOrderNum();
+    setOrderNum(num);
+    await saveOrder(num);
+
+    const text = "🛒 НОВЕ ЗАМОВЛЕННЯ " + num + "\n\n" +
+      "📦 " + tile.name + "\n" +
+      "📐 " + (tile.size || "") + "\n" +
+      (isPanno
+        ? "🗂 " + pannoQty + " комплект" + (pannoQty > 1 ? (pannoQty < 5 ? "и" : "ів") : "") + "\n"
+        : "📏 " + area.toFixed(2) + " м²" + (tileCount ? " (" + tileCount + " шт)" : "") + "\n") +
+      "💰 " + total.toLocaleString() + " грн\n" +
+      "📞 " + phone;
+
+    // Відправляємо через Telegram бота прямо вам
+    try {
+      await fetch(TG_PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o" },
+        body: JSON.stringify({ action: "sendMessage",
+          text: text,
+          parse_mode: "HTML"
+        })
+      });
+    } catch(e) {
+      console.log("Telegram error:", e);
+    }
+
+    // Google Ads — відстеження конверсії "Замовити"
+    if (typeof gtag === "function") {
+      gtag("event", "conversion", {
+        send_to: "AW-18188380707/cMVPCL-9grMcEKPU8uBD",
+        value: total,
+        currency: "UAH",
+        transaction_id: num,
+      });
+    }
+
+    setSending(false);
+    setSent(true);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 1100,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }} onClick={onClose}>
+      <div style={{
+        background: "#0f0f0f", borderRadius: 20, maxWidth: 420, width: "100%",
+        border: "1px solid #2a2a2a", overflow: "hidden", animation: "fadeIn 0.25s ease",
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Оформити замовлення</div>
+            <div style={{ color: "#fff", fontSize: 18, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
+            <div style={{ color: "#555", fontSize: 12, marginTop: 2 }}>{tile.size}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#555", cursor: "pointer", width: 34, height: 34, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+        </div>
+
+        {!sent ? (
+          <div style={{ padding: "20px 22px 22px" }}>
+
+            {/* Кількість */}
+            <div style={{ marginBottom: 20 }}>
+              {isPanno ? (
+                /* Панно — лічильник комплектів */
+                <>
+                  <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Кількість комплектів</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
+                    <button onClick={() => setPannoQty(q => Math.max(1, q - 1))} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "#1a1a1a", border: "1px solid #2a2a2a",
+                      color: "#fff", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>−</button>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ color: "#c9a84c", fontSize: 36, fontWeight: 900, lineHeight: 1 }}>{pannoQty}</div>
+                      <div style={{ color: "#555", fontSize: 12, marginTop: 4 }}>комплект{pannoQty > 1 ? (pannoQty < 5 ? "и" : "ів") : ""}</div>
+                    </div>
+                    <button onClick={() => setPannoQty(q => q + 1)} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+                      border: "none", color: "#000", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>+</button>
+                  </div>
+                </>
+              ) : (
+                /* Плитка — лічильник м² */
+                <>
+                  <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Кількість</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                    <button onClick={decrease} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "#1a1a1a", border: "1px solid #2a2a2a",
+                      color: "#fff", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>−</button>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <input
+                          ref={inputRef}
+                          type="number"
+                          defaultValue={area.toFixed(2)}
+                          onBlur={e => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val > 0) {
+                              const snapped = hasTileData ? Math.round(val / tileArea) * tileArea : val;
+                              setArea(parseFloat(snapped.toFixed(4)));
+                              e.target.value = snapped.toFixed(2);
+                            }
+                          }}
+                          onKeyDown={e => { if (e.key === "Enter") e.target.blur(); }}
+                          style={{
+                            width: 130, padding: "8px 10px", borderRadius: 10,
+                            background: "#1a1a1a", border: "1px solid #2a2a2a",
+                            color: "#fff", fontSize: 22, fontWeight: 900,
+                            textAlign: "center", outline: "none",
+                          }}
+                        />
+                        <span style={{ color: "#c9a84c", fontSize: 16, fontWeight: 700 }}>м²</span>
+                      </div>
+                      {tileCount && <div style={{ color: "#555", fontSize: 11, marginTop: 6 }}>{tileCount} шт</div>}
+                    </div>
+                    <button onClick={increase} style={{
+                      width: 44, height: 44, borderRadius: "50%",
+                      background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+                      border: "none", color: "#000", fontSize: 24, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>+</button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Форма контактів */}
+            <div style={{ marginBottom: 16 }}>
+              <style>{`
+                @keyframes phonePulseRed {
+                  0%   { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+                  50%  { border-color: #f44336cc; box-shadow: 0 0 10px rgba(244,67,51,0.4); }
+                  100% { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+                }
+                .phone-pulse-red { animation: phonePulseRed 1.5s ease-in-out infinite; }
+              `}</style>
+              <div style={{ color: "#f44336", fontSize: 12, marginBottom: 6, fontWeight: 600 }}>📞 Номер телефону *</div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={e => handlePhoneChange(e.target.value)}
+                onKeyDown={e => {
+                  const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter','+','-','(',')',' '];
+                  if (!allowed.includes(e.key) && !/[0-9]/.test(e.key)) e.preventDefault();
+                }}
+                placeholder="+380XXXXXXXXX"
+                inputMode="tel"
+                maxLength={16}
+                className={!phone ? "phone-pulse-red" : ""}
+                style={{
+                  width: "100%", padding: "12px 14px", borderRadius: 10, background: "#1a1a1a",
+                  border: phoneError && phone ? "1px solid #f44336" : phone && !phoneError ? "1px solid #4caf50" : "1px solid #f4433666",
+                  color: "#fff", fontSize: 15, outline: "none", transition: "border-color 0.3s",
+                }}
+              />
+              {phoneError && phone && (
+                <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ {phoneError}</div>
+              )}
+              {phone && !phoneError && (
+                <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>
+              )}
+            </div>
+
+            {/* Сума */}
+            <div style={{
+              background: "#1a1a1a", borderRadius: 12, padding: "14px 16px",
+              border: "1px solid #c9a84c22", marginBottom: 16,
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <div>
+                <div style={{ color: "#555", fontSize: 12 }}>Сума замовлення</div>
+                <div style={{ color: "#444", fontSize: 10, marginTop: 2 }}>
+                  {isPanno
+                    ? tile.price.toLocaleString() + " грн × " + pannoQty + " комп."
+                    : tile.price.toLocaleString() + " грн/м² × " + area.toFixed(2) + " м²"}
+                </div>
+              </div>
+              <div style={{ color: "#fff", fontSize: 22, fontWeight: 800 }}>
+                {total.toLocaleString()} <span style={{ color: "#c9a84c", fontSize: 14 }}>грн</span>
+              </div>
+            </div>
+
+            {/* Кнопка замовити */}
+            <button
+              onClick={handleOrder}
+              disabled={!isFormValid() || sending}
+              style={{
+                width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                background: isFormValid() ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
+                color: isFormValid() ? "#000" : "#555",
+                cursor: isFormValid() ? "pointer" : "not-allowed",
+                fontSize: 15, fontWeight: 800, transition: "all 0.2s",
+              }}
+            >
+              {sending ? "⏳ Оформлення..." : "🛒 Замовити"}
+            </button>
+            {!isFormValid() && (
+              <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginTop: 8 }}>
+                {isPanno ? "Заповніть ім'я, телефон і місто" : "Введіть коректний номер телефону"}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ padding: "40px 22px", textAlign: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+            <div style={{ color: "#c9a84c", fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{orderNum}</div>
+            <div style={{ color: "#fff", fontSize: 18, fontFamily: "serif", fontWeight: 700, marginBottom: 8 }}>Замовлення прийнято!</div>
+            <div style={{ color: "#555", fontSize: 13, lineHeight: 1.6 }}>
+              Менеджер зателефонує на<br/>
+              <span style={{ color: "#fff", fontWeight: 700 }}>{phone}</span>
+            </div>
+            <button onClick={onClose} style={{
+              marginTop: 24, padding: "10px 28px", borderRadius: 10,
+              background: "#1a1a1a", border: "1px solid #2a2a2a",
+              color: "#777", cursor: "pointer", fontSize: 13,
+            }}>Закрити</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+
+function RoomCalculator({ tile, onClose }) {
+  const tileArea = tile.tileArea || 0;
+  const hasTileData = tileArea > 0;
+
+  const [length, setLength] = useState("5");
+  const [width, setWidth] = useState("4");
+  const [waste, setWaste] = useState(10);
+  const [extraArea, setExtraArea] = useState(0); // ручне коригування м²
+  const [phone, setPhone] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const roomArea = parseFloat(length || 0) * parseFloat(width || 0);
+  const withWaste = roomArea > 0 ? roomArea * (1 + waste / 100) : 0;
+  const baseArea = withWaste + extraArea;
+  // Якщо є дані про плитку — округлюємо до цілих плиток
+  const tileCount = hasTileData ? Math.ceil(baseArea / tileArea) : 0;
+  const area = hasTileData ? tileCount * tileArea : baseArea;
+  const totalPrice = area * tile.price;
+  const enoughStock = area <= tile.stock;
+
+  // Крок = площа однієї плитки (наприклад 0.72 м² для 120×60), або 1 м² якщо даних нема
+  const areaStep = hasTileData ? tileArea : 1;
+  const addArea = () => setExtraArea(e => parseFloat((e + areaStep).toFixed(4)));
+  const subArea = () => setExtraArea(e => parseFloat(Math.max(-(withWaste - areaStep), e - areaStep).toFixed(4)));
+
+  const submit = async () => {
+    if (!phone.trim() || phone.replace(/\D/g, "").length < 9) {
+      alert("Введіть коректний номер телефону");
+      return;
+    }
+    if (area <= 0) {
+      alert("Спочатку введіть розміри кімнати");
+      return;
+    }
+    setSending(true);
+    const msg =
+      "📐 Розрахунок з калькулятора\n\n" +
+      "🔲 Плитка: " + tile.name + "\n" +
+      "💰 Ціна: " + tile.price.toLocaleString() + " грн/м²\n" +
+      "📏 Кімната: " + length + " × " + width + " = " + roomArea.toFixed(2) + " м²\n" +
+      "➕ Запас: " + waste + "%\n" +
+      (hasTileData ? "🔢 Кількість: " + tileCount + " шт\n" : "") +
+      "📦 Площа: " + area.toFixed(2) + " м²\n" +
+      "💵 Сума: " + totalPrice.toLocaleString() + " грн\n\n" +
+      "📞 Телефон: " + phone;
+    try {
+      await fetch(TG_PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + SUPA_KEY, "apikey": SUPA_KEY },
+        body: JSON.stringify({ action: "sendMessage", text: msg })
+      });
+      setSent(true);
+    } catch(e) {
+      alert("Помилка відправки. Спробуйте ще раз.");
+    }
+    setSending(false);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 1100,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }} onClick={onClose}>
+      <div style={{
+        background: "#0f0f0f", borderRadius: 20, maxWidth: 420, width: "100%",
+        border: "1px solid #2a2a2a", overflow: "hidden", animation: "fadeIn 0.25s ease",
+        maxHeight: "92vh", overflowY: "auto",
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#0f0f0f", zIndex: 5 }}>
+          <div>
+            <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>🏠 Калькулятор кімнати</div>
+            <div style={{ color: "#fff", fontSize: 17, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
+            {hasTileData && <div style={{ color: "#444", fontSize: 11, marginTop: 2 }}>1 плитка = {tileArea.toFixed(4)} м²</div>}
+          </div>
+          <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#555", cursor: "pointer", width: 34, height: 34, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+        </div>
+
+        {sent ? (
+          <div style={{ padding: "40px 22px", textAlign: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+            <div style={{ color: "#fff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Заявку відправлено!</div>
+            <div style={{ color: "#777", fontSize: 13, marginBottom: 24 }}>Менеджер зв'яжеться з вами найближчим часом</div>
+            <button onClick={onClose} style={{ padding: "12px 28px", borderRadius: 12, background: "#c9a84c", border: "none", color: "#000", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Закрити</button>
+          </div>
+        ) : (
+        <div style={{ padding: "20px 22px 24px" }}>
+          {/* Розміри кімнати */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: "#555", fontSize: 11, marginBottom: 6, textAlign: "center" }}>Довжина (м)</div>
+              <input type="number" value={length}
+                onChange={e => { setLength(e.target.value); setExtraArea(0); }}
+                style={{ width: "100%", padding: "12px", borderRadius: 10, background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#fff", fontSize: 18, fontWeight: 700, textAlign: "center", outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", paddingTop: 22, color: "#333", fontSize: 20 }}>×</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: "#555", fontSize: 11, marginBottom: 6, textAlign: "center" }}>Ширина (м)</div>
+              <input type="number" value={width}
+                onChange={e => { setWidth(e.target.value); setExtraArea(0); }}
+                style={{ width: "100%", padding: "12px", borderRadius: 10, background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#fff", fontSize: 18, fontWeight: 700, textAlign: "center", outline: "none" }} />
+            </div>
+          </div>
+
+          {/* Запас */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ color: "#555", fontSize: 12 }}>Запас на обрізку</span>
+              <span style={{ color: "#c9a84c", fontWeight: 700, fontSize: 13 }}>{waste}%</span>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[5, 10, 15, 20].map(w => (
+                <button key={w} onClick={() => { setWaste(w); setExtraArea(0); }} style={{
+                  flex: 1, padding: "7px 0", borderRadius: 8, border: "1px solid",
+                  borderColor: waste === w ? "#c9a84c" : "#2a2a2a",
+                  background: waste === w ? "#c9a84c11" : "transparent",
+                  color: waste === w ? "#c9a84c" : "#555",
+                  cursor: "pointer", fontSize: 12, fontWeight: 700,
+                }}>{w}%</button>
+              ))}
+            </div>
+          </div>
+
+          {area > 0 && (
+            <>
+              {/* Коригування площі +/- */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ color: "#555", fontSize: 12, textAlign: "center", marginBottom: 12 }}>Площа (м²)</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                  <button onClick={subArea} style={{
+                    width: 44, height: 44, borderRadius: "50%",
+                    background: "#1a1a1a", border: "1px solid #2a2a2a",
+                    color: "#fff", fontSize: 24, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>−</button>
+                  <div style={{ textAlign: "center", minWidth: 130 }}>
+                    <div style={{ color: "#fff", fontSize: 28, fontWeight: 900 }}>{area.toFixed(2)} <span style={{ color: "#c9a84c", fontSize: 16 }}>м²</span></div>
+                    {hasTileData && <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{tileCount} шт</div>}
+                  </div>
+                  <button onClick={addArea} style={{
+                    width: 44, height: 44, borderRadius: "50%",
+                    background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+                    border: "none", color: "#000", fontSize: 24, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>+</button>
+                </div>
+              </div>
+
+              {/* Результат */}
+              <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", border: "1px solid #c9a84c22", marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ color: "#555", fontSize: 12 }}>Загальна сума</div>
+                    <div style={{ color: "#444", fontSize: 10, marginTop: 2 }}>{tile.price.toLocaleString()} грн/м² × {area.toFixed(2)} м²</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ color: "#fff", fontSize: 24, fontWeight: 900 }}>{totalPrice.toLocaleString()} <span style={{ color: "#c9a84c", fontSize: 14 }}>грн</span></div>
+                  </div>
+                </div>
+                <div style={{
+                  marginTop: 10, padding: "7px 10px", borderRadius: 8,
+                  background: enoughStock ? "#4caf5011" : "#f4433611",
+                  border: "1px solid " + (enoughStock ? "#4caf5033" : "#f4433633"),
+                  textAlign: "center", fontSize: 12,
+                  color: enoughStock ? "#4caf50" : "#f44336",
+                }}>
+                  {enoughStock ? "✓ На складі достатньо (" + Number(tile.stock).toFixed(2) + " м²)" : "⚠ На складі лише " + Number(tile.stock).toFixed(2) + " м²"}
+                </div>
+              </div>
+
+              {/* Телефон */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ color: "#f44336", fontSize: 12, marginBottom: 6, fontWeight: 600 }}>📞 Номер телефону *</div>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={e => {
+                    const clean = e.target.value.replace(/[^\d+\s\-()]/g, "");
+                    setPhone(clean);
+                  }}
+                  placeholder="+380XXXXXXXXX"
+                  inputMode="tel"
+                  maxLength={16}
+                  className={!phone ? "phone-pulse-red" : ""}
+                  style={{
+                    width: "100%", padding: "12px 14px", borderRadius: 10, background: "#1a1a1a",
+                    border: phone && phone.replace(/\D/g,"").length < 10 ? "1px solid #f44336" : phone ? "1px solid #4caf50" : "1px solid #f4433666",
+                    color: "#fff", fontSize: 15, outline: "none", transition: "border-color 0.3s",
+                  }}
+                />
+                {phone && phone.replace(/\D/g,"").length < 10 && (
+                  <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ Номер занадто короткий</div>
+                )}
+                {phone && phone.replace(/\D/g,"").length >= 10 && (
+                  <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>
+                )}
+              </div>
+
+              {/* Кнопка замовити */}
+              <button onClick={submit} disabled={sending || !phone || phone.replace(/\D/g,"").length < 10} style={{
+                width: "100%", padding: "15px", borderRadius: 12,
+                background: phone && phone.replace(/\D/g,"").length >= 10 ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
+                border: "none", color: phone && phone.replace(/\D/g,"").length >= 10 ? "#000" : "#555",
+                fontSize: 15, fontWeight: 800,
+                cursor: phone && phone.replace(/\D/g,"").length >= 10 ? "pointer" : "not-allowed",
+              }}>
+                {sending ? "Відправка..." : "Прорахувати і замовити"}
+              </button>
+            </>
+          )}
+        </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+const tagColors = {
+  "Преміум": "#c9a84c",
+  "Люкс": "#b8860b",
+  "Золото": "#c9a84c",
+  "Мармур": "#8a8a8a",
+  "Білий": "#ccc",
+  "Чорний": "#555",
+  "Великий формат": "#7a9e7e",
+  "Контраст": "#c9a84c",
+  "Панно": "#7b68ee",
+  "Синій": "#4169e1",
+};
+
+function ExpandableDesc({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!text) return null;
+  return (
+    <div style={{ margin: "10px 0 14px" }}>
+      <p style={{
+        color: "#666", fontSize: 12, lineHeight: 1.6, margin: 0,
+        display: "-webkit-box", WebkitLineClamp: expanded ? "unset" : 2,
+        WebkitBoxOrient: "vertical", overflow: expanded ? "visible" : "hidden",
+      }}>{text}</p>
+      {text.length > 80 && (
+        <button onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }} style={{
+          background: "none", border: "none", color: "#c9a84c",
+          fontSize: 11, cursor: "pointer", padding: "2px 0", marginTop: 2,
+        }}>{expanded ? "↑ Згорнути" : "↓ Читати більше"}</button>
+      )}
+    </div>
+  );
+}
+
+function getSaleInfo(tile) {
+  if (!tile.salePrice && !tile.salePercent) return null;
+  const now = new Date();
+  if (tile.saleUntil) {
+    const until = new Date(tile.saleUntil);
+    until.setHours(23, 59, 59);
+    if (now > until) return null; // акція закінчилась
+  }
+  const salePrice = tile.salePrice || Math.round(tile.price * (1 - tile.salePercent / 100));
+  const percent = tile.salePercent || Math.round((1 - salePrice / tile.price) * 100);
+  const daysLeft = tile.saleUntil ? Math.ceil((new Date(tile.saleUntil) - now) / (1000 * 60 * 60 * 24)) : null;
+  return { salePrice, percent, daysLeft };
+}
+
+function StarRating({ rating, count, size = 13 }) {
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ display: "flex", gap: 1 }}>
+        {[1,2,3,4,5].map(i => (
+          <span key={i} style={{ color: i <= full ? "#f4b942" : (i === full+1 && half ? "#f4b942" : "#333"), fontSize: size }}>
+            {i <= full ? "★" : (i === full+1 && half ? "⭐" : "☆")}
+          </span>
+        ))}
+      </div>
+      <span style={{ color: "#f4b942", fontSize: size, fontWeight: 700 }}>{rating.toFixed(1)}</span>
+      {count > 0 && <span style={{ color: "#444", fontSize: size - 2 }}>({count})</span>}
+    </div>
+  );
+}
+
+function ReviewsSection({ reviews }) {
+  if (!reviews || reviews.length === 0) return null;
+  const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+  return (
+    <div style={{ padding: "20px 0 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #1a1a1a" }}>
+        <StarRating rating={avg} count={reviews.length} size={16} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {reviews.map((r, i) => (
+          <div key={i} style={{ background: "#1a1a1a", borderRadius: 12, padding: "12px 14px", border: "1px solid #2a2a2a" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ color: "#c9a84c", fontSize: 13, fontWeight: 700 }}>{r.author}</span>
+              <StarRating rating={r.rating} count={0} size={12} />
+            </div>
+            <p style={{ color: "#777", fontSize: 13, lineHeight: 1.6 }}>{r.text}</p>
+            {r.created_at && (
+              <div style={{ color: "#333", fontSize: 10, marginTop: 6 }}>
+                {new Date(r.created_at).toLocaleDateString("uk-UA")}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StockBar({ stock, reserve, totalStock, unit }) {
+  const total = totalStock || (stock + reserve);
+  if (!total && !stock && !reserve) return null;
+
+  const LIMIT = 200;
+
+  // Визначаємо статус і колір по вільному залишку
+  let statusColor, statusLabel, displayStock;
+  if (stock <= 0 && reserve <= 0) {
+    statusColor = "#555";
+    statusLabel = "Немає";
+    displayStock = null;
+  } else if (stock <= 0 && reserve > 0) {
+    statusColor = "#ff9800";
+    statusLabel = "Є";
+    displayStock = "0 " + unit;
+  } else if (stock > LIMIT && unit !== "к-т") {
+    statusColor = "#4caf50";
+    statusLabel = "Багато";
+    displayStock = LIMIT + "+ " + unit;
+  } else if (stock > 10 || unit === "к-т") {
+    statusColor = "#4caf50";
+    statusLabel = "Є";
+    displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
+  } else {
+    statusColor = "#f44336";
+    statusLabel = "Мало";
+    displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
+  }
+
+  const hasReserve = reserve > 0;
+
+  return (
+    <div style={{ padding: "8px 0 4px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor, display: "inline-block", flexShrink: 0 }} />
+          <span style={{ color: statusColor, fontSize: 12, fontWeight: 700 }}>{statusLabel}</span>
+          {displayStock && (
+            <span style={{ color: "#555", fontSize: 11 }}>· {displayStock}</span>
+          )}
+        </div>
+        {hasReserve && (
+          <span style={{ color: "#ff980077", fontSize: 10 }}>резерв {reserve.toLocaleString()} {unit}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PannoModal({ panno, collections, onClose }) {
+  const [selectedTile, setSelectedTile] = useState(collections[0]);
+  const [search, setSearch] = useState("");
+  const [pannoCount, setPannoCount] = useState(1);
+  const [tileArea, setTileArea] = useState(collections[0]?.tileArea || 1);
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const tileStep = selectedTile?.tileArea || 1;
+
+  const filtered = collections.filter(t =>
+    t.name.toLowerCase().includes(search.toLowerCase()) && !t.isPanno
+  );
+
+  const total = panno.price * pannoCount + (selectedTile ? selectedTile.price * tileArea : 0);
+  const tileCount = tileStep > 0 ? Math.round(tileArea / tileStep) : 0;
+
+  const validatePhone = (val) => {
+    const digits = val.replace(/\D/g, "");
+    if (!digits) return "Введіть номер телефону";
+    if (digits.length < 10) return "Номер занадто короткий";
+    return "";
+  };
+
+  const handlePhoneChange = (val) => {
+    const clean = val.replace(/[^\d+\s\-()]/g, "");
+    setPhone(clean);
+    setPhoneError(validatePhone(clean));
+  };
+
+  const handleSelectTile = (tile) => {
+    setSelectedTile(tile);
+    const newStep = tile.tileArea || 1;
+    const newArea = Math.max(newStep, Math.round(tileArea / newStep) * newStep);
+    setTileArea(parseFloat(newArea.toFixed(4)));
+  };
+
+  const decreaseTile = () => setTileArea(a => parseFloat(Math.max(tileStep, a - tileStep).toFixed(4)));
+  const increaseTile = () => setTileArea(a => parseFloat((a + tileStep).toFixed(4)));
+
+  const isValid = phone.trim() && !validatePhone(phone);
+
+  const order = async () => {
+    if (!isValid) return;
+    setSending(true);
+    const text = "🏷 ЗАМОВЛЕННЯ КОМПЛЕКТУ #MS Ceramica\n\n" +
+      "🎨 Панно: " + panno.name + " × " + pannoCount + " шт — " + (panno.price * pannoCount).toLocaleString() + " грн\n" +
+      "🔲 Плитка: " + (selectedTile ? selectedTile.name + " — " + selectedTile.price.toLocaleString() + " грн/м²" : "не обрано") + "\n" +
+      "📐 Площа плитки: " + tileArea.toFixed(2) + " м² (" + tileCount + " шт)\n" +
+      "💰 Орієнтовно: " + total.toLocaleString() + " грн\n\n" +
+      "📞 " + phone;
+    try {
+      await fetch(TG_PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o" },
+        body: JSON.stringify({ action: "sendMessage", text })
+      });
+      setSent(true);
+    } catch(e) {
+      alert("Помилка відправки. Спробуйте ще раз.");
+    }
+    setSending(false);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 2000,
+      display: "flex", flexDirection: "column", overflowY: "auto",
+      animation: "fadeIn 0.25s ease",
+    }} onClick={onClose}>
+      <div style={{ maxWidth: 720, width: "100%", margin: "0 auto", padding: "0 0 40px" }}
+        onClick={e => e.stopPropagation()}>
+
+        <div style={{
+          position: "sticky", top: 0, zIndex: 10,
+          background: "#0f0f0f", borderBottom: "1px solid #1a1a1a",
+          padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <div>
+            <div style={{ color: "#7b68ee", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 2 }}>🎨 Панно</div>
+            <div style={{ color: "#fff", fontSize: 18, fontFamily: "serif", fontWeight: 700 }}>{panno.name}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#555", cursor: "pointer", width: 36, height: 36, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, background: "#000", marginBottom: 16 }}>
+          <img src={panno.image} alt={panno.name} style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }} />
+          <img src={selectedTile ? selectedTile.image : ""} alt={selectedTile?.name} style={{ width: "100%", height: 280, objectFit: "cover", display: "block", transition: "opacity 0.3s" }} />
+        </div>
+
+        <div style={{ padding: "0 16px" }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            <div style={{ flex: 1, background: "#111", borderRadius: 10, padding: "10px 14px", border: "1px solid #7b68ee44" }}>
+              <div style={{ color: "#7b68ee", fontSize: 10, marginBottom: 3 }}>Панно</div>
+              <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{panno.name}</div>
+              <div style={{ color: "#c9a84c", fontSize: 12, marginTop: 2 }}>{panno.price.toLocaleString()} грн</div>
+            </div>
+            <div style={{ flex: 1, background: "#111", borderRadius: 10, padding: "10px 14px", border: "1px solid #c9a84c44" }}>
+              <div style={{ color: "#c9a84c", fontSize: 10, marginBottom: 3 }}>Плитка</div>
+              <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{selectedTile?.name || "—"}</div>
+              <div style={{ color: "#c9a84c", fontSize: 12, marginTop: 2 }}>{selectedTile ? selectedTile.price.toLocaleString() + " грн/м²" : "—"}</div>
+            </div>
+          </div>
+
+          <div style={{ background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", border: "1px solid #c9a84c22", marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+              {/* Кількість панно */}
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#555", fontSize: 11, marginBottom: 8, textAlign: "center" }}>Кількість панно</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <button onClick={() => setPannoCount(Math.max(1, pannoCount - 1))} style={{ width: 32, height: 32, borderRadius: "50%", background: "#2a2a2a", border: "none", color: "#fff", fontSize: 18, cursor: "pointer" }}>−</button>
+                  <input type="number" value={pannoCount} min="1" onChange={e => setPannoCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{ width: 50, textAlign: "center", background: "transparent", border: "none", color: "#c9a84c", fontSize: 20, fontWeight: 900, outline: "none" }} />
+                  <button onClick={() => setPannoCount(pannoCount + 1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", fontSize: 18, cursor: "pointer" }}>+</button>
+                </div>
+                <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginTop: 4 }}>{(panno.price * pannoCount).toLocaleString()} грн</div>
+              </div>
+
+              <div style={{ width: 1, background: "#2a2a2a" }} />
+
+              {/* Площа плитки */}
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#555", fontSize: 11, marginBottom: 8, textAlign: "center" }}>Площа плитки (м²)</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <button onClick={decreaseTile} style={{ width: 32, height: 32, borderRadius: "50%", background: "#2a2a2a", border: "none", color: "#fff", fontSize: 18, cursor: "pointer" }}>−</button>
+                  <div style={{ textAlign: "center" }}>
+                    <input
+                      type="number"
+                      value={tileArea.toFixed(2)}
+                      min="0.01"
+                      step={tileStep}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val > 0) setTileArea(parseFloat(val.toFixed(4)));
+                      }}
+                      onBlur={e => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val > 0) {
+                          const snapped = Math.max(tileStep, Math.round(val / tileStep) * tileStep);
+                          setTileArea(parseFloat(snapped.toFixed(4)));
+                        }
+                      }}
+                      style={{ width: 70, textAlign: "center", background: "transparent", border: "none", borderBottom: "1px solid #c9a84c44", color: "#c9a84c", fontSize: 20, fontWeight: 900, outline: "none", padding: "2px 0" }}
+                    />
+                    <div style={{ color: "#555", fontSize: 10, marginTop: 2 }}>{tileCount} шт</div>
+                  </div>
+                  <button onClick={increaseTile} style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", fontSize: 18, cursor: "pointer" }}>+</button>
+                </div>
+                <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginTop: 4 }}>{selectedTile ? (selectedTile.price * tileArea).toLocaleString() + " грн" : "—"}</div>
+              </div>
+            </div>
+
+            {/* Загальна сума */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: "1px solid #2a2a2a" }}>
+              <div style={{ color: "#555", fontSize: 12 }}>Орієнтовна сума</div>
+              <div style={{ color: "#fff", fontSize: 22, fontWeight: 900 }}>{total.toLocaleString()} <span style={{ color: "#c9a84c", fontSize: 14 }}>грн</span></div>
+            </div>
+          </div>
+
+          {sent ? (
+            <div style={{ textAlign: "center", padding: "20px 0 10px" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+              <div style={{ color: "#fff", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Замовлення відправлено!</div>
+              <div style={{ color: "#777", fontSize: 14 }}>Менеджер зв'яжеться з вами найближчим часом</div>
+            </div>
+          ) : (
+            <>
+              {/* Форма контактів */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Контактні дані</div>
+
+                {/* Телефон з пульсацією */}
+                <style>{`
+                  @keyframes phonePulseRed {
+                    0%   { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+                    50%  { border-color: #f44336cc; box-shadow: 0 0 10px rgba(244,67,51,0.4); }
+                    100% { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+                  }
+                  .phone-pulse-red { animation: phonePulseRed 1.5s ease-in-out infinite; }
+                `}</style>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ color: "#f44336", fontSize: 12, marginBottom: 5, fontWeight: 600 }}>📞 Номер телефону *</div>
+                  <input type="tel" value={phone} onChange={e => handlePhoneChange(e.target.value)}
+                    placeholder="+380XXXXXXXXX" inputMode="tel" maxLength={16}
+                    className={!phone ? "phone-pulse-red" : ""}
+                    style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "#111",
+                      border: phoneError && phone ? "1px solid #f44336" : phone && !phoneError ? "1px solid #4caf50" : "1px solid #f4433666",
+                      color: "#fff", fontSize: 15, outline: "none", transition: "border-color 0.3s" }} />
+                  {phoneError && phone && <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ {phoneError}</div>}
+                  {phone && !phoneError && <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>}
+                </div>
+              </div>
+
+              <button onClick={order} disabled={!isValid || sending} style={{
+                width: "100%", padding: "13px", borderRadius: 12, border: "none",
+                cursor: isValid ? "pointer" : "not-allowed",
+                background: isValid ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
+                color: isValid ? "#000" : "#555", fontSize: 14, fontWeight: 800, marginBottom: 8,
+              }}>
+                {sending ? "⏳ Відправляємо..." : "🛒 Замовити комплект"}
+              </button>
+              {!isValid && (
+                <div style={{ color: "#555", fontSize: 11, textAlign: "center", marginBottom: 16 }}>
+                  Введіть коректний номер телефону
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
+            ✦ Підібрати плитку ({filtered.length} варіантів)
+          </div>
+
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Пошук плитки..."
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#111", border: "1px solid #2a2a2a", color: "#fff", fontSize: 13, outline: "none", marginBottom: 12 }} />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {filtered.map(tile => (
+              <div key={tile.id} onClick={() => handleSelectTile(tile)} style={{
+                display: "flex", alignItems: "center", gap: 12,
+                background: selectedTile?.id === tile.id ? "#c9a84c11" : "#111",
+                borderRadius: 12, padding: "10px 14px",
+                border: "1px solid " + (selectedTile?.id === tile.id ? "#c9a84c" : "#1e1e1e"),
+                cursor: "pointer", transition: "all 0.2s",
+              }}>
+                <img src={tile.image} alt={tile.name} style={{ width: 52, height: 60, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: selectedTile?.id === tile.id ? "#c9a84c" : "#fff", fontSize: 14, fontWeight: 700 }}>{tile.name}</div>
+                  <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{tile.size}</div>
+                  <div style={{ color: "#c9a84c", fontSize: 12, marginTop: 2 }}>{tile.price.toLocaleString()} грн/м²</div>
+                </div>
+                {selectedTile?.id === tile.id && <div style={{ color: "#c9a84c", fontSize: 18 }}>✓</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShareButton({ tile }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const url = window.location.origin + window.location.pathname + "?tile=" + String(tile.id);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: tile.name + " — MS Ceramica",
+          text: tile.name + " · " + (tile.size || "") + " · " + tile.price.toLocaleString() + " грн/м²",
+          url,
+        });
+      } catch(err) {
+        // Користувач скасував або браузер відхилив — просто копіюємо
+        if (err.name !== "AbortError") {
+          try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch(_) {}
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch(_) {}
+    }
+  };
+
+  return (
+    <button
+      onClick={handleShare}
+      title="Поділитись товаром"
+      style={{
+        width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+        background: copied ? "#4caf5022" : "#1a1a1a",
+        border: "1px solid " + (copied ? "#4caf50" : "#2a2a2a"),
+        color: copied ? "#4caf50" : "#666",
+        cursor: "pointer", fontSize: 15,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.2s",
+      }}
+      onMouseOver={e => { if (!copied) { e.currentTarget.style.borderColor="#c9a84c"; e.currentTarget.style.color="#c9a84c"; } }}
+      onMouseOut={e => { if (!copied) { e.currentTarget.style.borderColor="#2a2a2a"; e.currentTarget.style.color="#666"; } }}
+    >
+      {copied ? "✓" : "⎙"}
+    </button>
+  );
+}
+
+function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
+      background: "#111", borderRadius: 16,
+      border: `1px solid ${hovered ? "#c9a84c44" : "#1e1e1e"}`,
+      overflow: "hidden", transition: "all 0.3s ease",
+      transform: hovered ? "translateY(-4px)" : "none",
+      boxShadow: hovered ? "0 20px 40px rgba(201,168,76,0.1)" : "0 4px 12px rgba(0,0,0,0.3)",
+      cursor: "pointer",
+    }}>
+      {/* Фото — клік відкриває 3D-перегляд */}
+      <div style={{ position: "relative", height: 220, overflow: "hidden" }} onClick={() => { const imgs = tile.images || [tile.image]; if (imgs[0] && onView3D) onView3D(tile); }}>
+        <img src={tile.image} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", background: "#111", display: "block" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #111 0%, transparent 60%)", pointerEvents: "none" }} />
+        {/* Підказка 3D */}
+        <div style={{
+          position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
+          border: "1px solid rgba(201,168,76,0.5)",
+          borderRadius: 30, padding: "8px 16px",
+          color: "#c9a84c", fontSize: 11, fontWeight: 700, letterSpacing: 1,
+          opacity: hovered ? 1 : 0, transition: "opacity 0.3s",
+          whiteSpace: "nowrap",
+        }}>✦ 3D перегляд</div>
+        <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {tile.tags.map(tag => (
+            <span key={tag} style={{ background: (tagColors[tag]||"#666")+"22", color: tagColors[tag]||"#ccc", border: `1px solid ${(tagColors[tag]||"#666")}44`, borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 700 }}>{tag}</span>
+          ))}
+        </div>
+        
+      </div>
+      <div style={{ padding: "16px 18px 18px" }}>
+        <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{!warehouseMode && tile.subtitle}</div>
+        {!warehouseMode && <div onClick={() => { if (onView3D) onView3D(tile); }} style={{ color: "#fff", fontSize: 19, fontFamily: "serif", fontWeight: 700, marginBottom: 8, cursor: "pointer" }}>{tile.name}</div>}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
+          {tile.size ? <div style={{ color: "#555", fontSize: 11 }}>📐 {tile.size}</div> : null}
+          {(tile.finishTags || []).map(f => (
+            <span key={f} style={{ padding: "2px 8px", borderRadius: 20, background: "#7b68ee22", border: "1px solid #7b68ee44", color: "#7b68ee", fontSize: 10, fontWeight: 700 }}>{f}</span>
+          ))}
+        </div>
+        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} />
+        {!warehouseMode && tile.description ? <ExpandableDesc text={tile.description.replace(/^#+\s*/gm, "").trim()} /> : null}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div>
+            {(() => {
+              const sale = getSaleInfo(tile);
+              return sale ? (
+                <>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <span style={{ color: "#f44336", fontSize: 24, fontWeight: 800 }}>{sale.salePrice.toLocaleString()}</span>
+                    <span style={{ color: "#f44336", fontSize: 13 }}>грн/{tile.unit}</span>
+                  </div>
+                  <div style={{ color: "#555", fontSize: 12, textDecoration: "line-through" }}>{tile.price.toLocaleString()} грн/{tile.unit}</div>
+                  {sale.daysLeft !== null && sale.daysLeft <= 7 && (
+                    <div style={{ color: "#f44336", fontSize: 10, marginTop: 2 }}>⏰ {sale.daysLeft <= 0 ? "останній день" : "ще " + sale.daysLeft + " дн."}</div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "#fff", fontSize: 24, fontWeight: 800 }}>{tile.price.toLocaleString()}</span>
+                  <span style={{ color: "#c9a84c", fontSize: 13, marginLeft: 4 }}>грн/{tile.unit}</span>
+                </>
+              );
+            })()}
+          </div>
+          <ShareButton tile={tile} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {/* Кнопка запитати */}
+          <button onClick={(e) => { e.stopPropagation(); window.__openChat && window.__openChat(); }}
+            style={{ width: "100%", padding: "9px 0", borderRadius: 10, background: "linear-gradient(135deg, #1a1a2e, #16213e)", border: "1px solid #3a3a5c", color: "#a78bfa", cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.2s" }}
+            onMouseOver={e => e.currentTarget.style.borderColor="#a78bfa"}
+            onMouseOut={e => e.currentTarget.style.borderColor="#3a3a5c"}>
+            💬 Запитати про товар
+          </button>
+          {/* Основні кнопки */}
+          <div style={{ display: "flex", gap: 8 }}>
+          {tile.isPanno ? (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); onPanno && onPanno(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", cursor: "pointer", fontSize: 12, fontWeight: 800 }}>🎨 Підібрати плитку</button>
+              <button onClick={(e) => { e.stopPropagation(); onOrder(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c44", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🛒 Замовити</button>
+            </>
+          ) : (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); onVisualize(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", cursor: "pointer", fontSize: 12, fontWeight: 800 }}>✦ Інтер'єр</button>
+              <button className="calc-btn" onClick={(e) => { e.stopPropagation(); onCalc(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c66", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🧮 Прорахувати</button>
+              <button onClick={(e) => { e.stopPropagation(); onOrder(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c44", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🛒 Замовити</button>
+            </>
+          )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroBanner() {
+  const [slides, setSlides] = React.useState([]);
+  const [autoplay, setAutoplay] = React.useState(4);
+  const [active, setActive] = React.useState(0);
+  const [dragging, setDragging] = React.useState(false);
+  const [startX, setStartX] = React.useState(0);
+  const [offsetX, setOffsetX] = React.useState(0);
+  const [transitioning, setTransitioning] = React.useState(true);
+  const [zoom, setZoom] = React.useState(1);
+  const [zx, setZx] = React.useState(0);
+  const [zy, setZy] = React.useState(0);
+  const [galleryOpen, setGalleryOpen] = React.useState(false);
+  const [isDesk, setIsDesk] = React.useState(() => typeof window !== 'undefined' && window.innerWidth >= 769);
+  const timerRef = React.useRef(null);
+  const pinchRef = React.useRef({ dist: 0, startZoom: 1, panX: 0, panY: 0, lastX: 0, lastY: 0 });
+  const movedRef = React.useRef(false);
+  const startTimeRef = React.useRef(0);
+
+  // Завантаження банерів із Supabase
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(
+          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/banners?is_visible=eq.true&select=*&order=sort_order",
+          { headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY } }
+        );
+        const data = await res.json();
+        if (Array.isArray(data)) setSlides(data);
+
+        const sres = await fetch(
+          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/settings?key=eq.banner_autoplay&select=value",
+          { headers: { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY } }
+        );
+        const sdata = await sres.json();
+        if (Array.isArray(sdata) && sdata[0]) setAutoplay(parseInt(sdata[0].value) || 4);
+      } catch(e) { console.log("Banner load:", e); }
+    };
+    load();
+  }, []);
+
+  const next = React.useCallback(() => {
+    setTransitioning(true);
+    setActive(a => (a + 1) % Math.max(slides.length, 1));
+    setOffsetX(0);
+  }, [slides.length]);
+
+  const goTo = (idx) => {
+    setTransitioning(true);
+    setActive((idx + slides.length) % slides.length);
+    setOffsetX(0);
+  };
+
+  // Автопрокрутка з затримкою з адмінки
+  React.useEffect(() => {
+    if (slides.length <= 1) return;
+    timerRef.current = setInterval(next, autoplay * 1000);
+    return () => clearInterval(timerRef.current);
+  }, [slides.length, autoplay, next]);
+
+  const resetTimer = () => {
+    clearInterval(timerRef.current);
+    if (slides.length > 1) timerRef.current = setInterval(next, autoplay * 1000);
+  };
+
+  // Відстеження розміру екрану
+  React.useEffect(() => {
+    const handler = () => setIsDesk(window.innerWidth >= 769);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  const pinchDist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+  const onStart = (e) => {
+    const touches = e.touches;
+    if (touches && touches.length === 2) {
+      // Початок зуму двома пальцями
+      clearInterval(timerRef.current);
+      pinchRef.current.dist = pinchDist(touches);
+      pinchRef.current.startZoom = zoom;
+      setDragging(false);
+      setTransitioning(false);
+      return;
+    }
+    setDragging(true);
+    const x = touches ? touches[0].clientX : e.clientX;
+    const y = touches ? touches[0].clientY : e.clientY;
+    setStartX(x);
+    pinchRef.current.lastX = x;
+    pinchRef.current.lastY = y;
+    movedRef.current = false;
+    startTimeRef.current = Date.now();
+    setTransitioning(false);
+  };
+
+  const onMove = (e) => {
+    const touches = e.touches;
+    // Зум двома пальцями
+    if (touches && touches.length === 2) {
+      if (e.cancelable) e.preventDefault();
+      movedRef.current = true;
+      let next = pinchRef.current.startZoom * (pinchDist(touches) / pinchRef.current.dist);
+      next = Math.max(1, Math.min(next, 4));
+      setZoom(next);
+      if (next === 1) { setZx(0); setZy(0); }
+      return;
+    }
+    if (!dragging) return;
+    const x = touches ? touches[0].clientX : e.clientX;
+    const y = touches ? touches[0].clientY : e.clientY;
+    if (Math.abs(x - startX) > 8) movedRef.current = true;
+    // Якщо збільшено — рухаємо фото всередині банера
+    if (zoom > 1) {
+      if (e.cancelable) e.preventDefault();
+      const dx = x - pinchRef.current.lastX;
+      const dy = y - pinchRef.current.lastY;
+      pinchRef.current.lastX = x;
+      pinchRef.current.lastY = y;
+      setZx(v => v + dx);
+      setZy(v => v + dy);
+      return;
+    }
+    // Інакше — звичайний свайп каруселі
+    setOffsetX(x - startX);
+  };
+
+  const onEnd = (e) => {
+    // Якщо ще лишився один палець після зуму — нічого не робимо
+    if (e.touches && e.touches.length > 0) return;
+    if (zoom > 1) { setDragging(false); return; }
+    if (!dragging) return;
+    setDragging(false);
+    setTransitioning(true);
+    // Короткий тап без руху → відкрити галерею на весь екран
+    const isTap = !movedRef.current && (Date.now() - startTimeRef.current) < 350;
+    if (isTap) {
+      setOffsetX(0);
+      clearInterval(timerRef.current);
+      setGalleryOpen(true);
+      return;
+    }
+    if (offsetX < -60) { goTo(active + 1); resetTimer(); }
+    else if (offsetX > 60) { goTo(active - 1); resetTimer(); }
+    else setOffsetX(0);
+  };
+
+  // Подвійний тап — скинути зум
+  const lastTapRef = React.useRef(0);
+  const onDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300 && zoom > 1) {
+      setZoom(1); setZx(0); setZy(0);
+    }
+    lastTapRef.current = now;
+  };
+
+  // Desktop: зум колесом миші прямо на банері
+  const onWheelBanner = (e) => {
+    e.preventDefault();
+    clearInterval(timerRef.current);
+    const delta = e.deltaY < 0 ? 0.25 : -0.25;
+    setZoom(z => {
+      const n = Math.max(1, Math.min(z + delta, 4));
+      if (n === 1) { setZx(0); setZy(0); resetTimer(); }
+      return n;
+    });
+  };
+
+  // Якщо немає фото — показуємо placeholder тієї ж висоти щоб layout не стрибав
+  if (slides.length === 0) return (
+    <div style={{ width: "100%", height: "56vw", maxHeight: 440, minHeight: 200, background: "#0a0a0a" }} />
+  );
+
+  // ── ДЕСКТОП: великий + два маленьких ──
+  if (isDesk && slides.length >= 1) {
+    const left = slides[active % slides.length];
+    const right = slides[(active + 1) % slides.length];
+    return (
+      <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", height: 380, gap: 3, background: "#0a0a0a" }}>
+        {/* Лівий банер — активний */}
+        <div
+          style={{ position: "relative", overflow: "hidden", cursor: "pointer" }}
+          onClick={() => { setGalleryOpen(true); clearInterval(timerRef.current); }}
+        >
+          <img src={left.image_url} alt={left.title || ""} draggable={false}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", transition: "transform 0.6s ease" }}
+            onMouseEnter={e => e.target.style.transform = "scale(1.03)"}
+            onMouseLeave={e => e.target.style.transform = "scale(1)"}
+          />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.7) 100%)", pointerEvents: "none" }} />
+          {(left.title || left.subtitle) && (
+            <div style={{ position: "absolute", bottom: 24, left: 24, pointerEvents: "none" }}>
+              {left.title && <div style={{ color: "#fff", fontSize: 24, fontWeight: 900, fontFamily: "serif", lineHeight: 1.15, marginBottom: 6, textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}>{left.title}</div>}
+              {left.subtitle && <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>{left.subtitle}</div>}
+            </div>
+          )}
+          {/* Крапки навігації */}
+          {slides.length > 1 && (
+            <div style={{ position: "absolute", bottom: 14, right: 14, display: "flex", gap: 5, zIndex: 5 }}>
+              {slides.map((_, i) => (
+                <div key={i} onClick={e => { e.stopPropagation(); goTo(i); resetTimer(); }} style={{
+                  width: active === i ? 20 : 6, height: 6, borderRadius: 3,
+                  background: active === i ? "#c9a84c" : "rgba(255,255,255,0.4)",
+                  transition: "width 0.3s", cursor: "pointer",
+                }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Правий банер — наступний слайд */}
+        <div
+          style={{ position: "relative", overflow: "hidden", cursor: "pointer" }}
+          onClick={() => { goTo((active + 1) % slides.length); resetTimer(); }}
+        >
+          <img src={right.image_url} alt={right.title || ""} draggable={false}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", transition: "transform 0.6s ease", filter: "brightness(0.8)" }}
+            onMouseEnter={e => { e.target.style.transform = "scale(1.03)"; e.target.style.filter = "brightness(1)"; }}
+            onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.filter = "brightness(0.8)"; }}
+          />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.7) 100%)", pointerEvents: "none" }} />
+          {(right.title || right.subtitle) && (
+            <div style={{ position: "absolute", bottom: 24, left: 24, pointerEvents: "none" }}>
+              {right.title && <div style={{ color: "#fff", fontSize: 24, fontWeight: 900, fontFamily: "serif", lineHeight: 1.15, marginBottom: 6, textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}>{right.title}</div>}
+              {right.subtitle && <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>{right.subtitle}</div>}
+            </div>
+          )}
+          {/* Стрілка вперед */}
+          <div style={{ position: "absolute", top: "50%", right: 16, transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "rgba(255,255,255,0.7)", fontSize: 22, width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(6px)", pointerEvents: "none" }}>›</div>
+        </div>
+
+        {/* Галерея */}
+        {galleryOpen && (
+          <BannerGallery
+            slides={slides}
+            startIndex={active}
+            onClose={() => { setGalleryOpen(false); resetTimer(); }}
+            onIndexChange={(i) => setActive(i)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── МОБІЛЬНА версія (каруселі, зум, свайп) ──
+  return (
+    <div
+      className="hero-banner"
+      style={{ position: "relative", width: "100%", height: "56vw", maxHeight: 440, minHeight: 200, overflow: "hidden", userSelect: "none", touchAction: "pan-y", background: "#0a0a0a" }}
+      onMouseDown={onStart} onMouseMove={onMove} onMouseUp={onEnd} onMouseLeave={onEnd}
+      onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd}
+      onWheel={onWheelBanner}
+    >
+      <style>{`
+        @media (min-width: 769px) {
+          .hero-banner {
+            height: 360px !important;
+            max-height: 360px !important;
+            max-width: none !important;
+            width: 100% !important;
+            margin: 0 !important;
+            border-radius: 0;
+            overflow: hidden;
+            display: block;
+          }
+          .hero-banner .banner-slide {
+            width: 100% !important;
+            height: 360px !important;
+          }
+          .hero-banner .banner-slide .banner-img {
+            object-fit: contain !important;
+            object-position: center !important;
+          }
+        }
+      `}</style>
+      {slides.map((s, i) => {
+        const offset = i - active;
+        const x = offset * 100 + (active === i ? (offsetX / window.innerWidth) * 100 : 0);
+        return (
+          <div key={s.id || i} className={"banner-slide" + (active === i ? " active" : "")} style={{
+            position: "absolute", inset: 0,
+            transform: `translateX(${x}%)`,
+            transition: transitioning && !dragging ? "transform 0.5s cubic-bezier(.16,1,.3,1)" : "none",
+          }}>
+            <img src={s.image_url} alt={s.title || "банер"} draggable={false}
+              className="banner-img"
+              onClick={active === i ? onDoubleTap : undefined}
+              style={{
+                position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center",
+                transform: active === i && zoom > 1 ? `translate(${zx}px, ${zy}px) scale(${zoom})` : "none",
+                transition: dragging ? "none" : "transform 0.15s ease",
+                transformOrigin: "center center",
+              }} />
+            {(s.title || s.subtitle) && (
+              <>
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.1) 100%)" }} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "24px 28px" }}>
+                  {s.title && <div style={{ color: "#fff", fontSize: "clamp(20px, 5vw, 34px)", fontWeight: 900, fontFamily: "serif", lineHeight: 1.15, marginBottom: 8, maxWidth: 340, textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}>{s.title}</div>}
+                  {s.subtitle && <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "clamp(12px, 3vw, 16px)", maxWidth: 300, textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{s.subtitle}</div>}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Крапки */}
+      {slides.length > 1 && (
+        <div style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 6, zIndex: 5 }}>
+          {slides.map((_, i) => (
+            <div key={i} onClick={() => { goTo(i); resetTimer(); }} style={{
+              width: active === i ? 22 : 6, height: 6, borderRadius: 3,
+              background: active === i ? "#c9a84c" : "rgba(255,255,255,0.35)",
+              transition: "width 0.3s, background 0.3s", cursor: "pointer",
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Стрілки */}
+      {slides.length > 1 && (
+        <>
+          <button onClick={() => { goTo(active - 1); resetTimer(); }} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", zIndex: 5 }}>‹</button>
+          <button onClick={() => { goTo(active + 1); resetTimer(); }} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", zIndex: 5 }}>›</button>
+        </>
+      )}
+
+      {/* Повноекранний перегляд із зумом */}
+      {/* Підказка про зум (тільки коли збільшено) */}
+      {zoom > 1 && (
+        <div style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.55)", color: "rgba(255,255,255,0.85)", fontSize: 11, padding: "4px 12px", borderRadius: 20, backdropFilter: "blur(8px)", zIndex: 6, whiteSpace: "nowrap" }}>
+          {Math.round(zoom * 100)}% · подвійний тап щоб скинути
+        </div>
+      )}
+
+      {/* Повноекранна галерея */}
+      {galleryOpen && (
+        <BannerGallery
+          slides={slides}
+          startIndex={active}
+          onClose={() => { setGalleryOpen(false); resetTimer(); }}
+          onIndexChange={(i) => setActive(i)}
+        />
+      )}
+    </div>
+  );
+}
+
+function BannerGallery({ slides, startIndex, onClose, onIndexChange }) {
+  const [idx, setIdx] = React.useState(startIndex);
+  const [scale, setScale] = React.useState(1);
+  const [tx, setTx] = React.useState(0);
+  const [ty, setTy] = React.useState(0);
+  const [offsetX, setOffsetX] = React.useState(0);
+  const [dragging, setDragging] = React.useState(false);
+  const g = React.useRef({ startX: 0, lastX: 0, lastY: 0, pinchDist: 0, startScale: 1, moved: false, panning: false });
+  const lastTap = React.useRef(0);
+  const mouseRef = React.useRef({ down: false, startX: 0, lastX: 0, lastY: 0, moved: false });
+  const idxRef = React.useRef(startIndex);
+  React.useEffect(() => { idxRef.current = idx; }, [idx]);
+
+  // Клавіатура: ← → гортання, Esc закрити, +/- зум
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowRight") goTo(idxRef.current + 1);
+      else if (e.key === "ArrowLeft") goTo(idxRef.current - 1);
+      else if (e.key === "+" || e.key === "=") setScale(s => Math.min(s + 0.5, 5));
+      else if (e.key === "-") setScale(s => { const n = Math.max(s - 0.5, 1); if (n === 1) { setTx(0); setTy(0); } return n; });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+  const goTo = (i) => {
+    const ni = (i + slides.length) % slides.length;
+    setIdx(ni); setScale(1); setTx(0); setTy(0); setOffsetX(0);
+    onIndexChange && onIndexChange(ni);
+  };
+
+  const onStart = (e) => {
+    const t = e.touches;
+    g.current.moved = false;
+    if (t.length === 2) {
+      g.current.pinchDist = dist(t);
+      g.current.startScale = scale;
+    } else if (t.length === 1) {
+      g.current.startX = t[0].clientX;
+      g.current.lastX = t[0].clientX;
+      g.current.lastY = t[0].clientY;
+      g.current.panning = scale > 1;
+      setDragging(true);
+    }
+  };
+  const onMove = (e) => {
+    const t = e.touches;
+    if (t.length === 2) {
+      if (e.cancelable) e.preventDefault();
+      g.current.moved = true;
+      let next = g.current.startScale * (dist(t) / g.current.pinchDist);
+      next = Math.max(1, Math.min(next, 5));
+      setScale(next);
+      if (next === 1) { setTx(0); setTy(0); }
+      return;
+    }
+    if (t.length === 1) {
+      const x = t[0].clientX, y = t[0].clientY;
+      if (Math.abs(x - g.current.startX) > 8) g.current.moved = true;
+      if (scale > 1) {
+        // рух збільшеного фото
+        if (e.cancelable) e.preventDefault();
+        const dx = x - g.current.lastX, dy = y - g.current.lastY;
+        g.current.lastX = x; g.current.lastY = y;
+        setTx(v => v + dx); setTy(v => v + dy);
+      } else {
+        // свайп між фото
+        setOffsetX(x - g.current.startX);
+      }
+    }
+  };
+  const onEnd = (e) => {
+    if (e.touches.length > 0) return;
+    setDragging(false);
+    g.current.panning = false;
+    if (scale > 1) return;
+    if (offsetX < -60) goTo(idx + 1);
+    else if (offsetX > 60) goTo(idx - 1);
+    else setOffsetX(0);
+  };
+  const onTap = () => {
+    const now = Date.now();
+    if (now - lastTap.current < 300) {
+      if (scale > 1) { setScale(1); setTx(0); setTy(0); }
+      else setScale(2.5);
+    }
+    lastTap.current = now;
+  };
+
+  // ── Desktop: миша і колесо ──
+  const onWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.2 : -0.2;
+    setScale(s => {
+      const n = Math.max(1, Math.min(s + delta, 5));
+      if (n === 1) { setTx(0); setTy(0); }
+      return n;
+    });
+  };
+  const onMouseDown = (e) => {
+    mouseRef.current = { down: true, startX: e.clientX, lastX: e.clientX, lastY: e.clientY, moved: false };
+    setDragging(true);
+  };
+  const onMouseMove = (e) => {
+    if (!mouseRef.current.down) return;
+    if (Math.abs(e.clientX - mouseRef.current.startX) > 8) mouseRef.current.moved = true;
+    if (scale > 1) {
+      const dx = e.clientX - mouseRef.current.lastX, dy = e.clientY - mouseRef.current.lastY;
+      mouseRef.current.lastX = e.clientX; mouseRef.current.lastY = e.clientY;
+      setTx(v => v + dx); setTy(v => v + dy);
+    } else {
+      setOffsetX(e.clientX - mouseRef.current.startX);
+    }
+  };
+  const onMouseUp = () => {
+    if (!mouseRef.current.down) return;
+    mouseRef.current.down = false;
+    setDragging(false);
+    if (scale > 1) return;
+    if (offsetX < -60) goTo(idx + 1);
+    else if (offsetX > 60) goTo(idx - 1);
+    else setOffsetX(0);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.97)", zIndex: 2000, overflow: "hidden", touchAction: "none", cursor: scale > 1 ? "grab" : "default" }}
+      onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd}
+      onWheel={onWheel} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
+
+      {/* Слайди */}
+      {slides.map((s, i) => {
+        const off = (i - idx) * 100 + (i === idx && scale === 1 ? (offsetX / window.innerWidth) * 100 : 0);
+        return (
+          <div key={s.id || i} style={{
+            position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            transform: `translateX(${off}%)`,
+            transition: dragging ? "none" : "transform 0.35s cubic-bezier(.16,1,.3,1)",
+          }}>
+            <img src={s.image_url} alt={s.title || "фото"} draggable={false}
+              onClick={i === idx ? onTap : undefined}
+              style={{
+                maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
+                transform: i === idx && scale > 1 ? `translate(${tx}px, ${ty}px) scale(${scale})` : "none",
+                transition: dragging ? "none" : "transform 0.15s ease",
+              }} />
+          </div>
+        );
+      })}
+
+      {/* Стрілки (desktop) */}
+      {slides.length > 1 && (
+        <>
+          <button onClick={(e) => { e.stopPropagation(); goTo(idx - 1); }} style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", fontSize: 24, cursor: "pointer", backdropFilter: "blur(8px)", zIndex: 5, display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
+          <button onClick={(e) => { e.stopPropagation(); goTo(idx + 1); }} style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", fontSize: 24, cursor: "pointer", backdropFilter: "blur(8px)", zIndex: 5, display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
+        </>
+      )}
+
+      {/* Закрити */}
+      <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 24, cursor: "pointer", backdropFilter: "blur(8px)", zIndex: 5 }}>×</button>
+
+      {/* Лічильник */}
+      {slides.length > 1 && (
+        <div style={{ position: "absolute", top: 22, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.7)", fontSize: 13, background: "rgba(0,0,0,0.4)", padding: "3px 12px", borderRadius: 20, backdropFilter: "blur(8px)" }}>{idx + 1} / {slides.length}</div>
+      )}
+
+      {/* Крапки */}
+      {slides.length > 1 && (
+        <div style={{ position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 7, zIndex: 5 }}>
+          {slides.map((_, i) => (
+            <div key={i} onClick={() => goTo(i)} style={{ width: idx === i ? 22 : 7, height: 7, borderRadius: 4, background: idx === i ? "#c9a84c" : "rgba(255,255,255,0.35)", transition: "all 0.3s", cursor: "pointer" }} />
+          ))}
+        </div>
+      )}
+
+      {/* Підказка */}
+      <div style={{ position: "absolute", bottom: 52, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.4)", fontSize: 11, whiteSpace: "nowrap", textAlign: "center" }}>
+        Гортайте · колесо або два пальці — збільшити · Esc / × — закрити
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// InfoModal — універсальне модальне вікно для сторінок Merchant Center
+// ─────────────────────────────────────────────
+function InfoModal({ page, onClose }) {
+  const pages = {
+    delivery: {
+      title: "Доставка",
+      icon: "🚚",
+      content: () => (
+        <div>
+          <p style={{ color: "#aaa", fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
+            Доставляємо плитку по всій Україні. Мінімальне замовлення — від 30 м².
+          </p>
+
+          {[
+            {
+              icon: "📦", title: "Нова Пошта", badge: "Найпопулярніше",
+              rows: [
+                ["Доставка до відділення", "за тарифами НП"],
+                ["Адресна доставка (кур'єр)", "за тарифами НП"],
+                ["Термін", "1–3 робочих дні"],
+                ["Безкоштовно від", "50 000 грн"],
+              ]
+            },
+            {
+              icon: "🚐", title: "Delivery", badge: null,
+              rows: [
+                ["Доставка до відділення", "за тарифами Delivery"],
+                ["Адресна доставка", "за тарифами Delivery"],
+                ["Термін", "1–3 робочих дні"],
+              ]
+            },
+            {
+              icon: "✉️", title: "Укрпошта", badge: null,
+              rows: [
+                ["Доставка до відділення", "за тарифами Укрпошти"],
+                ["Термін", "2–5 робочих днів"],
+              ]
+            },
+            {
+              icon: "🏪", title: "Самовивіз", badge: "Безкоштовно",
+              rows: [
+                ["Адреса", "м. Радехів, вул. Броварська 24"],
+                ["Графік", "Пн–Пт 9:00–19:00"],
+                ["Субота", "9:00–18:00"],
+                ["Неділя", "11:00–17:00"],
+              ]
+            },
+          ].map((s, i) => (
+            <div key={i} style={{ background: "#111", borderRadius: 14, padding: "16px", marginBottom: 12, border: "1px solid #1e1e1e" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 20 }}>{s.icon}</span>
+                <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{s.title}</span>
+                {s.badge && <span style={{ background: "#c9a84c22", color: "#c9a84c", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, border: "1px solid #c9a84c44" }}>{s.badge}</span>}
+              </div>
+              {s.rows.map(([k, v], j) => (
+                <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "5px 0", borderBottom: j < s.rows.length - 1 ? "1px solid #1a1a1a" : "none" }}>
+                  <span style={{ color: "#555", fontSize: 12 }}>{k}</span>
+                  <span style={{ color: "#ccc", fontSize: 12, textAlign: "right", maxWidth: "55%" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          <div style={{ background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 12, padding: 14, marginTop: 4 }}>
+            <div style={{ color: "#c9a84c", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>ℹ️ Важливо</div>
+            <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6 }}>
+              При замовленні від <span style={{ color: "#c9a84c", fontWeight: 700 }}>50 000 грн</span> — доставка безкоштовна. Нижче цієї суми вартість розраховується за тарифами перевізника.
+            </div>
+          </div>
+        </div>
+      )
+    },
+
+    payment: {
+      title: "Оплата",
+      icon: "💳",
+      content: () => (
+        <div>
+          <p style={{ color: "#aaa", fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
+            Пропонуємо зручні способи оплати для фізичних та юридичних осіб.
+          </p>
+
+          {[
+            {
+              icon: "🏦", title: "Безготівковий розрахунок (IBAN)", badge: "Рекомендовано",
+              body: (
+                <div style={{ marginTop: 8 }}>
+                  {[
+                    ["Отримувач", "ФОП Мисак Павло Володимирович"],
+                    ["Код", "3126118058"],
+                    ["IBAN", "UA613052990000026005031004307"],
+                    ["Банк", "АТ КБ «ПРИВАТБАНК»"],
+                  ].map(([k, v], j) => (
+                    <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "5px 0", borderBottom: "1px solid #1a1a1a" }}>
+                      <span style={{ color: "#555", fontSize: 12, flexShrink: 0, marginRight: 8 }}>{k}</span>
+                      <span style={{ color: "#ccc", fontSize: 12, textAlign: "right", wordBreak: "break-all" }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            },
+            {
+              icon: "📬", title: "Накладений платіж (Нова Пошта)", badge: null,
+              body: <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6, marginTop: 6 }}>Оплата при отриманні на відділенні Нової Пошти. Комісія за переказ — за тарифами НП. Послуга доступна для замовлень після погодження з менеджером.</div>
+            },
+            {
+              icon: "💰", title: "Готівка", badge: null,
+              body: <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6, marginTop: 6 }}>Оплата готівкою при самовивозі за адресою: м. Радехів, вул. Броварська 24.</div>
+            },
+          ].map((s, i) => (
+            <div key={i} style={{ background: "#111", borderRadius: 14, padding: "16px", marginBottom: 12, border: "1px solid #1e1e1e" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 20 }}>{s.icon}</span>
+                <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{s.title}</span>
+                {s.badge && <span style={{ background: "#c9a84c22", color: "#c9a84c", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, border: "1px solid #c9a84c44" }}>{s.badge}</span>}
+              </div>
+              {s.body}
+            </div>
+          ))}
+
+          <div style={{ background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 12, padding: 14 }}>
+            <div style={{ color: "#c9a84c", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>ℹ️ Примітка</div>
+            <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6 }}>Оплата картою онлайн (LiqPay) — буде доступна найближчим часом. Після підтвердження замовлення менеджер надішле реквізити або рахунок-фактуру.</div>
+          </div>
+        </div>
+      )
+    },
+
+    returns: {
+      title: "Повернення та обмін",
+      icon: "🔄",
+      content: () => (
+        <div>
+          <p style={{ color: "#aaa", fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
+            Ми дотримуємося вимог Закону України «Про захист прав споживачів». Термін повернення — 14 днів з дня отримання товару.
+          </p>
+
+          {[
+            {
+              title: "✅ Умови повернення",
+              items: [
+                "Товар не використовувався та зберіг товарний вигляд",
+                "Збережена оригінальна упаковка та всі комплектуючі",
+                "Є товарний або касовий чек, накладна або інший підтверджувальний документ",
+                "Пройшло не більше 14 календарних днів з дня отримання",
+              ]
+            },
+            {
+              title: "❌ Не підлягає поверненню",
+              items: [
+                "Плитка, яка вже була укладена або порізана",
+                "Товар з механічними пошкодженнями, що виникли після отримання",
+                "Товар без оригінальної упаковки (якщо упаковка пошкоджена покупцем)",
+              ]
+            },
+          ].map((block, i) => (
+            <div key={i} style={{ background: "#111", borderRadius: 14, padding: "16px", marginBottom: 12, border: "1px solid #1e1e1e" }}>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 10 }}>{block.title}</div>
+              {block.items.map((item, j) => (
+                <div key={j} style={{ display: "flex", gap: 8, padding: "4px 0", color: "#888", fontSize: 12, lineHeight: 1.5 }}>
+                  <span style={{ color: "#c9a84c", flexShrink: 0 }}>·</span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          <div style={{ background: "#111", borderRadius: 14, padding: "16px", marginBottom: 12, border: "1px solid #1e1e1e" }}>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 10 }}>📋 Як оформити повернення</div>
+            {[
+              "Зв'яжіться з менеджером: +380979000398 або pavlomysak2004@gmail.com",
+              "Опишіть причину та прикріпіть фото товару",
+              "Отримайте підтвердження та інструкції щодо відправки",
+              "Надішліть товар на адресу: м. Радехів, вул. Броварська 24",
+              "Після отримання та перевірки — повернення коштів протягом 3–5 робочих днів",
+            ].map((step, j) => (
+              <div key={j} style={{ display: "flex", gap: 10, padding: "5px 0", borderBottom: j < 4 ? "1px solid #1a1a1a" : "none" }}>
+                <span style={{ color: "#c9a84c", fontWeight: 700, fontSize: 12, flexShrink: 0, width: 18 }}>{j + 1}.</span>
+                <span style={{ color: "#888", fontSize: 12, lineHeight: 1.5 }}>{step}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: "#111", borderRadius: 14, padding: "16px", border: "1px solid #1e1e1e" }}>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 10 }}>💸 Повернення коштів</div>
+            {[
+              ["Спосіб", "На той самий рахунок/картку або готівкою"],
+              ["Термін", "3–5 робочих днів після отримання товару нами"],
+              ["Вартість зворотньої доставки", "За рахунок покупця (крім випадків браку)"],
+            ].map(([k, v], j) => (
+              <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "5px 0", borderBottom: j < 2 ? "1px solid #1a1a1a" : "none" }}>
+                <span style={{ color: "#555", fontSize: 12 }}>{k}</span>
+                <span style={{ color: "#ccc", fontSize: 12, textAlign: "right", maxWidth: "55%" }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    },
+
+    contacts: {
+      title: "Контакти",
+      icon: "📞",
+      content: () => (
+        <div>
+          <div style={{ background: "linear-gradient(135deg, #c9a84c22, #b8860b11)", border: "1px solid #c9a84c33", borderRadius: 16, padding: 20, marginBottom: 20, textAlign: "center" }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🏪</div>
+            <div style={{ color: "#c9a84c", fontSize: 18, fontWeight: 900, marginBottom: 4 }}>MS Ceramica</div>
+            <div style={{ color: "#666", fontSize: 12 }}>Гуртовий продаж керамічної плитки</div>
+          </div>
+
+          {[
+            { icon: "📞", label: "Телефон", value: "+38 097 900 03 98", href: "tel:+380979000398" },
+            { icon: "✉️", label: "Email", value: "pavlomysak2004@gmail.com", href: "mailto:pavlomysak2004@gmail.com" },
+            { icon: "📍", label: "Адреса", value: "м. Радехів, вул. Броварська 24", href: "https://maps.google.com/?q=Радехів,+Броварська+24" },
+          ].map((c, i) => (
+            <a key={i} href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 14, background: "#111", borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: "1px solid #1e1e1e", textDecoration: "none" }}>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{c.icon}</span>
+              <div>
+                <div style={{ color: "#555", fontSize: 11, marginBottom: 2 }}>{c.label}</div>
+                <div style={{ color: "#c9a84c", fontSize: 14, fontWeight: 700 }}>{c.value}</div>
+              </div>
+            </a>
+          ))}
+
+          <div style={{ background: "#111", borderRadius: 14, padding: "16px", border: "1px solid #1e1e1e", marginBottom: 10 }}>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>🕐 Графік роботи</div>
+            {[
+              ["Понеділок – П'ятниця", "9:00 – 19:00"],
+              ["Субота", "9:00 – 18:00"],
+              ["Неділя", "11:00 – 17:00"],
+            ].map(([d, h], i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 2 ? "1px solid #1a1a1a" : "none" }}>
+                <span style={{ color: "#666", fontSize: 12 }}>{d}</span>
+                <span style={{ color: "#c9a84c", fontSize: 12, fontWeight: 700 }}>{h}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: "#111", borderRadius: 14, padding: "16px", border: "1px solid #1e1e1e" }}>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 8 }}>💬 Написати зараз</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <a href="https://t.me/+380979000398" target="_blank" rel="noopener noreferrer" style={{ flex: 1, background: "#229ED922", border: "1px solid #229ED944", borderRadius: 12, padding: "10px", textAlign: "center", textDecoration: "none", color: "#229ED9", fontSize: 12, fontWeight: 700 }}>
+                ✈️ Telegram
+              </a>
+              <a href="viber://chat?number=%2B380979000398" style={{ flex: 1, background: "#7360F222", border: "1px solid #7360F244", borderRadius: 12, padding: "10px", textAlign: "center", textDecoration: "none", color: "#7360F2", fontSize: 12, fontWeight: 700 }}>
+                📲 Viber
+              </a>
+              <button onClick={() => window.__openChat && window.__openChat()} style={{ flex: 1, background: "#c9a84c22", border: "1px solid #c9a84c44", borderRadius: 12, padding: "10px", color: "#c9a84c", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                💬 Чат
+              </button>
+            </div>
+            <div style={{ color: "#444", fontSize: 11, marginTop: 10, textAlign: "center" }}>Відповідаємо протягом 15–30 хвилин у робочий час</div>
+          </div>
+        </div>
+      )
+    },
+
+    privacy: {
+      title: "Політика конфіденційності",
+      icon: "🔒",
+      content: () => (
+        <div style={{ color: "#888", fontSize: 12, lineHeight: 1.8 }}>
+          <p style={{ marginBottom: 16 }}>Дата набрання чинності: 1 січня 2025 р.</p>
+          <p style={{ marginBottom: 16 }}>ФОП Мисак Павло Володимирович («ми», «наш») є відповідальним за обробку персональних даних на сайті <span style={{ color: "#c9a84c" }}>mysak.com.ua</span>.</p>
+
+          {[
+            { title: "1. Які дані ми збираємо", text: "Ім'я та прізвище, номер телефону, адресу електронної пошти, адресу доставки — лише у випадку, коли ви самостійно надаєте їх при оформленні замовлення або через форму зв'язку." },
+            { title: "2. Як ми використовуємо дані", text: "Для обробки та доставки замовлень; для зв'язку щодо вашого замовлення; для відповіді на запити клієнтів. Ми не продаємо і не передаємо ваші дані третім особам без вашої згоди, крім випадків, передбачених законодавством України." },
+            { title: "3. Cookies та аналітика", text: "Наш сайт використовує файли cookie для аналізу трафіку (Google Analytics, Google Tag Manager). Cookie — це невеликі текстові файли, що зберігаються у вашому браузері. Вони допомагають нам покращувати роботу сайту. Ви можете заблокувати cookies у налаштуваннях браузера, проте це може вплинути на функціональність сайту." },
+            { title: "4. Зберігання даних", text: "Ваші дані зберігаються лише протягом часу, необхідного для виконання замовлення та виконання правових зобов'язань. Ми використовуємо захищені сервери Supabase (EU-West) для зберігання даних." },
+            { title: "5. Ваші права", text: "Відповідно до Закону України «Про захист персональних даних» ви маєте право на доступ, виправлення або видалення ваших персональних даних. Для цього зверніться до нас: pavlomysak2004@gmail.com." },
+            { title: "6. Зміни до політики", text: "Ми можемо оновлювати цю політику. Актуальна версія завжди доступна на цій сторінці." },
+          ].map((s, i) => (
+            <div key={i} style={{ background: "#111", borderRadius: 12, padding: 14, marginBottom: 10, border: "1px solid #1a1a1a" }}>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{s.title}</div>
+              <div>{s.text}</div>
+            </div>
+          ))}
+
+          <div style={{ background: "#111", borderRadius: 12, padding: 14, border: "1px solid #1a1a1a" }}>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 6 }}>7. Контакт</div>
+            <div>З питань конфіденційності: <a href="mailto:pavlomysak2004@gmail.com" style={{ color: "#c9a84c" }}>pavlomysak2004@gmail.com</a></div>
+            <div style={{ marginTop: 4 }}>ФОП Мисак Павло Володимирович, м. Радехів, вул. Броварська 24</div>
+          </div>
+        </div>
+      )
+    },
+  };
+
+  const p = pages[page];
+  if (!p) return null;
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1500, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }} />
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 1600,
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
+        pointerEvents: "none",
+      }}>
+        <div style={{
+          width: "min(600px, 100vw)",
+          maxHeight: "90vh",
+          background: "#0f0f0f",
+          borderRadius: "20px 20px 0 0",
+          border: "1px solid #2a2a2a",
+          display: "flex", flexDirection: "column",
+          animation: "slideUp 0.3s ease",
+          pointerEvents: "all",
+          boxShadow: "0 -10px 60px rgba(0,0,0,0.8)",
+        }}>
+          {/* Шапка */}
+          <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 22 }}>{p.icon}</span>
+              <span style={{ color: "#fff", fontSize: 17, fontWeight: 800 }}>{p.title}</span>
+            </div>
+            <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: "50%", background: "#1a1a1a", border: "none", color: "#666", cursor: "pointer", fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+          </div>
+          {/* Контент */}
+          <div style={{ overflowY: "auto", padding: "20px 20px 32px", flex: 1 }}>
+            {p.content()}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────
+// SiteFooter — підвал з усіма посиланнями Merchant Center
+// ─────────────────────────────────────────────
+function SiteFooter({ onOpenPage }) {
+  return (
+    <div style={{ borderTop: "1px solid #141414", background: "#080808", padding: "28px 24px 20px" }}>
+      {/* Лого + слоган */}
+      <div style={{ marginBottom: 22, textAlign: "center" }}>
+        <div style={{ color: "#c9a84c", fontSize: 16, fontWeight: 900, letterSpacing: 1 }}>MS Ceramica</div>
+        <div style={{ color: "#333", fontSize: 11, marginTop: 3 }}>Гуртовий продаж керамічної плитки</div>
+      </div>
+
+      {/* Посилання */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", marginBottom: 20 }}>
+        {[
+          { href: "/delivery.html", label: "🚚 Доставка" },
+          { href: "/payment.html", label: "💳 Оплата" },
+          { href: "/returns.html", label: "🔄 Повернення" },
+          { href: "/contacts.html", label: "📞 Контакти" },
+          { key: "privacy", label: "🔒 Конфіденційність" },
+        ].map((item) => (
+          item.href
+            ? <a key={item.href} href={item.href} style={{
+                background: "transparent", border: "1px solid #1a1a1a",
+                borderRadius: 10, padding: "9px 10px",
+                color: "#555", fontSize: 12,
+                textAlign: "left", textDecoration: "none", display: "block",
+              }}>{item.label}</a>
+            : <button key={item.key} onClick={() => onOpenPage(item.key)} style={{
+                background: "transparent", border: "1px solid #1a1a1a",
+                borderRadius: 10, padding: "9px 10px",
+                color: "#555", fontSize: 12, cursor: "pointer",
+                textAlign: "left",
+              }}>{item.label}</button>
+        ))}
+      </div>
+
+      {/* Контактна інформація */}
+      <div style={{ borderTop: "1px solid #111", paddingTop: 16, marginBottom: 16 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+          <a href="tel:+380979000398" style={{ color: "#c9a84c", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>📞 097 900 03 98</a>
+          <span style={{ color: "#222" }}>·</span>
+          <a href="mailto:pavlomysak2004@gmail.com" style={{ color: "#555", fontSize: 12, textDecoration: "none" }}>✉️ pavlomysak2004@gmail.com</a>
+          <span style={{ color: "#222" }}>·</span>
+          <span style={{ color: "#444", fontSize: 12 }}>📍 м. Радехів, вул. Броварська 24</span>
+        </div>
+        <div style={{ textAlign: "center", color: "#2a2a2a", fontSize: 11, marginTop: 8 }}>
+          Пн–Пт 9:00–19:00 · Сб 9:00–18:00 · Нд 11:00–17:00
+        </div>
+      </div>
+
+      {/* Значки оплати */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {["Visa", "Mastercard", "IBAN", "Нова Пошта", "Накладний платіж"].map((label, i) => (
+          <div key={i} style={{
+            background: "#111", border: "1px solid #1e1e1e",
+            borderRadius: 8, padding: "5px 10px",
+            color: "#444", fontSize: 10, fontWeight: 700,
+            textAlign: "center", lineHeight: 1.3,
+          }}>{label}</div>
+        ))}
+      </div>
+
+      {/* Копірайт */}
+      <div style={{ textAlign: "center", color: "#1e1e1e", fontSize: 10 }}>
+        © {new Date().getFullYear()} ФОП Мисак Павло Володимирович · mysak.com.ua
+      </div>
+    </div>
+  );
+}
+
+function TileCatalog() {
+  const { collections, pannos, loading } = useCollections();
+  const [activeFilters, setActiveFilters] = useState([]);
+  const [visualizing, setVisualizing] = useState(null);
+  const [ordering, setOrdering] = useState(null);
+  const [viewing3D, setViewing3D] = useState(null);
+  const [search, setSearch] = useState("");
+  const [activeCard, setActiveCard] = useState(0);
+  const [navOpen, setNavOpen] = useState(false);
+  const [calcTile, setCalcTile] = useState(null);
+  const [warehouseMode, setWarehouseMode] = useState(false);
+  const [pannoModal, setPannoModal] = useState(null);
+  const [priceRange, setPriceRange] = useState([0, 999999]);
+  const [infoPage, setInfoPage] = useState(null);
+  const cardRefs = useRef({});
+
+  const scrollToCard = (id) => {
+    const el = cardRefs.current[id];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setActiveCard(id);
+    }
+  };
+
+  // Читаємо ?tile= один раз при монтуванні і зберігаємо
+  const targetTileId = useRef((() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get("tile");
+      if (p) window.history.replaceState({}, "", window.location.pathname);
+      return p ? (isNaN(p) ? p : Number(p)) : null;
+    } catch(_) { return null; }
+  })());
+  const scrolledRef = useRef(false);
+  const scrollTimers = useRef([]);
+
+  // Скролимо тільки після повного завантаження (loading=false) і коли ref є в DOM
+  useEffect(() => {
+    if (!targetTileId.current || scrolledRef.current || loading) return;
+    const id = targetTileId.current;
+    // Невеликий timeout щоб React встиг оновити DOM після останнього setState
+    const t = setTimeout(() => {
+      const el = cardRefs.current[id];
+      if (!el) return;
+      scrolledRef.current = true;
+      setActiveCard(id);
+
+      const doScroll = () => {
+        const el2 = cardRefs.current[id];
+        if (!el2) return;
+        try {
+          const rect = el2.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) return;
+          const scrollY = window.pageYOffset + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+          window.scrollTo({ top: Math.max(0, scrollY) });
+        } catch(_) {}
+      };
+
+      // Два скроли: одразу + після завантаження зображень
+      doScroll();
+      scrollTimers.current.push(setTimeout(doScroll, 1500));
+    }, 100);
+    scrollTimers.current.push(t);
+
+    return () => { scrollTimers.current.forEach(clearTimeout); scrollTimers.current = []; };
+  }, [loading]);
+  // Динамічні фільтри з усіх тегів + Панно окремо
+  const allTags = Array.from(new Set(
+    [...collections, ...pannos].flatMap(c => c.tags || [])
+  )).filter(t => t).sort();
+  const filters = ["Всі", "Панно", ...allTags.filter(t => t !== "Панно")];
+  const allItems = [...collections, ...pannos];
+  const allPrices = allItems.map(t => t.price).filter(p => p > 0);
+  const minPrice = allPrices.length ? Math.min(...allPrices) : 0;
+  const maxPrice = allPrices.length ? Math.max(...allPrices) : 99999;
+
+  // Перемикання тегу: "Всі" скидає вибір, інші додаються/знімаються
+  const toggleFilter = (f) => {
+    if (f === "Всі") { setActiveFilters([]); return; }
+    setActiveFilters(prev =>
+      prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]
+    );
+  };
+
+  const filtered = allItems.filter(t => {
+    // Якщо нічого не вибрано — показуємо все
+    const matchFilter = activeFilters.length === 0 || activeFilters.every(f =>
+      f === "Панно" ? t.isPanno : (t.tags || []).includes(f)
+    );
+    const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
+      (t.subtitle || "").toLowerCase().includes(search.toLowerCase());
+    const effectivePrice = (() => { const s = getSaleInfo(t); return s ? s.salePrice : t.price; })();
+    const matchPrice = effectivePrice >= priceRange[0] && effectivePrice <= priceRange[1];
+    return matchFilter && matchSearch && matchPrice;
+  });
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", fontFamily: "sans-serif", color: "#fff" }}>
+      <style>{`
+        @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+        @keyframes pulse { 0%,100% { opacity:0.6; } 50% { opacity:1; } }
+        @keyframes fadeSlide { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:none; } }
+        @keyframes slideIn { from { transform:translateX(100%); } to { transform:translateX(0); } }
+        @keyframes slideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+        @keyframes calcPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); border-color: #c9a84c66; }
+          50% { box-shadow: 0 0 0 6px rgba(201,168,76,0); border-color: #c9a84c; }
+        }
+        .calc-btn { animation: calcPulse 2s infinite; }
+        .calc-btn:hover { animation: none; background: #c9a84c11 !important; }
+        * { box-sizing: border-box; }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ borderBottom: "1px solid #141414", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#0a0a0aee", backdropFilter: "blur(20px)", zIndex: 100 }}>
+        <style>{`
+          @keyframes phonePulse {
+            0%   { color: #c9a84c; text-shadow: 0 0 0px rgba(201,168,76,0); }
+            50%  { color: #FFE066; text-shadow: 0 0 12px rgba(255,224,102,0.8), 0 0 24px rgba(201,168,76,0.4); }
+            100% { color: #c9a84c; text-shadow: 0 0 0px rgba(201,168,76,0); }
+          }
+          .phone-blink { animation: phonePulse 2s ease-in-out infinite; }
+        `}</style>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <a href="tel:+380979000398" style={{ textDecoration: "none" }}>
+            <div className="phone-blink" style={{ fontSize: 18, fontWeight: 900, letterSpacing: 1, whiteSpace: "nowrap" }}>097 900 03 98</div>
+          </a>
+          <button onClick={() => window.__openChat && window.__openChat()} style={{
+            width: 38, height: 38, borderRadius: "50%",
+            background: "linear-gradient(135deg, #229ED9, #1a7fb5)",
+            border: "none", cursor: "pointer",
+            boxShadow: "0 4px 14px rgba(34,158,217,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 18, flexShrink: 0,
+          }}>💬</button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={() => setWarehouseMode(v => !v)} style={{
+            padding: "6px 12px", borderRadius: 20, border: "1px solid",
+            borderColor: warehouseMode ? "#7b68ee" : "#2a2a2a",
+            background: warehouseMode ? "#7b68ee22" : "transparent",
+            color: warehouseMode ? "#7b68ee" : "#555",
+            cursor: "pointer", fontSize: 11, fontWeight: 700,
+          }}>
+            {warehouseMode ? "📦 Склад" : "👁 Повний"}
+          </button>
+          <button onClick={() => window.location.href = "admin.html"} style={{
+            width: 32, height: 32, borderRadius: "50%", border: "1px solid #2a2a2a",
+            background: "transparent", color: "#333", cursor: "pointer",
+            fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
+          }} title="Адмінка">⚙️</button>
+        </div>
+      </div>
+
+      {/* Hero Swipe Banner */}
+      <HeroBanner />
+
+      {/* Stats */}
+      <div style={{ padding: "32px 24px 24px", background: "linear-gradient(180deg, #0f0e0a 0%, #0a0a0a 100%)" }}>
+        <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap" }}>
+          {[
+            [loading ? "..." : collections.length + pannos.length, "Колекцій"],
+            [(() => {
+              const now = new Date();
+              const h = now.getHours().toString().padStart(2,"0");
+              const m = now.getMinutes().toString().padStart(2,"0");
+              return "оновлено о " + h + ":" + m;
+            })(), "✦ Ексклюзивні колекції"]
+          ].map(([v, l], i) => (
+            <div key={i} style={{ flex: 1, minWidth: 120, background: "#111", borderRadius: 12, padding: 16, border: "1px solid #1a1a1a" }}>
+              <div style={{ color: "#c9a84c", fontSize: i===0 ? 22 : 11, fontWeight: i===0 ? 800 : 400, letterSpacing: i===1 ? 1 : 0 }}>{v}</div>
+              <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Пошук колекції..." style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "#111", border: "1px solid #1e1e1e", color: "#fff", fontSize: 13, outline: "none", marginBottom: 16 }} />
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+          {filters.map(f => {
+            const isAll = f === "Всі";
+            const on = isAll ? activeFilters.length === 0 : activeFilters.includes(f);
+            return (
+              <button key={f} onClick={() => toggleFilter(f)} style={{ whiteSpace: "nowrap", padding: "7px 16px", borderRadius: 20, border: "1px solid", borderColor: on ? "#c9a84c" : "#1e1e1e", background: on ? "#c9a84c" : "transparent", color: on ? "#000" : "#555", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                {!isAll && on ? "✓ " : ""}{f}
+              </button>
+            );
+          })}
+        </div>
+        {activeFilters.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+            <span style={{ color: "#555", fontSize: 11 }}>Вибрано: {activeFilters.join(" + ")}</span>
+            <button onClick={() => setActiveFilters([])} style={{ background: "transparent", border: "1px solid #2a2a2a", color: "#777", cursor: "pointer", fontSize: 11, padding: "3px 10px", borderRadius: 12 }}>✕ Скинути</button>
+          </div>
+        )}
+
+        {/* Фільтр за ціною */}
+        <div style={{ marginTop: 16, background: "#111", borderRadius: 14, padding: "14px 16px", border: "1px solid #1a1a1a" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ color: "#777", fontSize: 12 }}>💰 Ціна за м²</span>
+            <span style={{ color: "#c9a84c", fontSize: 13, fontWeight: 700 }}>
+              {priceRange[0].toLocaleString()} — {priceRange[1] >= 999999 ? "∞" : priceRange[1].toLocaleString()} грн
+            </span>
+          </div>
+          {/* Від */}
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ color: "#444", fontSize: 10 }}>Від</span>
+              <span style={{ color: "#666", fontSize: 10 }}>{priceRange[0].toLocaleString()} грн</span>
+            </div>
+            <input type="range"
+              min={0} max={maxPrice || 99999} step={50}
+              value={priceRange[0]}
+              onChange={e => {
+                const val = Number(e.target.value);
+                if (val < priceRange[1]) setPriceRange([val, priceRange[1]]);
+              }}
+              style={{ width: "100%", accentColor: "#c9a84c", cursor: "pointer" }}
+            />
+          </div>
+          {/* До */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ color: "#444", fontSize: 10 }}>До</span>
+              <span style={{ color: "#666", fontSize: 10 }}>{priceRange[1].toLocaleString()} грн</span>
+            </div>
+            <input type="range"
+              min={0} max={maxPrice || 99999} step={50}
+              value={priceRange[1]}
+              onChange={e => {
+                const val = Number(e.target.value);
+                if (val > priceRange[0]) setPriceRange([priceRange[0], val]);
+              }}
+              style={{ width: "100%", accentColor: "#c9a84c", cursor: "pointer" }}
+            />
+          </div>
+          {/* Скинути */}
+          {(priceRange[0] !== 0 || priceRange[1] !== 999999) && (
+            <button onClick={() => setPriceRange([0, 999999])} style={{
+              marginTop: 10, padding: "5px 12px", borderRadius: 8,
+              background: "transparent", border: "1px solid #2a2a2a",
+              color: "#555", cursor: "pointer", fontSize: 11,
+            }}>✕ Скинути фільтр</button>
+          )}
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{ padding: "8px 24px 40px", display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+        {loading && filtered.length === 0 && (
+          <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 40 }}>
+            <div style={{ color: "#c9a84c", fontSize: 13, animation: "pulse 1.5s infinite" }}>⟳ Завантаження колекцій...</div>
+          </div>
+        )}
+        {filtered.map((tile, i) => (
+          <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${i * 0.08}s` }}>
+            <TileCard tile={tile} onVisualize={setVisualizing} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} />
+          </div>
+        ))}
+      </div>
+
+      <div style={{ borderTop: "1px solid #141414", padding: "12px 24px", textAlign: "center" }}>
+        <div style={{ color: "#333", fontSize: 11 }}>Тільки для гуртових клієнтів · Мінімальне замовлення від 30 м²</div>
+      </div>
+
+      <SiteFooter onOpenPage={setInfoPage} />
+
+      {/* Плаваюча кнопка навігації */}
+      <button
+        onClick={() => setNavOpen(true)}
+        style={{
+          position: "fixed", bottom: 28, right: 20, zIndex: 600,
+          width: 52, height: 52, borderRadius: "50%",
+          background: "linear-gradient(135deg, #c9a84c, #b8860b)",
+          border: "none", cursor: "pointer",
+          boxShadow: "0 4px 20px rgba(201,168,76,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 22,
+        }}
+      >☰</button>
+
+      {/* Drawer навігація */}
+      {navOpen && (
+        <>
+          {/* Затемнення фону */}
+          <div onClick={() => setNavOpen(false)} style={{
+            position: "fixed", inset: 0, zIndex: 700,
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+          }} />
+
+          {/* Панель */}
+          <div style={{
+            position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 800,
+            width: "min(320px, 85vw)",
+            background: "#0f0f0f",
+            borderLeft: "1px solid #2a2a2a",
+            display: "flex", flexDirection: "column",
+            animation: "slideIn 0.28s cubic-bezier(0.23,1,0.32,1)",
+          }}>
+            {/* Шапка панелі */}
+            <div style={{
+              padding: "20px 18px 14px",
+              borderBottom: "1px solid #1a1a1a",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              flexShrink: 0,
+            }}>
+              <div>
+                <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase" }}>Швидка навігація</div>
+                <div style={{ color: "#fff", fontSize: 16, fontWeight: 700, marginTop: 2 }}>{collections.length} колекції</div>
+              </div>
+              <button onClick={() => setNavOpen(false)} style={{
+                background: "#1a1a1a", border: "none", color: "#666",
+                cursor: "pointer", width: 34, height: 34, borderRadius: "50%",
+                fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>×</button>
+            </div>
+
+            {/* Список колекцій */}
+            <div style={{ overflowY: "auto", flex: 1, padding: "8px 0" }}>
+              {collections.map((tile, i) => (
+                <div
+                  key={tile.id}
+                  onClick={() => {
+                    setNavOpen(false);
+                    setTimeout(() => {
+                      const el = cardRefs.current[tile.id];
+                      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                      setActiveCard(tile.id);
+                    }, 200);
+                  }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "10px 18px", cursor: "pointer",
+                    background: activeCard === tile.id ? "#c9a84c11" : "transparent",
+                    borderLeft: `3px solid ${activeCard === tile.id ? "#c9a84c" : "transparent"}`,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {/* Мініатюра */}
+                  <div style={{ width: 48, height: 56, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: activeCard === tile.id ? "1px solid #c9a84c" : "1px solid #2a2a2a" }}>
+                    <img src={tile.image} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                  {/* Інфо */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: activeCard === tile.id ? "#c9a84c" : "#fff", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tile.name}</div>
+                    <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{tile.size}</div>
+                    <div style={{ color: "#c9a84c", fontSize: 12, fontWeight: 700, marginTop: 2 }}>{tile.price.toLocaleString()} грн/м²</div>
+                  </div>
+                  {/* Номер */}
+                  <div style={{ color: "#333", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>#{i + 1}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Інформаційні посилання в drawer */}
+            <div style={{ borderTop: "1px solid #1a1a1a", padding: "12px 14px", flexShrink: 0 }}>
+              <div style={{ color: "#333", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Інформація</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {[
+                  { href: "/delivery.html", label: "🚚 Доставка" },
+                  { href: "/payment.html", label: "💳 Оплата" },
+                  { href: "/returns.html", label: "🔄 Повернення" },
+                  { href: "/contacts.html", label: "📞 Контакти" },
+                ].map(({ href, label }) => (
+                  <a key={href} href={href} style={{
+                    background: "#111", border: "1px solid #1e1e1e",
+                    borderRadius: 10, padding: "8px 10px",
+                    color: "#666", fontSize: 11, textDecoration: "none", display: "block",
+                  }}>{label}</a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {viewing3D && <TileViewer tile={viewing3D} onClose={() => setViewing3D(null)} hideInfo={warehouseMode} />}
+      {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
+      {pannoModal && <PannoModal panno={pannoModal} collections={collections} onClose={() => setPannoModal(null)} />}
+      <LiveChat />
+      {visualizing && <AIVisualization tile={visualizing} onClose={() => setVisualizing(null)} />}
+      {ordering && <OrderModal tile={ordering} onClose={() => setOrdering(null)} />}
+      {infoPage && <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />}
+    </div>
+  );
+}
+
+
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<TileCatalog />);
+  </script>
+</body>
+</html>
