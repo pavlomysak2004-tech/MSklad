@@ -86,14 +86,14 @@ export default async function TilePage({ params }) {
             {/* Ціна */}
             <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 14, padding: 16, marginBottom: 16 }}>
               <div style={{ color: '#c9a84c', fontSize: 28, fontWeight: 900 }}>
-                {formatPrice(tile.sale_price || tile.price_uah)} грн<span style={{ fontSize: 14, fontWeight: 400 }}>/м²</span>
+                {formatPrice(tile.sale_price > 0 ? tile.sale_price : tile.price_uah)} грн<span style={{ fontSize: 14, fontWeight: 400 }}>/м²</span>
               </div>
-              {tile.sale_price && tile.sale_price < tile.price_uah && (
+              {tile.sale_price > 0 && tile.sale_price < tile.price_uah && (
                 <div style={{ color: '#555', fontSize: 13, textDecoration: 'line-through' }}>
                   {formatPrice(tile.price_uah)} грн/м²
                 </div>
               )}
-              {tile.price_eur && (
+              {tile.price_eur > 0 && (
                 <div style={{ color: '#444', fontSize: 12, marginTop: 4 }}>≈ {formatPrice(tile.price_eur)} €/м²</div>
               )}
             </div>
@@ -104,7 +104,7 @@ export default async function TilePage({ params }) {
                 ['Розмір', `${tile.size} см`],
                 ['Площа плитки', tile.tile_area ? `${tile.tile_area} м²` : '—'],
                 ['Покриття', tile.finish || '—'],
-                ['В наявності', tile.stock > 0 ? `${tile.stock} м²` : 'Немає'],
+                ['В наявності', tile.stock > 0 ? `${Math.round(tile.stock)} м²` : 'Немає'],
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #1a1a1a' }}>
                   <span style={{ color: '#555', fontSize: 13 }}>{k}</span>
@@ -148,7 +148,7 @@ export default async function TilePage({ params }) {
         {tile.description && (
           <div style={{ marginTop: 32, background: '#111', border: '1px solid #1e1e1e', borderRadius: 16, padding: 20 }}>
             <h2 style={{ color: '#fff', fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Опис</h2>
-            <p style={{ color: '#888', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{tile.description}</p>
+            <p style={{ color: '#888', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{tile.description.replace(/^#+\s*/gm, '').replace(/\*\*/g, '').replace(/#\S+/g, '').trim()}</p>
           </div>
         )}
 
