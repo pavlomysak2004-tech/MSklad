@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18188380707"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "AW-18188380707");
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Адмінка — #МитнийSklad</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; color: #fff; font-family: sans-serif; min-height: 100vh; }
+    
+    input, textarea, select {
+      background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff;
+      border-radius: 10px; padding: 10px 14px; font-size: 14px;
+      outline: none; width: 100%;
+    }
+    input:focus, textarea:focus { border-color: #c9a84c; }
+    
+    button { cursor: pointer; border: none; border-radius: 10px; font-weight: 700; transition: opacity 0.2s; }
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-gold { background: linear-gradient(135deg, #c9a84c, #b8860b); color: #000; padding: 12px 20px; font-size: 14px; }
+    .btn-dark { background: #1a1a1a; border: 1px solid #2a2a2a; color: #777; padding: 10px 16px; font-size: 13px; }
+    .btn-red { background: #f4433622; border: 1px solid #f4433644; color: #f44336; padding: 8px 14px; font-size: 12px; }
+    .btn-green { background: #4caf5022; border: 1px solid #4caf5044; color: #4caf50; padding: 8px 14px; font-size: 12px; }
+
+    .card { background: #111; border: 1px solid #1e1e1e; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+    .label { color: #555; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .gold { color: #c9a84c; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin: 2px; cursor: pointer; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px; }
+    .modal { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 20px; width: 100%; max-width: 500px; margin: auto; }
+    .modal-header { padding: 20px; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 16px 20px; border-top: 1px solid #1a1a1a; display: flex; gap: 10px; }
+
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .photo-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1; }
+    .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.7); color: #f44336; font-size: 14px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+    
+    .upload-zone { border: 2px dashed #2a2a2a; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .upload-zone:hover { border-color: #c9a84c; }
+    
+    .stat-box { background: #111; border: 1px solid #1a1a1a; border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-val { font-size: 28px; font-weight: 900; color: #c9a84c; }
+    .stat-label { color: #555; font-size: 11px; margin-top: 4px; }
+
+    .collection-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: #111; border: 1px solid #1e1e1e; border-radius: 12px; margin-bottom: 8px; }
+    .collection-thumb { width: 52px; height: 60px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #1a1a1a; }
+    
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: #2a2a2a; border-radius: 22px; transition: .3s; cursor: pointer; }
+    .slider:before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: #555; border-radius: 50%; transition: .3s; }
+    input:checked + .slider { background: #c9a84c22; border: 1px solid #c9a84c44; }
+    input:checked + .slider:before { transform: translateX(18px); background: #c9a84c; }
+
+    .nav-tabs { display: flex; gap: 4px; padding: 0 16px; margin-bottom: 20px; overflow-x: auto; }
+    .tab-arrows { display: none; }
+    @media (max-width: 768px) { .tab-arrows { display: inline-flex !important; } }
+    .nav-tab {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; border: 1px solid #1e1e1e; background: transparent; color: #555; transition: all 0.2s; }
+    .nav-tab.active { background: #c9a84c; color: #000; border-color: #c9a84c; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    .toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff;
+      padding: 12px 20px; border-radius: 12px; font-size: 13px;
+      z-index: 9999; opacity: 0; transition: opacity 0.3s;
+      max-width: 90vw; text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { border-color: #f4433644; color: #f44336; }
+    .toast.success { border-color: #4caf5044; color: #4caf50; }
+    .modal-body input, .modal-body textarea, .modal-body select {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
+      cursor: text !important;
+      opacity: 1 !important;
+      -webkit-appearance: none;
+    }
+    .modal-overlay { touch-action: pan-y; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const SUPABASE_URL = "https://svbmamaqrtsknuztxiuq.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+
+const api = async (method, path, body) => {
+  const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    method,
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json",
+      "Prefer": (method === "POST" || method === "PATCH") ? "return=representation" : ""
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  return res.status === 204 ? null : res.json();
+};
+
+const uploadPhoto = async (file, collectionId) => {
+  const ext = file.name.split(".").pop();
+  const path = `collections/${collectionId}/${Date.now()}.${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/Photos/${path}`, {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": file.type
+    },
+    body: file
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error('Upload: ' + err); }
+  return `${SUPABASE_URL}/storage/v1/object/public/Photos/${path}`;
+};
+
+const getNBURate = async () => {
+  try {
+    const res = await fetch("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json");
+    const data = await res.json();
+    const eur = data.find(x => x.cc === "EUR");
+    const usd = data.find(x => x.cc === "USD");
+    return { eur: eur?.rate || 43.5, usd: usd?.rate || 41.2 };
+  } catch { return { eur: 43.5, usd: 41.2 }; }
+};
+
+
+function showToast(msg, type) {
+  let t = document.getElementById("toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = "toast " + (type || "");
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+// STATE
+let state = {
+  page: "login",
+  tab: "collections",
+  collections: [],
+  loading: false,
+  modal: null,
+  editItem: null,
+  rates: { eur: 43.5, usd: 41.2 },
+  autoRate: true,
+  collectionSearch: "",
+  tabOrder: (() => {
+    const saved = JSON.parse(localStorage.getItem('msklad_tab_order') || 'null') || ['collections','pannos','rates','orders','reports'];
+    if (!saved.includes('banners')) saved.push('banners');
+    return saved;
+  })(),
+  banners: [],
+  bannerAutoplay: 4,
+  reportLoading: false,
+  reportError: null,
+  reportSearch: "",
+  reportView: null,
+  reportWarehouse: "",
+  reportSortDir: "desc",
+  transferTo: "",
+  transferItems: {},
+};
+
+const ADMIN_PASSWORD = "mitnyisklad2024";
+
+// RENDER
+function render() {
+  document.getElementById("app").innerHTML = state.page === "login" ? renderLogin() : renderAdmin();
+  bindEvents();
+}
+
+function renderLogin() {
+  return `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div style="width:100%;max-width:340px;">
+        <div style="text-align:center;margin-bottom:32px;">
+          <div style="color:#c9a84c;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">Адмін панель</div>
+          <div style="font-size:26px;font-weight:900;font-family:serif;">#МитнийSklad</div>
+        </div>
+        <div class="card">
+          <div class="label" style="margin-bottom:12px;">Пароль</div>
+          <input type="password" id="pwd" placeholder="Введіть пароль" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="btn-gold" style="width:100%" onclick="doLogin()">Увійти →</button>
+          <div id="login-err" style="color:#f44336;font-size:12px;text-align:center;margin-top:10px;display:none;">Невірний пароль</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderAdmin() {
+  return `
+    <div style="max-width:600px;margin:0 auto;">
+      <!-- Header -->
+      <div style="padding:16px 20px;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#0a0a0aee;backdrop-filter:blur(20px);z-index:100;">
+        <div>
+          <div style="color:#c9a84c;font-size:10px;letter-spacing:2px;">АДМІН ПАНЕЛЬ</div>
+          <div style="font-size:18px;font-weight:900;font-family:serif;">#МитнийSklad</div>
+        </div>
+        <a href="/" style="padding:8px 14px;border-radius:20px;border:1px solid #2a2a2a;background:transparent;color:#555;font-size:12px;font-weight:600;text-decoration:none;margin-right:8px;">👁 Сайт</a>
+        <button class="btn-dark" onclick="state.page='login';render()">Вийти</button>
+      </div>
+
+      <!-- Stats -->
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="stat-box">
+          <div class="stat-val">${state.collections.filter(c=>!c.is_panno).length}</div>
+          <div class="stat-label">Колекцій</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">${state.collections.filter(c=>c.is_panno).length}</div>
+          <div class="stat-label">Панно</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="font-size:18px">${state.rates.eur.toFixed(1)}</div>
+          <div class="stat-label">EUR/UAH</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="nav-tabs" id="nav-tabs-container">
+        ${(() => {
+          const labels = {
+            collections: '🏷 Колекції',
+            pannos: '🎨 Панно',
+            rates: '💱 Курс валют',
+            orders: '📋 Замовлення',
+            reports: '📊 Звіти',
+            banners: '🖼 Банер'
+          };
+          return state.tabOrder.map((tab, idx) => {
+            const isActive = state.tab === tab;
+            const canLeft = idx > 0;
+            const canRight = idx < state.tabOrder.length - 1;
+            return `<div style="display:inline-flex;align-items:center;gap:2px;">
+              <button
+                class="nav-tab ${isActive ? 'active' : ''}"
+                onclick="switchTab('${tab}')"
+                data-tab="${tab}"
+                draggable="true"
+                ondragstart="tabDragStart(event,'${tab}')"
+                ondragover="tabDragOver(event)"
+                ondrop="tabDrop(event,'${tab}')"
+                ondragend="tabDragEnd(event)"
+                style="user-select:none;"
+              >${labels[tab]}</button>
+              <span class="tab-arrows" style="display:inline-flex;flex-direction:column;gap:1px;">
+                <button onclick="moveTab('${tab}',-1)" ${!canLeft?'disabled':''} style="background:${canLeft?'#2a2a2a':'transparent'};border:none;color:${canLeft?'#777':'#333'};cursor:${canLeft?'pointer':'default'};font-size:8px;padding:1px 3px;border-radius:3px;line-height:1;">▲</button>
+                <button onclick="moveTab('${tab}',1)" ${!canRight?'disabled':''} style="background:${canRight?'#2a2a2a':'transparent'};border:none;color:${canRight?'#777':'#333'};cursor:${canRight?'pointer':'default'};font-size:8px;padding:1px 3px;border-radius:3px;line-height:1;">▼</button>
+              </span>
+            </div>`;
+          }).join('');
+        })()}
+      </div>
+
+      <!-- Content -->
+      <div style="padding:0 16px 40px;">
+        ${state.tab==='collections' ? renderCollections(false) : ''}
+        ${state.tab==='pannos' ? renderCollections(true) : ''}
+        ${state.tab==='rates' ? renderRates() : ''}
+        ${state.tab==='orders' ? renderOrders() : ''}
+        ${state.tab==='reports' ? renderReports() : ''}
+        ${state.tab==='banners' ? renderBanners() : ''}
+      </div>
+
+      ${state.modal ? renderModal() : ''}
+    </div>`;
+}
+
+function renderCollections(isPanno) {
+  const searchVal = state.collectionSearch || "";
+  const items = state.collections.filter(c => {
+    if (c.is_panno !== isPanno) return false;
+    if (!searchVal) return true;
+    const q = searchVal.toLowerCase();
+    return (c.name || "").toLowerCase().includes(q) ||
+           (c.article || "").toLowerCase().includes(q) ||
+           (c.size || "").toLowerCase().includes(q);
+  });
+
+  return `
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div id="collections-count" style="color:#777;font-size:13px;">${items.length} позицій</div>
+        <button class="btn-gold" onclick="openAddModal(${isPanno})">+ Додати</button>
+      </div>
+      <div style="margin-bottom:12px;position:relative;">
+        <input type="text" id="collection-search-input"
+          oninput="handleSearchInput(this.value)"
+          placeholder="🔍 Пошук за назвою, артикулом, розміром..."
+          style="width:100%;padding:10px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+        ${searchVal ? `<span id="search-clear-btn" onclick="clearSearch()"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#555;font-size:18px;">×</span>` : ''}
+      </div>
+      <div id="collections-list-container">
+        ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal ? 'Нічого не знайдено' : 'Немає позицій') + '</div>' : ''}
+        ${items.map(item => renderCollectionRow(item)).join('')}
+      </div>
+    </div>`;
+}
+
+function renderCollectionRow(item) {
+  const photos = item.photos || [];
+  const thumb = photos[0]?.url || "";
+  const price = item.price_uah || 0;
+
+  // Акційна ціна: явна sale_price АБО розрахунок зі знижки sale_percent
+  let salePrice = 0;
+  if (item.sale_price > 0) salePrice = item.sale_price;
+  else if (item.sale_percent > 0 && price > 0) salePrice = Math.round(price * (1 - item.sale_percent / 100));
+  const hasSale = salePrice > 0 && salePrice < price;
+  const percent = item.sale_percent > 0 ? item.sale_percent : (hasSale ? Math.round((1 - salePrice / price) * 100) : 0);
+
+  // Блок ціни
+  let priceHtml;
+  if (hasSale) {
+    priceHtml = `
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px;">
+        <span style="color:#777;font-size:11px;text-decoration:line-through;">${price.toLocaleString()} грн</span>
+        <span style="color:#f44336;font-size:13px;font-weight:800;">${salePrice.toLocaleString()} грн</span>
+        ${percent > 0 ? `<span style="background:#f4433622;color:#f44336;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;border:1px solid #f4433644;">🔥 -${percent}%</span>` : ''}
+      </div>`;
+  } else {
+    priceHtml = `<div style="color:#c9a84c;font-size:12px;font-weight:700;margin-top:2px;">${price ? price.toLocaleString() + " грн" : "—"}</div>`;
+  }
+
+  // Теги під ціною
+  const tags = item.tags || [];
+  const tagsHtml = tags.length > 0 ? `
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+      ${tags.map(tag => `<span style="background:#c9a84c1a;color:#c9a84c;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;border:1px solid #c9a84c33;">${tag}</span>`).join('')}
+    </div>` : '';
+
+  return `
+    <div class="collection-row">
+      ${thumb ? `<img class="collection-thumb" src="${thumb}" onerror="this.style.display='none'">` : `<div class="collection-thumb" style="display:flex;align-items:center;justify-content:center;color:#333;font-size:20px;">📷</div>`}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+        <div style="color:#555;font-size:11px;margin-top:2px;">${item.size || "—"} · ${item.article || ""}</div>
+        ${priceHtml}
+        ${tagsHtml}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+        <label class="switch" title="${item.is_visible ? 'Видимий' : 'Прихований'}">
+          <input type="checkbox" ${item.is_visible ? 'checked' : ''} onchange="toggleVisible(${item.id}, this.checked)">
+          <span class="slider"></span>
+        </label>
+        <button class="btn-dark" style="padding:6px 10px;font-size:11px;" onclick="openEditModal(${item.id})">✏️</button>
+        <button class="btn-red" style="padding:6px 10px;font-size:11px;" onclick="deleteItem(${item.id})">🗑</button>
+      </div>
+    </div>`;
+}
+
+function renderRates() {
+  return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;">Курс валют</div>
+        <label class="switch">
+          <input type="checkbox" ${state.autoRate ? 'checked' : ''} onchange="toggleAutoRate(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div style="color:#555;font-size:12px;margin-bottom:16px;">${state.autoRate ? '✅ Автооновлення з НБУ' : '✏️ Вручну'}</div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="label">EUR/UAH</div>
+          <input type="number" id="rate-eur" value="${state.rates.eur.toFixed(2)}" ${state.autoRate ? 'disabled' : ''}>
+        </div>
+        <div>
+          <div class="label">USD/UAH</div>
+          <input type="number" id="rate-usd" value="${state.rates.usd.toFixed(2)}" ${state.autoRate ? 'disabled' : ''}>
+        </div>
+      </div>
+      
+      ${!state.autoRate ? `<button class="btn-gold" style="width:100%;margin-top:16px;" onclick="saveRates()">Зберегти курс</button>` : ''}
+      ${state.autoRate ? `<button class="btn-dark" style="width:100%;margin-top:16px;" onclick="refreshRates()">🔄 Оновити зараз</button>` : ''}
+    </div>`;
+}
+
+// ============ БАНЕР (свайп зверху сайту) ============
+function renderBanners() {
+  const items = (state.banners || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  return `
+    <div>
+      <!-- Налаштування автопрокрутки -->
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">🖼 Банер на сайті</div>
+        <div style="color:#555;font-size:12px;margin-bottom:16px;">Фотографії що показуються зверху сайту у вигляді свайпу на повну ширину</div>
+
+        <div class="label">Затримка автопрокрутки (секунди)</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="range" min="2" max="10" step="1" value="${state.bannerAutoplay}"
+            oninput="document.getElementById('autoplay-val').textContent=this.value+' сек'; state.bannerAutoplay=parseInt(this.value)"
+            style="flex:1;accent-color:#c9a84c;cursor:pointer;">
+          <span id="autoplay-val" style="color:#c9a84c;font-size:14px;font-weight:700;min-width:54px;">${state.bannerAutoplay} сек</span>
+        </div>
+        <button class="btn-gold" style="width:100%;margin-top:14px;" onclick="saveBannerSettings()">💾 Зберегти затримку</button>
+      </div>
+
+      <!-- Кнопка додавання -->
+      <label class="upload-zone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px;margin-bottom:16px;">
+        <div style="font-size:28px;">📸</div>
+        <div style="font-size:13px;color:#c9a84c;font-weight:700;">Додати фото в банер</div>
+        <div style="font-size:11px;color:#555;">Можна обрати кілька фото одразу</div>
+        <input type="file" accept="image/*" multiple style="display:none" onchange="handleBannerUpload(this)">
+      </label>
+
+      <!-- Список банерів -->
+      <div style="color:#777;font-size:13px;margin-bottom:10px;">${items.length} фото · перетягуй щоб змінити порядок</div>
+
+      ${items.length === 0 ? `
+        <div style="text-align:center;padding:40px;color:#555;background:#0f0f0f;border-radius:12px;border:1px dashed #2a2a2a;">
+          Поки що немає фото.<br>Додайте перше — воно одразу з'явиться на сайті.
+        </div>
+      ` : items.map((b, i) => `
+        <div draggable="true"
+          ondragstart="bannerDragStart(event,${b.id})"
+          ondragover="event.preventDefault()"
+          ondrop="bannerDrop(event,${b.id})"
+          style="display:flex;align-items:center;gap:12px;background:#0f0f0f;border:1px solid ${b.is_visible===false?'#2a2a2a':'#c9a84c33'};border-radius:12px;padding:10px;margin-bottom:10px;cursor:grab;opacity:${b.is_visible===false?0.5:1};">
+          <div style="color:#444;font-size:18px;flex-shrink:0;">☰</div>
+          <div style="width:80px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#1a1a1a;">
+            <img src="${b.image_url}" alt="" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="flex:1;min-width:0;">
+            <input type="text" value="${(b.title||'').replace(/"/g,'&quot;')}" placeholder="Заголовок (необов'язково)"
+              onchange="updateBannerField(${b.id},'title',this.value)"
+              style="width:100%;padding:6px 8px;border-radius:6px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:12px;margin-bottom:4px;box-sizing:border-box;">
+            <input type="text" value="${(b.subtitle||'').replace(/"/g,'&quot;')}" placeholder="Підпис (необов'язково)"
+              onchange="updateBannerField(${b.id},'subtitle',this.value)"
+              style="width:100%;padding:6px 8px;border-radius:6px;background:#1a1a1a;border:1px solid #2a2a2a;color:#999;font-size:11px;box-sizing:border-box;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+            <button onclick="toggleBannerVisible(${b.id})" title="${b.is_visible===false?'Показати':'Сховати'}"
+              style="background:${b.is_visible===false?'#2a2a2a':'#c9a84c22'};border:1px solid ${b.is_visible===false?'#333':'#c9a84c44'};color:${b.is_visible===false?'#666':'#c9a84c'};cursor:pointer;width:32px;height:28px;border-radius:6px;font-size:13px;">${b.is_visible===false?'🚫':'👁'}</button>
+            <button onclick="deleteBanner(${b.id})" title="Видалити"
+              style="background:#f4433622;border:1px solid #f4433644;color:#f44336;cursor:pointer;width:32px;height:28px;border-radius:6px;font-size:13px;">🗑</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+async function loadBanners() {
+  try {
+    const banners = await api("GET", "banners?select=*&order=sort_order");
+    state.banners = banners || [];
+    const settings = await api("GET", "settings?select=*&key=eq.banner_autoplay");
+    if (settings && settings[0]) state.bannerAutoplay = parseInt(settings[0].value) || 4;
+  } catch(e) {
+    console.error("Banner load error:", e);
+    showToast("Помилка завантаження банерів: " + e.message, "error");
+  }
+}
+
+const uploadBannerPhoto = async (file) => {
+  const ext = file.name.split(".").pop();
+  const path = `banners/${Date.now()}_${Math.random().toString(36).substr(2,5)}.${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/Photos/${path}`, {
+    method: "POST",
+    headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY, "Content-Type": file.type },
+    body: file
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error('Upload: ' + err); }
+  return `${SUPABASE_URL}/storage/v1/object/public/Photos/${path}`;
+};
+
+async function handleBannerUpload(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  showToast("Завантаження " + files.length + " фото...", "info");
+  try {
+    let order = (state.banners || []).length;
+    for (const file of files) {
+      const url = await uploadBannerPhoto(file);
+      const created = await api("POST", "banners", {
+        image_url: url, title: "", subtitle: "", sort_order: order++, is_visible: true
+      });
+      if (created && created[0]) state.banners.push(created[0]);
+    }
+    showToast("✅ Додано " + files.length + " фото", "success");
+    render();
+  } catch(e) {
+    showToast("Помилка: " + e.message, "error");
+  }
+}
+
+async function updateBannerField(id, field, value) {
+  try {
+    await api("PATCH", "banners?id=eq." + id, { [field]: value });
+    const b = state.banners.find(x => x.id === id);
+    if (b) b[field] = value;
+  } catch(e) { showToast("Помилка збереження: " + e.message, "error"); }
+}
+
+async function toggleBannerVisible(id) {
+  const b = state.banners.find(x => x.id === id);
+  if (!b) return;
+  const newVal = b.is_visible === false ? true : false;
+  try {
+    await api("PATCH", "banners?id=eq." + id, { is_visible: newVal });
+    b.is_visible = newVal;
+    render();
+  } catch(e) { showToast("Помилка: " + e.message, "error"); }
+}
+
+async function deleteBanner(id) {
+  if (!confirm("Видалити це фото з банера?")) return;
+  try {
+    await api("DELETE", "banners?id=eq." + id);
+    state.banners = state.banners.filter(x => x.id !== id);
+    showToast("Фото видалено", "success");
+    render();
+  } catch(e) { showToast("Помилка: " + e.message, "error"); }
+}
+
+async function saveBannerSettings() {
+  try {
+    await api("POST", "settings?on_conflict=key", { key: "banner_autoplay", value: String(state.bannerAutoplay) });
+    showToast("✅ Затримку збережено: " + state.bannerAutoplay + " сек", "success");
+  } catch(e) {
+    // fallback: try PATCH if row exists
+    try {
+      await api("PATCH", "settings?key=eq.banner_autoplay", { value: String(state.bannerAutoplay) });
+      showToast("✅ Затримку збережено", "success");
+    } catch(e2) { showToast("Помилка: " + e2.message, "error"); }
+  }
+}
+
+let bannerDragSrc = null;
+function bannerDragStart(e, id) { bannerDragSrc = id; e.dataTransfer.effectAllowed = "move"; }
+async function bannerDrop(e, targetId) {
+  e.preventDefault();
+  if (bannerDragSrc === null || bannerDragSrc === targetId) return;
+  const arr = state.banners.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const from = arr.findIndex(x => x.id === bannerDragSrc);
+  const to = arr.findIndex(x => x.id === targetId);
+  const [moved] = arr.splice(from, 1);
+  arr.splice(to, 0, moved);
+  arr.forEach((b, i) => b.sort_order = i);
+  state.banners = arr;
+  render();
+  try {
+    for (const b of arr) await api("PATCH", "banners?id=eq." + b.id, { sort_order: b.sort_order });
+  } catch(e) { showToast("Помилка порядку: " + e.message, "error"); }
+  bannerDragSrc = null;
+}
+
+function renderReports() {
+  // ── Меню звітів ──
+  if (!state.reportView) {
+    return `<div>
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#777;margin-bottom:16px;">Оберіть звіт</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+        <div onclick="state.reportView='warehouses';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:32px;margin-bottom:12px;">📦</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Залишки по складах</div>
+          <div style="font-size:12px;color:#666;">Загальний звіт по всіх складах з пошуком</div>
+        </div>
+        <div onclick="state.reportView='warehouse_single';state.reportWarehouse='';state.reportSortDir='desc';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:32px;margin-bottom:12px;">🏭</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Залишки по складу</div>
+          <div style="font-size:12px;color:#666;">Вибір складу, сортування, резерв</div>
+        </div>
+        <div onclick="state.reportView='transfer';state.reportWarehouse='';state.transferTo='';state.transferItems={};state.reportSearch='';render();loadWarehouseReport();" style="background:#131313;border:1px solid #2a2a2a;border-radius:14px;padding:24px;cursor:pointer;" onmouseover="this.style.borderColor='#c9a84c'" onmouseout="this.style.borderColor='#2a2a2a'">
+          <div style="font-size:32px;margin-bottom:12px;">🔄</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Переміщення товарів</div>
+          <div style="font-size:12px;color:#666;">Вибір складу, товарів і кількості — накладна в Telegram</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── Звіт 1: по всіх складах ──
+  if (state.reportView === 'warehouses') {
+    var tableHtml = "";
+    if (reportData.length > 0) tableHtml = buildReportTableHtml(reportData);
+    else if (state.reportLoading) tableHtml = '<div style="text-align:center;padding:40px;color:#c9a84c;">⟳ Завантаження...</div>';
+    else if (state.reportError) tableHtml = '<div style="text-align:center;padding:40px;color:#f44336;">❌ ' + state.reportError + '</div>';
+    else tableHtml = '<div style="text-align:center;padding:40px;color:#555;">Натисніть "Оновити"</div>';
+    return `<div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <button onclick="state.reportView=null;render();" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;">← Назад</button>
+        <span style="font-size:15px;font-weight:700;">📦 Залишки по складах</span>
+        <span style="color:#777;font-size:13px;">${reportData.length} позицій</span>
+        <button class="btn-gold" style="margin-left:auto;" onclick="loadWarehouseReport()">🔄 Оновити</button>
+      </div>
+      <div style="margin-bottom:8px;">
+        <input type="text" id="report-search-input" oninput="handleReportSearch(this.value)"
+          placeholder="🔍 Пошук за назвою або артикулом..."
+          style="width:100%;padding:10px 14px;border-radius:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;box-sizing:border-box;">
+      </div>
+      <div id="report-table-container" style="overflow-x:auto;">${tableHtml}</div>
+    </div>`;
+  }
+
+  // ── Звіт 2: по одному складу ──
+  if (state.reportView === 'warehouse_single') {
+    var whCols = reportHeaders.filter(function(h) { return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1; });
+    var selectedWh = state.reportWarehouse || (whCols.length > 0 ? whCols[0] : "");
+    var sortDir = state.reportSortDir || "desc";
+    var whButtons = whCols.map(function(wh) {
+      var isActive = selectedWh === wh;
+      return '<button onclick="state.reportWarehouse=\'' + wh + '\';state.reportSearch=\'\';render();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#c9a84c':'#2a2a2a') + ';background:' + (isActive?'#c9a84c22':'transparent') + ';color:' + (isActive?'#c9a84c':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
+    }).join("");
+    return `<div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <button onclick="state.reportView=null;render();" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;">← Назад</button>
+        <span style="font-size:15px;font-weight:700;">🏭 Залишки по складу</span>
+        <button class="btn-gold" style="margin-left:auto;" onclick="loadWarehouseReport()">🔄 Оновити</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">${whButtons}</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <input type="text" id="report-search-input2" oninput="state.reportSearch=this.value;rebuildWarehouseSingleTable();"
+          placeholder="🔍 Пошук..." value="${state.reportSearch||''}"
+          style="flex:1;padding:9px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+        <button onclick="state.reportSortDir=state.reportSortDir==='asc'?'desc':'asc';rebuildWarehouseSingleTable();"
+          style="padding:9px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#c9a84c;cursor:pointer;font-size:13px;white-space:nowrap;">
+          ${sortDir==='asc'?'↑ Від меншого':'↓ Від більшого'}
+        </button>
+      </div>
+      <div id="warehouse-single-table" style="overflow-x:auto;"></div>
+    </div>`;
+  }
+
+  // ── Звіт 3: Переміщення ──
+  if (state.reportView === 'transfer') {
+    var whCols2 = reportHeaders.filter(function(h) { return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1; });
+    var fromWh = state.reportWarehouse || "";
+    var toWh = state.transferTo || "";
+    var checkedCount = Object.keys(state.transferItems || {}).filter(function(k) { return state.transferItems[k] && state.transferItems[k].checked; }).length;
+
+    var whFromBtns = whCols2.length > 0 ? whCols2.map(function(wh) {
+      var isActive = fromWh === wh;
+      return '<button onclick="state.reportWarehouse=\'' + wh + '\';state.transferItems={};state.reportSearch=\'\';render();setTimeout(rebuildTransferTable,50);" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#c9a84c':'#2a2a2a') + ';background:' + (isActive?'#c9a84c22':'transparent') + ';color:' + (isActive?'#c9a84c':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
+    }).join("") : '<span style="color:#555;font-size:13px;">Натисніть "Оновити" щоб завантажити склади</span>';
+
+    var whToBtns = whCols2.filter(function(wh) { return wh !== fromWh; }).map(function(wh) {
+      var isActive = toWh === wh;
+      return '<button data-to-wh="' + wh + '" onclick="state.transferTo=\'' + wh + '\';updateTransferSendBtn();" style="padding:7px 14px;border-radius:20px;border:1px solid ' + (isActive?'#7b68ee':'#2a2a2a') + ';background:' + (isActive?'#7b68ee22':'transparent') + ';color:' + (isActive?'#7b68ee':'#777') + ';cursor:pointer;font-size:12px;font-weight:600;">' + wh.replace("Склад ","") + '</button>';
+    }).join("");
+
+    return `<div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <button onclick="state.reportView=null;render();" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;">← Назад</button>
+        <span style="font-size:15px;font-weight:700;">🔄 Переміщення товарів</span>
+        <button class="btn-gold" style="margin-left:auto;" onclick="loadWarehouseReport()">🔄 ${state.reportLoading ? 'Завантаження...' : reportData.length > 0 ? 'Оновити' : 'Завантажити дані'}</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:12px;padding:16px;">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c9a84c;margin-bottom:10px;">З якого складу</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${whFromBtns}</div>
+        </div>
+        <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:12px;padding:16px;">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7b68ee;margin-bottom:10px;">На який склад</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${fromWh ? whToBtns : '<span style="color:#555;font-size:13px;">Спочатку оберіть звідки</span>'}</div>
+        </div>
+      </div>
+
+      ${fromWh ? `
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <input type="text" id="transfer-search" oninput="state.reportSearch=this.value;rebuildTransferTable();"
+          placeholder="🔍 Пошук товару..." value="${state.reportSearch||''}"
+          style="flex:1;padding:9px 14px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;font-size:13px;outline:none;">
+        ${checkedCount > 0 ? `<span style="color:#c9a84c;font-size:13px;white-space:nowrap;">✓ Обрано: ${checkedCount}</span>` : ''}
+      </div>
+      <div id="transfer-table" style="overflow-x:auto;"></div>
+      <div id="transfer-send-area" style="margin-top:16px;padding-top:16px;border-top:1px solid #1a1a1a;">
+        ${checkedCount > 0 && toWh ? '<button onclick="showTransferPreview();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">👁 Переглянути і надіслати (' + checkedCount + ' позицій)</button>' : checkedCount > 0 ? '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>' : ''}
+      </div>
+      ` : '<div style="text-align:center;padding:40px;color:#555;">Оберіть склад-джерело щоб побачити товари</div>'}
+    </div>`;
+  }
+}
+
+// Голосовий пошук
+function rebuildWarehouseSingleTable() {
+  var container = document.getElementById("warehouse-single-table");
+  if (!container || !reportData.length) return;
+  var whCols = reportHeaders.filter(function(h) { return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1; });
+  var selectedWh = state.reportWarehouse || (whCols.length > 0 ? whCols[0] : "");
+  var sortDir = state.reportSortDir || "desc";
+  var search = (state.reportSearch || "").toLowerCase();
+  var rows2 = reportData.filter(function(r) {
+    return !search || String(r["Артикул"]||"").toLowerCase().includes(search) || String(r["Назва"]||"").toLowerCase().includes(search);
+  });
+  rows2.sort(function(a, b) {
+    var va = parseFloat(a[selectedWh]) || 0, vb = parseFloat(b[selectedWh]) || 0;
+    return sortDir === "asc" ? va - vb : vb - va;
+  });
+  var html2 = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html2 += '<thead><tr style="background:#1a1a1a;">';
+  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Артикул</th>';
+  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Назва</th>';
+  html2 += '<th style="padding:10px 12px;text-align:left;color:#777;font-weight:600;border-bottom:1px solid #2a2a2a;">Од.</th>';
+  html2 += '<th style="padding:10px 12px;text-align:right;color:#e57373;font-weight:700;border-bottom:1px solid #2a2a2a;">Резерв</th>';
+  html2 += '<th style="padding:10px 12px;text-align:right;color:#c9a84c;font-weight:700;border-bottom:1px solid #2a2a2a;cursor:pointer;" onclick="state.reportSortDir=state.reportSortDir===\'asc\'?\'desc\':\'asc\';rebuildWarehouseSingleTable();">Залишок ' + (sortDir==="asc"?"↑":"↓") + '</th>';
+  html2 += '</tr></thead><tbody>';
+  rows2.forEach(function(row, i) {
+    var val = parseFloat(row[selectedWh]) || 0;
+    var color = val === 0 ? "#f4433644" : val < 5 ? "#ff980022" : "#4caf5022";
+    var textColor = val === 0 ? "#f44336" : val < 5 ? "#ff9800" : "#4caf50";
+    var reserve = parseFloat(row["Резерв"]) || 0;
+    html2 += '<tr style="background:' + (i%2===0?"#0d0d0d":"#0a0a0a") + ';border-bottom:1px solid #141414;">';
+    html2 += '<td style="padding:10px 12px;color:#555;font-size:11px;">' + String(row["Артикул"]||"") + '</td>';
+    html2 += '<td style="padding:10px 12px;color:#ddd;">' + String(row["Назва"]||"") + '</td>';
+    html2 += '<td style="padding:10px 12px;color:#666;font-size:11px;">' + String(row["Од. вим."]||"м²") + '</td>';
+    html2 += '<td style="padding:10px 12px;text-align:right;">' + (reserve > 0 ? '<span style="background:#f4433622;color:#e57373;padding:3px 10px;border-radius:8px;font-weight:700;">' + reserve.toFixed(2) + '</span>' : '<span style="color:#333;">—</span>') + '</td>';
+    html2 += '<td style="padding:10px 12px;text-align:right;"><span style="background:' + color + ';color:' + textColor + ';padding:3px 10px;border-radius:8px;font-weight:700;">' + val.toFixed(2) + '</span></td>';
+    html2 += '</tr>';
+  });
+  html2 += '</tbody></table>';
+  var total = rows2.reduce(function(s,r) { return s + (parseFloat(r[selectedWh])||0); }, 0);
+  var inStock = rows2.filter(function(r) { return (parseFloat(r[selectedWh])||0) > 0; }).length;
+  html2 += '<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">';
+  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">В наявності: </span><span style="color:#4caf50;font-weight:700;">' + inStock + '</span></div>';
+  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Загальний залишок: </span><span style="color:#c9a84c;font-weight:700;">' + total.toFixed(2) + ' м²</span></div>';
+  html2 += '<div style="background:#1a1a1a;border-radius:10px;padding:12px 18px;font-size:13px;"><span style="color:#777;">Без залишків: </span><span style="color:#f44336;font-weight:700;">' + (rows2.length - inStock) + '</span></div>';
+  html2 += '</div>';
+  container.innerHTML = html2;
+  var input = document.getElementById("report-search-input2");
+  if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+}
+
+function updateTransferSendBtn() {
+  // Оновлюємо підсвічування кнопок "На який склад"
+  var toWh = state.transferTo || "";
+  document.querySelectorAll('[data-to-wh]').forEach(function(btn) {
+    var wh = btn.dataset.toWh;
+    var isActive = wh === toWh;
+    btn.style.borderColor = isActive ? '#7b68ee' : '#2a2a2a';
+    btn.style.background = isActive ? '#7b68ee22' : 'transparent';
+    btn.style.color = isActive ? '#7b68ee' : '#777';
+  });
+
+  // Рахуємо обрані товари
+  var checkedCount = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked;
+  }).length;
+
+  // Оновлюємо або показуємо/ховаємо кнопку відправки
+  var sendArea = document.getElementById("transfer-send-area");
+  if (!sendArea) return;
+  if (checkedCount > 0 && toWh) {
+    sendArea.innerHTML = '<button onclick="showTransferPreview();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">👁 Переглянути і надіслати (' + checkedCount + ' позицій)</button>';
+  } else if (checkedCount > 0) {
+    sendArea.innerHTML = '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>';
+  } else {
+    sendArea.innerHTML = '';
+  }
+}
+
+function rebuildTransferTable() {
+  var container = document.getElementById("transfer-table");
+  if (!container || !reportData.length) return;
+  var fromWh = state.reportWarehouse || "";
+  if (!fromWh) return;
+  var search = (state.reportSearch || "").toLowerCase();
+  var rows = reportData.filter(function(r) {
+    var val = parseFloat(r[fromWh]) || 0;
+    var matchSearch = !search || String(r["Артикул"]||"").toLowerCase().includes(search) || String(r["Назва"]||"").toLowerCase().includes(search);
+    return val > 0 && matchSearch;
+  });
+  rows.sort(function(a,b) { return (parseFloat(b[fromWh])||0) - (parseFloat(a[fromWh])||0); });
+  if (!state.transferItems) state.transferItems = {};
+
+  var html = '';
+  if (rows.length === 0) {
+    html = '<div style="text-align:center;padding:40px;color:#555;">Немає товарів з залишками на цьому складі</div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  // Заголовок
+  html += '<div style="background:#1a1a1a;border-radius:10px 10px 0 0;padding:10px 14px;display:grid;grid-template-columns:40px 1fr 90px;gap:8px;align-items:center;border-bottom:1px solid #2a2a2a;">';
+  html += '<div><input type="checkbox" id="transfer-check-all" onchange="transferCheckAll(this.checked)" style="accent-color:#c9a84c;width:16px;height:16px;cursor:pointer;"></div>';
+  html += '<div style="color:#777;font-size:11px;font-weight:600;letter-spacing:1px;">НАЗВА / АРТИКУЛ</div>';
+  html += '<div style="color:#c9a84c;font-size:11px;font-weight:600;text-align:right;">ЗАЛИШОК</div>';
+  html += '</div>';
+
+  rows.forEach(function(row, i) {
+    var article = String(row["Артикул"]||"");
+    var val = parseFloat(row[fromWh]) || 0;
+    var item = state.transferItems[article] || { checked: false, qty: val, pallets: 1, photo: null, photoName: null };
+    state.transferItems[article] = item;
+    var checked = item.checked;
+    var bg = i%2===0 ? "#0d0d0d" : "#0a0a0a";
+
+    html += '<div style="background:' + bg + ';border-bottom:1px solid #141414;padding:12px 14px;">';
+
+    // Рядок товару
+    html += '<div style="display:grid;grid-template-columns:40px 1fr 90px;gap:8px;align-items:center;">';
+    html += '<div><input type="checkbox" ' + (checked?"checked":"") + ' onchange="transferToggle(\'' + article + '\',this.checked,' + val + ')" style="accent-color:#c9a84c;width:16px;height:16px;cursor:pointer;"></div>';
+    html += '<div><div style="color:#ddd;font-size:13px;font-weight:600;">' + String(row["Назва"]||"") + '</div><div style="color:#555;font-size:11px;margin-top:2px;">' + article + '</div></div>';
+    html += '<div style="text-align:right;"><span style="color:#c9a84c;font-weight:700;">' + val.toFixed(2) + '</span><br><span style="color:#555;font-size:10px;">' + String(row["Од. вим."]||"м²") + '</span></div>';
+    html += '</div>';
+
+    // Блок деталей — тільки якщо відмічено
+    if (checked) {
+      html += '<div style="margin-top:10px;padding:12px;background:#141414;border-radius:10px;border:1px solid #2a2a2a;">';
+
+      // Палети + м²
+      html += '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">';
+
+      // Кількість палет
+      html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+      html += '<label style="color:#777;font-size:10px;letter-spacing:1px;">ПАЛЕТ</label>';
+      html += '<div style="display:flex;gap:6px;align-items:center;">';
+      [1,2,3,4,5].forEach(function(n) {
+        var isActive = (item.pallets || 1) === n;
+        html += '<button onclick="transferPallets(\'' + article + '\',' + n + ')" style="width:32px;height:32px;border-radius:8px;border:1px solid ' + (isActive?'#c9a84c':'#2a2a2a') + ';background:' + (isActive?'#c9a84c':'transparent') + ';color:' + (isActive?'#000':'#777') + ';cursor:pointer;font-size:13px;font-weight:700;">' + n + '</button>';
+      });
+      html += '<input type="number" value="' + (item.pallets||1) + '" min="1" step="1" onchange="transferPallets(\'' + article + '\',parseInt(this.value)||1)" style="width:50px;padding:5px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;border-radius:8px;font-size:13px;text-align:center;outline:none;" title="Свій номер">';
+      html += '</div></div>';
+
+      // м² вручну
+      html += '<div style="display:flex;flex-direction:column;gap:4px;">';
+      html += '<label style="color:#777;font-size:10px;letter-spacing:1px;">КІЛ-ТЬ (М²)</label>';
+      html += '<input type="number" data-article="' + article + '" value="' + (item.qty||val) + '" min="0.01" max="' + val + '" step="0.01" onchange="transferQty(\'' + article + '\',this.value)" style="width:90px;padding:7px;background:#1a1a1a;border:1px solid #c9a84c;color:#fff;border-radius:8px;font-size:13px;text-align:right;outline:none;">';
+      html += '</div>';
+
+      // Фото
+      html += '<div style="display:flex;flex-direction:column;gap:4px;margin-left:auto;">';
+      html += '<label style="color:#777;font-size:10px;letter-spacing:1px;">ФОТО (необов\'язково)</label>';
+      if (item.photoName) {
+        html += '<div style="display:flex;gap:6px;align-items:center;">';
+        html += '<span style="color:#4caf50;font-size:12px;">📷 ' + item.photoName + '</span>';
+        html += '<button onclick="transferRemovePhoto(\'' + article + '\')" style="background:none;border:none;color:#f44336;cursor:pointer;font-size:16px;" title="Видалити фото">✕</button>';
+        html += '</div>';
+      } else {
+        html += '<label style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;cursor:pointer;color:#aaa;font-size:12px;">';
+        html += '📷 Зробити фото';
+        html += '<input type="file" accept="image/*" capture="environment" onchange="transferPhoto(\'' + article + '\',this)" style="display:none;">';
+        html += '</label>';
+      }
+      html += '</div>';
+
+      html += '</div>'; // flex row
+      html += '</div>'; // details block
+    }
+
+    html += '</div>'; // товар
+  });
+
+  container.innerHTML = html;
+
+  // Оновлюємо кнопку відправки
+  var checkedCount = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked;
+  }).length;
+  var toWh = state.transferTo || "";
+  var sendArea = document.getElementById("transfer-send-area");
+  if (sendArea) {
+    if (checkedCount > 0 && toWh) {
+      sendArea.innerHTML = '<button onclick="showTransferPreview();" class="btn-gold" style="width:100%;padding:14px;font-size:15px;">👁 Переглянути і надіслати (' + checkedCount + ' позицій)</button>';
+    } else if (checkedCount > 0) {
+      sendArea.innerHTML = '<div style="padding:12px;background:#1a1a1a;border-radius:10px;text-align:center;color:#777;font-size:13px;">⬆️ Оберіть склад призначення щоб надіслати</div>';
+    } else {
+      sendArea.innerHTML = '';
+    }
+  }
+}
+
+function showTransferPreview() {
+  var fromWh = state.reportWarehouse || "";
+  var toWh = state.transferTo || "";
+  if (!fromWh || !toWh) { showToast("Оберіть склади", "error"); return; }
+
+  var items = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked && state.transferItems[k].qty > 0;
+  });
+  if (items.length === 0) { showToast("Оберіть товари", "error"); return; }
+
+  var now = new Date().toLocaleString("uk", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+
+  var rows = items.map(function(article) {
+    var row = reportData.find(function(r) { return String(r["Артикул"]||"").trim() === article; }) || {};
+    var item = state.transferItems[article];
+    var qty = (item.qty || 0).toFixed(2);
+    var pallets = item.pallets || 1;
+    var unit = String(row["Од. вим."]||"м²");
+    var hasPhoto = item.photoFile ? "📷" : "—";
+    return "<tr style='border-bottom:1px solid #1a1a1a;'>"
+      + "<td style='padding:8px 10px;color:#ddd;font-size:13px;'>" + String(row["Назва"]||article) + "</td>"
+      + "<td style='padding:8px 10px;text-align:center;color:#c9a84c;font-weight:700;'>" + pallets + "</td>"
+      + "<td style='padding:8px 10px;text-align:right;color:#fff;font-weight:700;'>" + qty + " " + unit + "</td>"
+      + "<td style='padding:8px 10px;text-align:center;'>" + hasPhoto + "</td>"
+      + "</tr>";
+  }).join("");
+
+  // Видаляємо старе модальне вікно якщо є
+  var old = document.getElementById("transfer-preview-modal");
+  if (old) old.remove();
+
+  var modal = document.createElement("div");
+  modal.id = "transfer-preview-modal";
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;";
+  modal.innerHTML = "<div style='background:#131313;border:1px solid #2a2a2a;border-radius:16px;padding:24px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;'>"
+    + "<div style='font-size:18px;font-weight:700;margin-bottom:16px;'>📋 Попередній перегляд накладної</div>"
+    + "<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;'>"
+    + "<div style='background:#0d0d0d;border-radius:10px;padding:12px;'><div style='color:#777;font-size:11px;margin-bottom:4px;'>З СКЛАДУ</div><div style='color:#c9a84c;font-weight:700;'>" + fromWh + "</div></div>"
+    + "<div style='background:#0d0d0d;border-radius:10px;padding:12px;'><div style='color:#777;font-size:11px;margin-bottom:4px;'>НА СКЛАД</div><div style='color:#7b68ee;font-weight:700;'>" + toWh + "</div></div>"
+    + "</div>"
+    + "<div style='color:#777;font-size:12px;margin-bottom:12px;'>🕐 " + now + " · 📦 " + items.length + " позицій</div>"
+    + "<table style='width:100%;border-collapse:collapse;margin-bottom:20px;'>"
+    + "<thead><tr style='background:#1a1a1a;'>"
+    + "<th style='padding:8px 10px;text-align:left;color:#777;font-size:11px;'>Назва</th>"
+    + "<th style='padding:8px 10px;text-align:center;color:#777;font-size:11px;'>Палет</th>"
+    + "<th style='padding:8px 10px;text-align:right;color:#777;font-size:11px;'>Кількість</th>"
+    + "<th style='padding:8px 10px;text-align:center;color:#777;font-size:11px;'>Фото</th>"
+    + "</tr></thead><tbody>" + rows + "</tbody></table>"
+    + "<div style='display:flex;gap:10px;'>"
+    + "<button onclick=\"document.getElementById('transfer-preview-modal').remove();\" style='flex:1;padding:12px;background:#1a1a1a;border:1px solid #2a2a2a;color:#aaa;border-radius:10px;cursor:pointer;font-size:14px;'>✏️ Редагувати</button>"
+    + "<button onclick=\"document.getElementById('transfer-preview-modal').remove();sendTransferTelegram();\" class='btn-gold' style='flex:2;padding:12px;font-size:14px;border-radius:10px;'>📤 Надіслати в Telegram</button>"
+    + "</div></div>";
+  document.body.appendChild(modal);
+}
+
+function transferToggle(article, checked, maxVal) {
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) {
+    state.transferItems[article] = { checked: false, qty: 44.64, pallets: 1, qtyManual: false, photoFile: null, photoName: null };
+  }
+  state.transferItems[article].checked = checked;
+  if (checked && !state.transferItems[article].qtyManual) {
+    state.transferItems[article].qty = Math.round((state.transferItems[article].pallets || 1) * 44.64 * 100) / 100;
+  }
+  rebuildTransferTable();
+  updateTransferSendBtn();
+}
+
+function transferPallets(article, n) {
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: 0, pallets: 1 };
+  state.transferItems[article].pallets = n;
+  rebuildTransferTable();
+}
+
+function transferPhoto(article, input) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: true };
+  // Зберігаємо файл і ім'я
+  state.transferItems[article].photoFile = file;
+  state.transferItems[article].photoName = file.name;
+  rebuildTransferTable();
+  showToast("📷 Фото додано: " + file.name, "success");
+}
+
+function transferRemovePhoto(article) {
+  if (!state.transferItems || !state.transferItems[article]) return;
+  state.transferItems[article].photoFile = null;
+  state.transferItems[article].photoName = null;
+  rebuildTransferTable();
+}
+
+async function sendTransferTelegram() {
+  var fromWh = state.reportWarehouse || "";
+  var toWh = state.transferTo || "";
+  if (!fromWh || !toWh) { showToast("Оберіть склади", "error"); return; }
+  var items = Object.keys(state.transferItems || {}).filter(function(k) {
+    return state.transferItems[k] && state.transferItems[k].checked && state.transferItems[k].qty > 0;
+  });
+  if (items.length === 0) { showToast("Оберіть товари", "error"); return; }
+
+  showToast("⏳ Надсилаємо...", "success");
+
+  var now = new Date().toLocaleString("uk", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+  var lines = items.map(function(article) {
+    var row = reportData.find(function(r) { return String(r["Артикул"]||"").trim() === article; }) || {};
+    var item = state.transferItems[article];
+    var qty = item.qty || 0;
+    var pallets = item.pallets || 1;
+    var unit = String(row["Од. вим."]||"м²");
+    var photoMark = item.photoFile ? " 📷" : "";
+    return "• " + String(row["Назва"]||article) + photoMark + "\n  " + article + "\n  Палет: " + pallets + " · " + qty.toFixed(2) + " " + unit;
+  });
+
+  var msg = "🔄 ПЕРЕМІЩЕННЯ ТОВАРІВ\n\n"
+    + "📤 З: " + fromWh + "\n"
+    + "📥 На: " + toWh + "\n"
+    + "🕐 " + now + "\n"
+    + "📦 Позицій: " + items.length + "\n\n"
+    + lines.join("\n\n");
+
+  const TG_URL = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
+  const TG_HEADERS = {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY
+  };
+
+  try {
+    // Надсилаємо текст
+    await fetch(TG_URL, {
+      method: "POST",
+      headers: TG_HEADERS,
+      body: JSON.stringify({ action: "sendMessage", text: msg })
+    });
+
+    // Надсилаємо фото для кожного товару
+    for (var i = 0; i < items.length; i++) {
+      var article = items[i];
+      var item = state.transferItems[article];
+      if (!item.photoFile) continue;
+      var row = reportData.find(function(r) { return String(r["Артикул"]||"").trim() === article; }) || {};
+      var name = String(row["Назва"]||article);
+      var caption = "📷 " + name + " [" + article + "]\nПалет: " + (item.pallets||1) + " · " + (item.qty||0).toFixed(2) + " " + String(row["Од. вим."]||"м²");
+
+      // Конвертуємо фото в base64
+      await new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = async function(e) {
+          var base64 = e.target.result.split(',')[1];
+          try {
+            await fetch(TG_URL, {
+              method: "POST",
+              headers: TG_HEADERS,
+              body: JSON.stringify({ action: "sendPhoto", photo: base64, caption: caption })
+            });
+          } catch(err) { console.log("Помилка фото:", err); }
+          resolve();
+        };
+        reader.onerror = resolve;
+        reader.readAsDataURL(item.photoFile);
+      });
+    }
+
+    showToast("✅ Накладну надіслано в Telegram!", "success");
+    state.transferItems = {};
+    state.transferTo = "";
+    render();
+    setTimeout(rebuildTransferTable, 10);
+  } catch(e) {
+    showToast("❌ Помилка: " + e.message, "error");
+  }
+}
+
+function transferQty(article, val) {
+  if (!state.transferItems) state.transferItems = {};
+  if (!state.transferItems[article]) state.transferItems[article] = { checked: true, qty: parseFloat(val) };
+  state.transferItems[article].qty = parseFloat(val) || 0;
+}
+
+function transferCheckAll(checked) {
+  var fromWh = state.reportWarehouse || "";
+  if (!fromWh) return;
+  if (!state.transferItems) state.transferItems = {};
+  reportData.forEach(function(row) {
+    var article = String(row["Артикул"]||"");
+    var val = parseFloat(row[fromWh]) || 0;
+    if (val > 0) {
+      if (!state.transferItems[article]) state.transferItems[article] = { checked: false, qty: val, pallets: 1 };
+      state.transferItems[article].checked = checked;
+    }
+  });
+  rebuildTransferTable();
+  updateTransferSendBtn();
+}
+
+function startVoiceSearch(onResult) {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast("Голосовий пошук не підтримується в цьому браузері", "error");
+    return;
+  }
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = new SpeechRecognition();
+  recognition.lang = "uk-UA";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.onresult = function(e) {
+    var text = e.results[0][0].transcript;
+    onResult(text);
+  };
+  recognition.onerror = function(e) {
+    var msgs = {
+      "not-allowed": "Мікрофон заблоковано. Дозвольте доступ в браузері.",
+      "no-speech": "Не почуто мови. Спробуйте ще раз.",
+      "network": "Помилка мережі. Потрібен інтернет.",
+      "aborted": "Скасовано.",
+    };
+    showToast(msgs[e.error] || "Помилка: " + e.error, "error");
+  };
+  recognition.start();
+  showToast("🎤 Говоріть...", "success");
+}
+
+function startReportVoice() {
+  startVoiceSearch(function(text) {
+    var input = document.getElementById("report-search-input");
+    if (input) { input.value = text; handleReportSearch(text); }
+  });
+}
+
+function startCollectionVoice() {
+  startVoiceSearch(function(text) {
+    var input = document.getElementById("collection-search-input");
+    if (input) { input.value = text; handleSearchInput(text); }
+  });
+}
+
+
+
+let reportSearchTimeout = null;
+
+function handleReportSearch(val) {
+  state.reportSearch = val;
+  clearTimeout(reportSearchTimeout);
+  reportSearchTimeout = setTimeout(function() {
+    var container = document.getElementById("report-table-container");
+    if (container && reportData.length > 0) {
+      container.innerHTML = buildReportTableHtml(reportData);
+    }
+  }, 150);
+}
+
+// Склади які не відображати
+var HIDDEN_WAREHOUSES = ["Склад Липинського"];
+
+// Кольори для складів
+var WH_COLORS = [
+  "#7b68ee", "#4caf50", "#ff9800", "#2196f3", "#e91e63", "#9c27b0"
+];
+
+function buildReportTableHtml(rows) {
+  if (!rows || rows.length === 0) return '<div style="text-align:center;padding:40px;color:#555;">Нічого не знайдено</div>';
+
+  var search = (state.reportSearch||"").toLowerCase();
+  var selectedWh = state.reportWarehouse || "";
+
+  var filtered = rows.filter(function(r) {
+    var matchSearch = !search ||
+      String(r["Артикул"]||"").toLowerCase().includes(search) ||
+      String(r["Назва"]||"").toLowerCase().includes(search);
+    var whVal = selectedWh ? (parseFloat(r[selectedWh]) || 0) : 1;
+    var matchWh = !selectedWh || whVal > 0;
+    return matchSearch && matchWh;
+  });
+
+  // Сортуємо по залишках вибраного складу або по загальній сумі
+  filtered.sort(function(a, b) {
+    var valA = selectedWh ? (parseFloat(a[selectedWh]) || 0) : (parseFloat(a["Всього"]) || 0);
+    var valB = selectedWh ? (parseFloat(b[selectedWh]) || 0) : (parseFloat(b["Всього"]) || 0);
+    return valB - valA;
+  });
+
+  var whCols = reportHeaders.filter(function(h) {
+    return h.indexOf("Склад") === 0 && HIDDEN_WAREHOUSES.indexOf(h) === -1;
+  });
+
+  var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+
+  filtered.forEach(function(row) {
+    var article = String(row["Артикул"]||"");
+    var name = String(row["Назва"]||"");
+    var unit = String(row["Од. вим."]||"м²");
+    var total = parseFloat(row["Всього"]) || 0;
+
+    // Беремо лише склади з ненульовими залишками і сортуємо по спаданню
+    var whItems = whCols.map(function(wh, i) {
+      return { name: wh.replace("Склад ",""), val: parseFloat(row[wh]) || 0, color: WH_COLORS[i % WH_COLORS.length] };
+    }).filter(function(w) { return w.val > 0; })
+      .sort(function(a, b) { return b.val - a.val; });
+
+    if (whItems.length === 0 && total === 0) return;
+
+    html += '<div style="background:#111;border-radius:12px;padding:12px 14px;border:1px solid #1e1e1e;">';
+
+    // Заголовок
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">';
+    html += '<div style="min-width:0;flex:1;">';
+    html += '<div style="color:#c9a84c;font-size:10px;letter-spacing:1px;margin-bottom:2px;">' + article + '</div>';
+    html += '<div style="color:#fff;font-size:12px;word-break:break-word;">' + name + '</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;flex-shrink:0;margin-left:12px;">';
+    html += '<div style="color:#c9a84c;font-size:15px;font-weight:700;">' + total.toFixed(2) + '</div>';
+    html += '<div style="color:#555;font-size:10px;">' + unit + ' всього</div>';
+    html += '</div>';
+    html += '</div>';
+
+    if (whItems.length > 0) {
+      // Прогрес бар
+      html += '<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#1a1a1a;margin-bottom:6px;">';
+      whItems.forEach(function(w) {
+        var pct = total > 0 ? (w.val / total * 100).toFixed(1) : 0;
+        html += '<div style="width:' + pct + '%;background:' + w.color + ';transition:width 0.3s;" title="' + w.name + ': ' + w.val.toFixed(2) + '"></div>';
+      });
+      html += '</div>';
+
+      // Легенда
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      whItems.forEach(function(w) {
+        html += '<span style="font-size:11px;color:' + w.color + ';">■ ' + w.name + ' ' + w.val.toFixed(2) + '</span>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+let reportData = [];
+let reportHeaders = [];
+
+async function loadWarehouseReport() {
+  state.reportLoading = true;
+  state.reportError = null;
+  reportData = [];
+  render();
+  try {
+    const res = await fetch("https://script.google.com/macros/s/AKfycbymfDIx4fu4j_nROvQ5PTgPPz6QPRUNzu1iu8WSGQed74XUDIZA2OAc0i7x0Rb-X-Ed/exec");
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    reportHeaders = data.headers || [];
+    reportData = data.rows || [];
+
+    // Додаємо резерв з Supabase
+    try {
+      const resSupabase = await api("GET", "collections?select=article,reserve&is_visible=not.is.null");
+      if (Array.isArray(resSupabase)) {
+        const reserveMap = {};
+        resSupabase.forEach(function(item) {
+          if (item.article) reserveMap[item.article.trim()] = item.reserve || 0;
+        });
+        reportData = reportData.map(function(row) {
+          var article = String(row["Артикул"] || "").trim();
+          row["Резерв"] = reserveMap[article] || 0;
+          return row;
+        });
+      }
+    } catch(e2) { console.log("Резерв не завантажено:", e2.message); }
+
+    state.reportLoading = false;
+    render();
+    setTimeout(function() {
+      rebuildWarehouseSingleTable();
+      rebuildTransferTable();
+    }, 50);
+  } catch(e) {
+    state.reportLoading = false;
+    state.reportError = e.message;
+    render();
+  }
+}
+
+
+
+function renderReportTable(rows) {
+  var container = document.getElementById("report-container");
+  if (!container) return;
+  if (!rows || rows.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#555;">Нічого не знайдено</div>';
+    return;
+  }
+
+  var table = document.createElement("div");
+  table.style.overflowX = "auto";
+
+  var t = document.createElement("table");
+  t.style.cssText = "width:100%;border-collapse:collapse;font-size:12px;min-width:900px;";
+
+  // Header
+  var thead = document.createElement("thead");
+  var htr = document.createElement("tr");
+  htr.style.background = "#0a0a0a";
+  reportHeaders.forEach(function(h) {
+    var th = document.createElement("th");
+    var isWh = h.indexOf("Склад") === 0;
+    var shortName = isWh ? h.replace("Склад ", "") : h;
+    th.textContent = shortName;
+    th.style.cssText = "padding:8px 10px;text-align:" + (isWh || h==="Всього" ? "right" : "left") + ";border-bottom:2px solid #2a2a2a;white-space:nowrap;font-size:11px;color:" + (h==="Всього" ? "#c9a84c" : isWh ? "#7b68ee" : "#777") + ";";
+    htr.appendChild(th);
+  });
+  thead.appendChild(htr);
+  t.appendChild(thead);
+
+  // Body
+  var tbody = document.createElement("tbody");
+  rows.forEach(function(row, ri) {
+    var tr = document.createElement("tr");
+    tr.style.background = ri % 2 === 0 ? "#111" : "#0f0f0f";
+    reportHeaders.forEach(function(h) {
+      var td = document.createElement("td");
+      var val = row[h];
+      var isWh = h.indexOf("Склад") === 0;
+      var isTotal = h === "Всього";
+      var numVal = parseFloat(val) || 0;
+      var color, display, align = "left";
+      if (h === "Артикул") { color = "#c9a84c"; display = String(val); }
+      else if (h === "Назва") { color = "#fff"; display = String(val); }
+      else if (h === "Од. вим.") { color = "#555"; display = String(val); }
+      else if (isTotal) { color = "#c9a84c"; display = numVal > 0 ? numVal.toFixed(2) : "—"; align = "right"; }
+      else if (isWh) { color = numVal > 0 ? "#4caf50" : "#333"; display = numVal > 0 ? numVal.toFixed(2) : "—"; align = "right"; }
+      else { color = "#777"; display = String(val); }
+      td.textContent = display;
+      td.style.cssText = "padding:7px 10px;border-bottom:1px solid #1a1a1a;color:" + color + ";white-space:nowrap;text-align:" + align + ";";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+  table.appendChild(t);
+  container.innerHTML = "";
+  container.appendChild(table);
+}
+
+function renderOrders() {
+  return `<div style="text-align:center;padding:40px;color:#333;">
+    <div style="font-size:32px;margin-bottom:12px;">📋</div>
+    <div>Замовлення з'являться тут коли клієнти будуть замовляти через сайт</div>
+  </div>`;
+}
+
+function renderModal() {
+  const item = state.editItem || {};
+  const isEdit = !!item.id;
+  const photos = item.photos || [];
+
+  return `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <div style="color:#c9a84c;font-size:10px;letter-spacing:2px;text-transform:uppercase;">${isEdit ? 'Редагувати' : 'Додати'}</div>
+            <div style="font-size:17px;font-weight:700;font-family:serif;">${item.is_panno ? 'Панно' : 'Колекцію'}</div>
+          </div>
+          <button class="btn-dark" style="width:34px;height:34px;padding:0;" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" style="max-height:65vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+          
+          <!-- Фото -->
+          <div style="margin-bottom:20px;">
+            <div class="label">Фото</div>
+            <div class="photo-grid" id="photo-grid">
+              ${photos.map((p,i) => `
+                <div class="photo-item" draggable="true"
+                  ondragstart="dragStart(event,${i})"
+                  ondragover="dragOver(event)"
+                  ondrop="dragDrop(event,${i})"
+                  ondragend="dragEnd(event)"
+                  style="cursor:grab;position:relative;">
+                  <img src="${p.url}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                  <div style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:2px 5px;border-radius:4px;pointer-events:none;">${i === 0 ? '★ Головне' : (i+1)}</div>
+                  <button class="photo-delete" onclick="removePhoto(${i})">×</button>
+                </div>`).join('')}
+              <label class="upload-zone" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+                <div style="font-size:24px;">📸</div>
+                <div style="font-size:11px;color:#555;">Додати фото</div>
+                <input type="file" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this)">
+              </label>
+            </div>
+            <div style="color:#444;font-size:10px;margin-top:6px;text-align:center;">☰ Перетягуй фото щоб змінити порядок · Перше фото — головне</div>
+          </div>
+
+          <!-- Назва -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Назва *</div>
+            <input type="text" id="f-name" value="${item.name || ''}" placeholder="Oro Nebula" autocomplete="off">
+          </div>
+
+          <!-- Артикул -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Артикул</div>
+            <input type="text" id="f-article" value="${item.article || ''}" placeholder="00-00021672" autocomplete="off">
+          </div>
+
+          <!-- Розмір -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Розмір</div>
+            <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см" autocomplete="off" inputmode="text">
+          </div>
+
+          <!-- Комплект -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Артикули комплекту (якщо є)</div>
+            <div style="color:#444;font-size:10px;margin-bottom:8px;">Залишки по всіх артикулах будуть сумуватись. Основний артикул вище.</div>
+            <div id="bundle-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" onclick="handleBundleClick(event)">
+              ${(item.bundle_articles||[]).map(art => `
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+                  ${art}
+                  <span data-remove-bundle="${art}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+                </span>`).join('')}
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="bundle-input" placeholder="Введи артикул і натисни +" style="flex:1;" autocomplete="off"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addBundleArticle();}">
+              <button onclick="addBundleArticle()" style="padding:10px 16px;border-radius:10px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+
+          <!-- Ціни -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Ціна</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div>
+                <div style="color:#c9a84c;font-size:10px;margin-bottom:4px;">UAH</div>
+                <input type="number" id="f-price-uah" value="${item.price_uah || ''}" placeholder="1240" min="0" step="1" inputmode="numeric" autocomplete="off" oninput="if(parseFloat(this.value)<0)this.value=0;calcFromUah(this.value)">
+              </div>
+              <div>
+                <div style="color:#4caf50;font-size:10px;margin-bottom:4px;">EUR</div>
+                <input type="number" id="f-price-eur" value="${item.price_eur || ''}" placeholder="29" min="0" step="0.01" inputmode="numeric" autocomplete="off" oninput="if(parseFloat(this.value)<0)this.value=0;calcFromEur(this.value)">
+              </div>
+              <div>
+                <div style="color:#2196F3;font-size:10px;margin-bottom:4px;">USD</div>
+                <input type="number" id="f-price-usd" value="${item.price_usd || ''}" placeholder="31" min="0" step="0.01" inputmode="numeric" autocomplete="off" oninput="if(parseFloat(this.value)<0)this.value=0;calcFromUsd(this.value)">
+              </div>
+            </div>
+            <div style="color:#555;font-size:10px;margin-top:4px;">EUR/UAH: ${state.rates.eur.toFixed(2)} · USD/UAH: ${state.rates.usd.toFixed(2)}</div>
+          </div>
+
+          <!-- Гуртова ціна -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Гуртова ціна (UAH)</div>
+            <input type="number" id="f-price-wholesale" value="${item.price_wholesale || ''}" placeholder="980" min="0" step="1" inputmode="numeric" autocomplete="off" readonly="false">
+          </div>
+
+          <!-- Опис -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div class="label" style="margin-bottom:0;">Опис</div>
+              <button onclick="generateDesc()" id="gen-btn" style="padding:5px 12px;border-radius:8px;background:#c9a84c22;border:1px solid #c9a84c44;color:#c9a84c;font-size:11px;font-weight:700;cursor:pointer;">✨ AI опис</button>
+            </div>
+            <textarea id="f-desc" rows="3" placeholder="Опис колекції...">${item.description || ''}</textarea>
+          </div>
+
+          <!-- Теги -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Теги</div>
+
+            <!-- Активні теги колекції -->
+            <div id="tags-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" onclick="handleTagClick(event)">
+              ${(item.tags||[]).map(tag => `
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#c9a84c22;border:1px solid #c9a84c44;color:#c9a84c;font-size:12px;font-weight:700;">
+                  ${tag}
+                  <span data-remove="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+                </span>`).join('')}
+            </div>
+
+            <!-- Існуючі теги з інших колекцій -->
+            ${getExistingTags(item.tags||[]).length > 0 ? `
+            <div style="margin-bottom:10px;">
+              <div style="color:#444;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Існуючі теги</div>
+              <div id="existing-tags-container" style="display:flex;flex-wrap:wrap;gap:6px;" onclick="handleExistingTagClick(event)">
+                ${getExistingTags(item.tags||[]).map(tag => `
+                  <span data-add="${tag}" style="cursor:pointer;padding:4px 10px;border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#555;font-size:12px;font-weight:700;transition:all 0.2s;">
+                    + ${tag}
+                  </span>`).join('')}
+              </div>
+            </div>` : ''}
+
+            <!-- Новий тег -->
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="tag-input" placeholder="Новий тег..." style="flex:1;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addTag();}">
+              <button onclick="addTag()" style="padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#c9a84c,#b8860b);border:none;color:#000;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+
+          <!-- Відгуки -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="label" style="margin-bottom:0;">⭐ Відгуки</div>
+              <button onclick="generateReviews()" id="gen-reviews-btn" style="padding:5px 12px;border-radius:8px;background:#f4433611;border:1px solid #f4433644;color:#f44336;font-size:11px;font-weight:700;cursor:pointer;">✨ Згенерувати AI</button>
+            </div>
+            <div id="reviews-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">
+              ${(item.reviews||[]).map((r,i) => `
+                <div style="background:#1a1a1a;border-radius:10px;padding:10px 12px;border:1px solid #2a2a2a;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <input value="${r.author}" onchange="updateReview(${i},'author',this.value)"
+                      style="background:transparent;border:none;color:#c9a84c;font-size:12px;font-weight:700;outline:none;width:120px;">
+                    <div style="display:flex;gap:2px;">
+                      ${[1,2,3,4,5].map(s => `<span onclick="updateReview(${i},'rating',${s})" style="cursor:pointer;font-size:14px;color:${s<=r.rating?'#f4b942':'#333'}">${s<=r.rating?'★':'☆'}</span>`).join('')}
+                    </div>
+                    <span onclick="removeReview(${i})" style="cursor:pointer;color:#444;font-size:16px;padding:0 4px;">×</span>
+                  </div>
+                  <textarea onchange="updateReview(${i},'text',this.value)" rows="2"
+                    style="width:100%;background:transparent;border:none;color:#777;font-size:12px;outline:none;resize:none;line-height:1.5;">${r.text}</textarea>
+                  <div style="color:#333;font-size:10px;margin-top:4px;">${r.created_at ? new Date(r.created_at).toLocaleDateString('uk-UA') : ''}</div>
+                </div>`).join('')}
+            </div>
+            <button onclick="addEmptyReview()" style="width:100%;padding:8px;border-radius:8px;background:transparent;border:1px dashed #2a2a2a;color:#555;cursor:pointer;font-size:12px;">+ Додати відгук вручну</button>
+          </div>
+
+          <!-- Покриття -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Покриття</div>
+            <div id="finish-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" onclick="handleFinishClick(event)">
+              ${(item.finish_tags||[]).map(tag => `
+                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+                  ${tag}
+                  <span data-remove-finish="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+                </span>`).join('')}
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              ${getExistingFinishTags(item.finish_tags||[]).length > 0 ? `
+              <div style="display:flex;flex-wrap:wrap;gap:6px;" onclick="handleExistingFinishClick(event)">
+                ${getExistingFinishTags(item.finish_tags||[]).map(tag => `
+                  <span data-add-finish="${tag}" style="cursor:pointer;padding:4px 10px;border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#555;font-size:12px;font-weight:700;">+ ${tag}</span>`).join('')}
+              </div>` : ''}
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="finish-input" placeholder="Нове покриття (напр. Полірована)..." style="flex:1;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addFinishTag();}">
+              <button onclick="addFinishTag()" style="padding:10px 16px;border-radius:10px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-weight:700;cursor:pointer;font-size:18px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+
+          <!-- Акція -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="label" style="margin-bottom:0;">🔥 Акція</div>
+              <label class="switch">
+                <input type="checkbox" id="f-sale-active" ${item.sale_price > 0 || item.sale_percent > 0 ? 'checked' : ''}
+                  onchange="toggleSaleSection(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div id="sale-section" style="display:${item.sale_price > 0 || item.sale_percent > 0 ? 'block' : 'none'}">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <div>
+                  <div style="color:#f44336;font-size:10px;margin-bottom:4px;">Акційна ціна (UAH)</div>
+                  <input type="number" id="f-sale-price" value="${item.sale_price || ''}" placeholder="990" min="0"
+                    oninput="calcSalePercent(this.value)"
+                    style="background:#f4433611;border:1px solid #f4433633;color:#fff;border-radius:10px;padding:10px;width:100%;outline:none;font-size:14px;">
+                </div>
+                <div>
+                  <div style="color:#f44336;font-size:10px;margin-bottom:4px;">Або знижка %</div>
+                  <input type="number" id="f-sale-percent" value="${item.sale_percent || ''}" placeholder="20" min="0" max="99"
+                    oninput="calcSalePrice(this.value)"
+                    style="background:#f4433611;border:1px solid #f4433633;color:#fff;border-radius:10px;padding:10px;width:100%;outline:none;font-size:14px;">
+                </div>
+              </div>
+              <div style="margin-bottom:10px;">
+                <div style="color:#f44336;font-size:10px;margin-bottom:4px;">⏰ Діє до</div>
+                <input type="date" id="f-sale-until" value="${item.sale_until ? item.sale_until.split('T')[0] : ''}"
+                  style="width:100%;background:#f4433611;border:1px solid #f4433633;color:#fff;border-radius:10px;padding:10px;outline:none;font-size:14px;">
+              </div>
+              <div id="sale-preview" style="background:#f4433611;border:1px solid #f4433633;border-radius:10px;padding:10px;font-size:12px;color:#f44336;text-align:center;">
+                ${item.sale_price > 0 ? '🔥 Акція: ' + item.sale_price.toLocaleString() + ' грн (було ' + item.price_uah.toLocaleString() + ' грн)' : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Видимість -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#1a1a1a;border-radius:10px;">
+            <span style="font-size:13px;">Показувати клієнтам</span>
+            <label class="switch">
+              <input type="checkbox" id="f-visible" ${item.is_visible !== false ? 'checked' : ''}>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn-dark" onclick="closeModal()">Скасувати</button>
+          <button class="btn-gold" style="flex:1;" onclick="saveItem()" id="save-btn">
+            ${isEdit ? 'Зберегти зміни' : 'Додати'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// EVENTS
+async function generateDesc() {
+  const btn = document.getElementById("gen-btn");
+  const desc = document.getElementById("f-desc");
+  const name = document.getElementById("f-name")?.value || state.editItem?.name || "";
+  const size = document.getElementById("f-size")?.value || state.editItem?.size || "";
+  const tags = state.editItem?.tags || [];
+  const photos = state.editItem?.photos || [];
+  const imageUrl = photos[0]?.url || "";
+
+  if (!name) { showToast("Спочатку введіть назву!", "error"); return; }
+
+  btn.textContent = "⏳ Генерую...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-desc", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+      },
+      body: JSON.stringify({ name, size, tags, imageUrl })
+    });
+
+    const data = await res.json();
+    if (data.description) {
+      if (desc) desc.value = data.description;
+      showToast("Опис згенеровано! ✅", "success");
+    } else {
+      showToast("Помилка: " + (data.error || "невідома"), "error");
+    }
+  } catch(e) {
+    showToast("Помилка: " + e.message, "error");
+  }
+
+  btn.textContent = "✨ AI опис";
+  btn.disabled = false;
+}
+
+async function generateReviews() {
+  const btn = document.getElementById("gen-reviews-btn");
+  const name = document.getElementById("f-name")?.value || state.editItem?.name || "";
+  const size = document.getElementById("f-size")?.value || state.editItem?.size || "";
+  const tags = (state.editItem?.tags || []).join(", ");
+
+  if (!name) { showToast("Спочатку введіть назву!", "error"); return; }
+
+  btn.textContent = "⏳ Генерую...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/generate-desc", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+      },
+      body: JSON.stringify({
+        name, size, tags,
+        prompt: "Згенеруй 5 реалістичних відгуків українською мовою про керамічну плитку " + name + " розміром " + size + ". Відгуки мають бути від різних людей з різними іменами (Олена К., Михайло В. тощо), різними оцінками від 4 до 5 зірок, короткими (1-2 речення). Відповідь ТІЛЬКИ у форматі JSON масиву: [{author,rating,text}]. Без пояснень."
+      })
+    });
+    const data = await res.json();
+    let reviews = [];
+    try {
+      const text = data.description || "";
+      const jsonMatch = text.match(/\[.*\]/s);
+      if (jsonMatch) reviews = JSON.parse(jsonMatch[0]);
+    } catch(e) { console.log("Parse error:", e); }
+
+    if (reviews.length > 0) {
+      const now = new Date().toISOString();
+      state.editItem.reviews = reviews.map(r => ({ ...r, created_at: now }));
+      showToast("✅ Згенеровано " + reviews.length + " відгуків!", "success");
+      render();
+    } else {
+      showToast("Помилка генерації відгуків", "error");
+    }
+  } catch(e) {
+    showToast("Помилка: " + e.message, "error");
+  }
+  btn.textContent = "✨ Згенерувати AI";
+  btn.disabled = false;
+}
+
+function updateReview(index, field, value) {
+  if (!state.editItem.reviews) return;
+  state.editItem.reviews[index][field] = field === "rating" ? parseInt(value) : value;
+  if (field === "rating") renderReviewsOnly();
+}
+
+function removeReview(index) {
+  if (!state.editItem.reviews) return;
+  state.editItem.reviews.splice(index, 1);
+  renderReviewsOnly();
+}
+
+function addEmptyReview() {
+  if (!state.editItem.reviews) state.editItem.reviews = [];
+  state.editItem.reviews.push({
+    author: "Клієнт",
+    rating: 5,
+    text: "",
+    created_at: new Date().toISOString()
+  });
+  renderReviewsOnly();
+}
+
+function renderReviewsOnly() {
+  const list = document.getElementById("reviews-list");
+  if (!list || !state.editItem.reviews) return;
+  list.innerHTML = state.editItem.reviews.map((r, i) =>
+    `<div style="background:#1a1a1a;border-radius:10px;padding:10px 12px;border:1px solid #2a2a2a;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <input value="${r.author}" onchange="updateReview(${i},'author',this.value)"
+          style="background:transparent;border:none;color:#c9a84c;font-size:12px;font-weight:700;outline:none;width:120px;">
+        <div style="display:flex;gap:2px;">
+          ${[1,2,3,4,5].map(s => `<span onclick="updateReview(${i},'rating',${s})" style="cursor:pointer;font-size:14px;color:${s<=r.rating?'#f4b942':'#333'}">${s<=r.rating?'★':'☆'}</span>`).join('')}
+        </div>
+        <span onclick="removeReview(${i})" style="cursor:pointer;color:#444;font-size:16px;padding:0 4px;">×</span>
+      </div>
+      <textarea onchange="updateReview(${i},'text',this.value)" rows="2"
+        style="width:100%;background:transparent;border:none;color:#777;font-size:12px;outline:none;resize:none;line-height:1.5;">${r.text}</textarea>
+      <div style="color:#333;font-size:10px;margin-top:4px;">${r.created_at ? new Date(r.created_at).toLocaleDateString('uk-UA') : ''}</div>
+    </div>`
+  ).join('');
+}
+
+function toggleSaleSection(active) {
+  const section = document.getElementById("sale-section");
+  if (section) section.style.display = active ? "block" : "none";
+  if (!active) {
+    const sp = document.getElementById("f-sale-price");
+    const spc = document.getElementById("f-sale-percent");
+    const su = document.getElementById("f-sale-until");
+    if (sp) sp.value = "";
+    if (spc) spc.value = "";
+    if (su) su.value = "";
+  }
+}
+
+function calcSalePercent(priceVal) {
+  const price = parseFloat(priceVal);
+  const uah = parseFloat(document.getElementById("f-price-uah")?.value || "0");
+  if (!isNaN(price) && price > 0 && uah > 0) {
+    const percent = Math.round((1 - price / uah) * 100);
+    const percentEl = document.getElementById("f-sale-percent");
+    if (percentEl) percentEl.value = percent > 0 ? percent : "";
+  }
+  updateSalePreview();
+}
+
+function calcSalePrice(percentVal) {
+  const percent = parseFloat(percentVal);
+  const uah = parseFloat(document.getElementById("f-price-uah")?.value || "0");
+  if (!isNaN(percent) && percent > 0 && uah > 0) {
+    const salePrice = Math.round(uah * (1 - percent / 100));
+    const priceEl = document.getElementById("f-sale-price");
+    if (priceEl) priceEl.value = salePrice;
+  }
+  updateSalePreview();
+}
+
+function updateSalePreview() {
+  const preview = document.getElementById("sale-preview");
+  if (!preview) return;
+  const salePrice = parseFloat(document.getElementById("f-sale-price")?.value || "0");
+  const uah = parseFloat(document.getElementById("f-price-uah")?.value || "0");
+  const until = document.getElementById("f-sale-until")?.value;
+  if (salePrice > 0 && uah > 0) {
+    const savings = Math.round(uah - salePrice);
+    const percent = Math.round((1 - salePrice / uah) * 100);
+    preview.innerHTML = "🔥 " + salePrice.toLocaleString() + " грн " +
+      "(було " + uah.toLocaleString() + " грн, економія " + savings.toLocaleString() + " грн · -" + percent + "%)" +
+      (until ? "<br>⏰ до " + new Date(until).toLocaleDateString("uk-UA") : "");
+    preview.style.display = "block";
+  } else {
+    preview.style.display = "none";
+  }
+}
+
+let searchTimeout = null;
+
+function handleSearchInput(val) {
+  state.collectionSearch = val;
+  // Оновлюємо список без перерендеру поля пошуку
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(function() {
+    renderCollectionsList();
+  }, 150);
+}
+
+function clearSearch() {
+  state.collectionSearch = "";
+  const input = document.getElementById("collection-search-input");
+  if (input) input.value = "";
+  renderCollectionsList();
+}
+
+function renderCollectionsList() {
+  const isPanno = state.tab === "pannos";
+  const container = document.getElementById("collections-list-container");
+  if (container) {
+    const searchVal = state.collectionSearch || "";
+    const items = state.collections.filter(c => {
+      if (c.is_panno !== isPanno) return false;
+      if (!searchVal) return true;
+      const q = searchVal.toLowerCase();
+      return (c.name || "").toLowerCase().includes(q) ||
+             (c.article || "").toLowerCase().includes(q) ||
+             (c.size || "").toLowerCase().includes(q);
+    });
+    const clearBtn = document.getElementById("search-clear-btn");
+    if (clearBtn) clearBtn.style.display = searchVal ? "block" : "none";
+    const countEl = document.getElementById("collections-count");
+    if (countEl) countEl.textContent = items.length + " позицій";
+    container.innerHTML = items.length === 0
+      ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal ? "Нічого не знайдено" : "Немає позицій") + "</div>"
+      : items.map(item => renderCollectionRow(item)).join("");
+  }
+}
+
+function bindEvents() {
+  // Restore report search input value after render
+  var reportInput = document.getElementById("report-search-input");
+  if (reportInput) {
+    reportInput.value = state.reportSearch || "";
+    if (state.reportSearch) {
+      reportInput.focus();
+      reportInput.setSelectionRange(reportInput.value.length, reportInput.value.length);
+    }
+  }
+  // Відновлюємо вибраний склад у select
+
+  // Restore search input value after render
+  const input = document.getElementById("collection-search-input");
+  if (input && state.collectionSearch) {
+    input.value = state.collectionSearch;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  // Ensure all inputs in modal are editable
+  setTimeout(() => {
+    document.querySelectorAll('.modal-body input, .modal-body textarea').forEach(el => {
+      el.removeAttribute('disabled');
+      el.removeAttribute('readonly');
+      el.style.pointerEvents = 'auto';
+      el.style.userSelect = 'text';
+      el.style.webkitUserSelect = 'text';
+      el.style.opacity = '1';
+      el.style.cursor = 'text';
+    });
+  }, 100);
+}
+
+function doLogin() {
+  const pwd = document.getElementById("pwd")?.value;
+  if (pwd === ADMIN_PASSWORD) {
+    state.page = "admin";
+    loadData();
+    render();
+  } else {
+    const err = document.getElementById("login-err");
+    if (err) err.style.display = "block";
+  }
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  state.collectionSearch = "";
+  render();
+}
+
+let tabDragSrc = null;
+
+function tabDragStart(e, tab) {
+  tabDragSrc = tab;
+  e.target.style.opacity = "0.4";
+  e.dataTransfer.effectAllowed = "move";
+}
+
+function tabDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+}
+
+function tabDrop(e, targetTab) {
+  e.preventDefault();
+  if (!tabDragSrc || tabDragSrc === targetTab) return;
+  reorderTab(tabDragSrc, targetTab);
+  tabDragSrc = null;
+}
+
+function tabDragEnd(e) {
+  tabDragSrc = null;
+  document.querySelectorAll(".nav-tab").forEach(function(el) { el.style.opacity = "1"; });
+}
+
+function moveTab(tab, dir) {
+  var order = state.tabOrder.slice();
+  var idx = order.indexOf(tab);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  order.splice(idx, 1);
+  order.splice(newIdx, 0, tab);
+  state.tabOrder = order;
+  localStorage.setItem("msklad_tab_order", JSON.stringify(order));
+  render();
+}
+
+function reorderTab(fromTab, toTab) {
+  var order = state.tabOrder.slice();
+  var fromIdx = order.indexOf(fromTab);
+  var toIdx = order.indexOf(toTab);
+  if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+  order.splice(fromIdx, 1);
+  order.splice(toIdx, 0, fromTab);
+  state.tabOrder = order;
+  localStorage.setItem("msklad_tab_order", JSON.stringify(order));
+  render();
+}
+
+// Long press + swipe для мобільного
+var longPressTimer = null;
+var longPressSrc = null;
+var longPressTouchId = null;
+
+function tabLongPressStart(e, tab) {
+  var touch = e.touches[0];
+  longPressTouchId = touch.identifier;
+  if (navigator.vibrate) navigator.vibrate(50);
+  longPressTimer = setTimeout(function() {
+    longPressSrc = tab;
+    document.querySelectorAll(".nav-tab").forEach(function(t) {
+      t.style.outline = t.getAttribute("data-tab") === tab ? "2px solid #c9a84c" : "";
+    });
+    // Додаємо обробник touchmove на весь документ
+    document.addEventListener("touchmove", onTabDragMove, { passive: false });
+    document.addEventListener("touchend", onTabDragEnd);
+  }, 500);
+}
+
+function tabLongPressEnd(e, tab) {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  if (!longPressSrc) switchTab(tab);
+}
+
+function onTabDragMove(e) {
+  var touch = e.touches[0];
+  var el = document.elementFromPoint(touch.clientX, touch.clientY);
+  document.querySelectorAll(".nav-tab").forEach(function(t) {
+    var isActive = t.getAttribute("data-tab") === longPressSrc;
+    var isTarget = el && t === el && !isActive;
+    t.style.outline = isActive ? "2px solid #c9a84c" : "";
+    t.style.background = isTarget ? "#c9a84c33" : "";
+  });
+}
+
+function onTabDragEnd(e) {
+  document.removeEventListener("touchmove", onTabDragMove);
+  document.removeEventListener("touchend", onTabDragEnd);
+  var touch = e.changedTouches[0];
+  var el = document.elementFromPoint(touch.clientX, touch.clientY);
+  document.querySelectorAll(".nav-tab").forEach(function(t) {
+    t.style.outline = "";
+    t.style.background = "";
+  });
+  if (el && el.classList.contains("nav-tab")) {
+    var targetTab = el.getAttribute("data-tab");
+    if (targetTab && targetTab !== longPressSrc) {
+      reorderTab(longPressSrc, targetTab);
+    }
+  }
+  longPressSrc = null;
+}
+
+function handleTabClick(e, tab) {
+  if (!longPressSrc) switchTab(tab);
+}
+
+async function loadData() {
+  state.loading = true;
+  try {
+    const [collections, photos, settings] = await Promise.all([
+      api("GET", "collections?select=*&order=sort_order,created_at"),
+      api("GET", "collection_photos?select=*&order=sort_order"),
+      api("GET", "settings?select=*")
+    ]);
+    
+    // Attach photos to collections
+    state.collections = (collections || []).map(c => ({
+      ...c,
+      photos: (photos || []).filter(p => p.collection_id === c.id)
+    }));
+
+    // Load rates
+    const eurSetting = (settings || []).find(s => s.key === "eur_rate");
+    const usdSetting = (settings || []).find(s => s.key === "usd_rate");
+    const autoSetting = (settings || []).find(s => s.key === "auto_rate");
+    
+    state.autoRate = autoSetting?.value === "true";
+    if (state.autoRate) {
+      const rates = await getNBURate();
+      state.rates = rates;
+    } else {
+      state.rates = {
+        eur: parseFloat(eurSetting?.value || "43.5"),
+        usd: parseFloat(usdSetting?.value || "41.2")
+      };
+    }
+  } catch(e) {
+    console.error(e);
+    showToast('Помилка: ' + e.message, 'error');
+  }
+  state.loading = false;
+  await loadBanners();
+  render();
+}
+
+function openAddModal(isPanno) {
+  state.editItem = { is_panno: isPanno, is_visible: true, tags: [], photos: [] };
+  state.modal = "edit";
+  render();
+}
+
+function openEditModal(id) {
+  state.editItem = JSON.parse(JSON.stringify(state.collections.find(c => c.id === id)));
+  state.modal = "edit";
+  render();
+}
+
+function closeModal() {
+  state.modal = null;
+  state.editItem = null;
+  render();
+}
+
+async function handlePhotoUpload(input) {
+  const files = Array.from(input.files);
+  const collId = state.editItem?.id || "new";
+  
+  for (const file of files) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (!state.editItem.photos) state.editItem.photos = [];
+      state.editItem.photos.push({ url: e.target.result, file, isNew: true });
+      render();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removePhoto(index) {
+  state.editItem.photos.splice(index, 1);
+  render();
+}
+
+function handleBundleClick(e) {
+  const art = e.target.getAttribute("data-remove-bundle");
+  if (art) {
+    state.editItem.bundle_articles = (state.editItem.bundle_articles || []).filter(a => a !== art);
+    renderBundleOnly();
+  }
+}
+
+function addBundleArticle() {
+  const input = document.getElementById("bundle-input");
+  if (!input) return;
+  const art = input.value.trim();
+  if (!art) return;
+  if (!state.editItem.bundle_articles) state.editItem.bundle_articles = [];
+  if (!state.editItem.bundle_articles.includes(art)) {
+    state.editItem.bundle_articles.push(art);
+    renderBundleOnly();
+  }
+  input.value = "";
+  input.focus();
+}
+
+function renderBundleOnly() {
+  const list = document.getElementById("bundle-list");
+  if (!list) return;
+  list.innerHTML = (state.editItem.bundle_articles || []).map(art =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+      ${art}
+      <span data-remove-bundle="${art}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+    </span>`
+  ).join('');
+}
+
+function handleFinishClick(e) {
+  const tag = e.target.getAttribute("data-remove-finish");
+  if (tag) {
+    state.editItem.finish_tags = (state.editItem.finish_tags || []).filter(t => t !== tag);
+    renderFinishTagsOnly();
+  }
+}
+
+function handleExistingFinishClick(e) {
+  const tag = e.target.getAttribute("data-add-finish");
+  if (tag) {
+    if (!state.editItem.finish_tags) state.editItem.finish_tags = [];
+    if (!state.editItem.finish_tags.includes(tag)) {
+      state.editItem.finish_tags.push(tag);
+      renderFinishTagsOnly();
+    }
+  }
+}
+
+function addFinishTag() {
+  const input = document.getElementById("finish-input");
+  if (!input) return;
+  const tag = input.value.trim();
+  if (!tag) return;
+  if (!state.editItem.finish_tags) state.editItem.finish_tags = [];
+  if (!state.editItem.finish_tags.includes(tag)) {
+    state.editItem.finish_tags.push(tag);
+    renderFinishTagsOnly();
+  }
+  input.value = "";
+  input.focus();
+}
+
+function renderFinishTagsOnly() {
+  const list = document.getElementById("finish-list");
+  if (!list) return;
+  list.innerHTML = (state.editItem.finish_tags || []).map(tag =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#7b68ee22;border:1px solid #7b68ee44;color:#7b68ee;font-size:12px;font-weight:700;">
+      ${tag}
+      <span data-remove-finish="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+    </span>`
+  ).join('');
+}
+
+function getExistingFinishTags(currentTags) {
+  const allTags = new Set();
+  state.collections.forEach(c => {
+    (c.finish_tags || []).forEach(t => allTags.add(t));
+  });
+  return Array.from(allTags).filter(t => !currentTags.includes(t)).sort();
+}
+
+function handleTagClick(e) {
+  const tag = e.target.getAttribute("data-remove");
+  if (tag) removeTag(tag);
+}
+
+function handleExistingTagClick(e) {
+  const tag = e.target.getAttribute("data-add");
+  if (tag) {
+    if (!state.editItem.tags) state.editItem.tags = [];
+    if (!state.editItem.tags.includes(tag)) {
+      state.editItem.tags.push(tag);
+      renderTagsOnly();
+    }
+  }
+}
+
+function getExistingTags(currentTags) {
+  // Збираємо всі унікальні теги з усіх колекцій
+  const allTags = new Set();
+  state.collections.forEach(c => {
+    (c.tags || []).forEach(t => allTags.add(t));
+  });
+  // Повертаємо лише ті що ще не додані до поточної колекції
+  return Array.from(allTags).filter(t => !currentTags.includes(t)).sort();
+}
+
+// Drag & Drop для фото
+let dragSrcIndex = null;
+
+function dragStart(e, index) {
+  dragSrcIndex = index;
+  e.dataTransfer.effectAllowed = "move";
+  e.target.closest(".photo-item").style.opacity = "0.4";
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  return false;
+}
+
+function dragDrop(e, targetIndex) {
+  e.preventDefault();
+  if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
+  
+  const photos = state.editItem.photos || [];
+  const dragged = photos[dragSrcIndex];
+  photos.splice(dragSrcIndex, 1);
+  photos.splice(targetIndex, 0, dragged);
+  state.editItem.photos = [...photos];
+  dragSrcIndex = null;
+  render();
+  return false;
+}
+
+function dragEnd(e) {
+  dragSrcIndex = null;
+  // Reset opacity for all items
+  document.querySelectorAll(".photo-item").forEach(el => el.style.opacity = "1");
+}
+
+function addTag() {
+  const input = document.getElementById("tag-input");
+  if (!input) return;
+  const tag = input.value.trim();
+  if (!tag) return;
+  if (!state.editItem.tags) state.editItem.tags = [];
+  if (!state.editItem.tags.includes(tag)) {
+    state.editItem.tags.push(tag);
+    renderTagsOnly();
+  }
+  input.value = "";
+  input.focus();
+}
+
+function removeTag(tag) {
+  if (!state.editItem.tags) return;
+  state.editItem.tags = state.editItem.tags.filter(t => t !== tag);
+  renderTagsOnly();
+}
+
+function renderTagsOnly() {
+  const list = document.getElementById("tags-list");
+  if (!list) return;
+  list.innerHTML = (state.editItem.tags || []).map(tag =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#c9a84c22;border:1px solid #c9a84c44;color:#c9a84c;font-size:12px;font-weight:700;">
+      ${tag}
+      <span data-remove="${tag}" style="cursor:pointer;font-size:16px;line-height:1;padding:0 2px;">×</span>
+    </span>`
+  ).join('');
+
+  // Оновлюємо існуючі теги
+  const existingContainer = document.getElementById("existing-tags-container");
+  if (existingContainer) {
+    const existing = getExistingTags(state.editItem.tags || []);
+    existingContainer.innerHTML = existing.map(tag =>
+      `<span data-add="${tag}" style="cursor:pointer;padding:4px 10px;border-radius:20px;background:#1a1a1a;border:1px solid #2a2a2a;color:#555;font-size:12px;font-weight:700;">+ ${tag}</span>`
+    ).join('');
+  }
+}
+
+function recalcPrices(source, val) {
+  const v = parseFloat(val);
+  if (isNaN(v) || v < 0) return;
+  const eur_rate = state.rates.eur || 43.5;
+  const usd_rate = state.rates.usd || 41.2;
+
+  let uah = 0;
+  if (source === "uah") uah = v;
+  else if (source === "eur") uah = v * eur_rate;
+  else if (source === "usd") uah = v * usd_rate;
+
+  const eur = Math.round((uah / eur_rate) * 100) / 100;
+  const usd = Math.round((uah / usd_rate) * 100) / 100;
+  const uahR = Math.round(uah);
+
+  const uahEl = document.getElementById("f-price-uah");
+  const eurEl = document.getElementById("f-price-eur");
+  const usdEl = document.getElementById("f-price-usd");
+
+  if (source !== "uah" && uahEl) uahEl.value = uahR;
+  if (source !== "eur" && eurEl) eurEl.value = eur;
+  if (source !== "usd" && usdEl) usdEl.value = usd;
+}
+
+function calcFromEur(val) { recalcPrices("eur", val); }
+function calcFromUsd(val) { recalcPrices("usd", val); }
+function calcFromUah(val) { recalcPrices("uah", val); }
+
+async function saveItem() {
+  const btn = document.getElementById("save-btn");
+  btn.disabled = true;
+  btn.textContent = "Збереження...";
+
+  try {
+    const item = state.editItem;
+    const data = {
+      name: document.getElementById("f-name").value.trim(),
+      article: document.getElementById("f-article").value.trim(),
+      size: document.getElementById("f-size").value.trim(),
+      price_uah: Math.max(0, parseFloat(document.getElementById("f-price-uah").value) || 0),
+      price_eur: Math.max(0, parseFloat(document.getElementById("f-price-eur").value) || 0),
+      price_usd: Math.max(0, parseFloat(document.getElementById("f-price-usd").value) || 0),
+      price_wholesale: Math.max(0, parseFloat(document.getElementById("f-price-wholesale").value) || 0),
+      description: document.getElementById("f-desc").value.trim(),
+      tags: item.tags || [],
+      is_visible: document.getElementById("f-visible").checked,
+      is_panno: item.is_panno || false,
+      finish_tags: item.finish_tags || [],
+      bundle_articles: item.bundle_articles || [],
+      reviews: state.editItem.reviews || [],
+      sale_price: Math.max(0, parseFloat(document.getElementById("f-sale-price")?.value || "0") || 0),
+      sale_percent: Math.max(0, parseInt(document.getElementById("f-sale-percent")?.value || "0") || 0),
+      sale_until: document.getElementById("f-sale-until")?.value || null,
+      updated_at: new Date().toISOString()
+    };
+
+    if (!data.name) { showToast('Введіть назву!', 'error'); btn.disabled = false; btn.textContent = "Зберегти"; return; }
+
+    let collectionId = item.id;
+
+    if (item.id) {
+      await api("PATCH", `collections?id=eq.${item.id}`, data);
+    } else {
+      const result = await api("POST", "collections", data);
+      if (!result || result.length === 0) throw new Error("Товар не створено — перевірте RLS політики в Supabase (collections: insert)");
+      collectionId = result[0].id;
+    }
+
+    // Видаляємо фото які були прибрані
+    const allPhotos = item.photos || [];
+    const existingPhotos = allPhotos.filter(p => !p.isNew && p.url);
+    const existingUrls = existingPhotos.map(p => p.url);
+    
+    // Отримуємо всі фото з бази
+    const dbPhotos = await api("GET", `collection_photos?collection_id=eq.${collectionId}&select=id,url`);
+    if (dbPhotos && dbPhotos.length > 0) {
+      for (const dbPhoto of dbPhotos) {
+        if (!existingUrls.includes(dbPhoto.url)) {
+          await api("DELETE", `collection_photos?id=eq.${dbPhoto.id}`);
+        }
+      }
+    }
+
+    // Оновлюємо sort_order для існуючих фото (з урахуванням нового порядку)
+    for (let i = 0; i < allPhotos.length; i++) {
+      const photo = allPhotos[i];
+      if (!photo.isNew && photo.url && dbPhotos) {
+        const dbPhoto = dbPhotos.find(p => p.url === photo.url);
+        if (dbPhoto) {
+          await api("PATCH", `collection_photos?id=eq.${dbPhoto.id}`, { sort_order: i });
+        }
+      }
+    }
+
+    // Upload new photos
+    const newPhotos = allPhotos.filter(p => p.isNew && p.file);
+    for (let i = 0; i < newPhotos.length; i++) {
+      const photo = newPhotos[i];
+      const url = await uploadPhoto(photo.file, collectionId);
+      const globalIndex = allPhotos.indexOf(photo);
+      await api("POST", "collection_photos", {
+        collection_id: parseInt(collectionId),
+        url,
+        sort_order: globalIndex
+      });
+    }
+
+    await loadData();
+    closeModal();
+  } catch(e) {
+    showToast('Помилка: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = "Зберегти";
+  }
+}
+
+async function deleteItem(id) {
+  if (!window._confirmDelete) { showToast('Натисни ще раз щоб видалити', 'error'); window._confirmDelete = setTimeout(() => window._confirmDelete = null, 3000); return; } clearTimeout(window._confirmDelete); window._confirmDelete = null;
+  try {
+    await api("DELETE", `collections?id=eq.${id}`);
+    await loadData();
+  } catch(e) {
+    showToast('Помилка: ' + e.message, 'error');
+  }
+}
+
+async function toggleVisible(id, visible) {
+  try {
+    await api("PATCH", `collections?id=eq.${id}`, { is_visible: visible, updated_at: new Date().toISOString() });
+    const item = state.collections.find(c => c.id === id);
+    if (item) item.is_visible = visible;
+  } catch(e) {
+    showToast('Помилка: ' + e.message, 'error');
+  }
+}
+
+async function toggleAutoRate(auto) {
+  state.autoRate = auto;
+  await api("PATCH", "settings?key=eq.auto_rate", { value: auto.toString(), updated_at: new Date().toISOString() });
+  if (auto) await refreshRates();
+  else render();
+}
+
+async function refreshRates() {
+  const rates = await getNBURate();
+  state.rates = rates;
+  await Promise.all([
+    api("PATCH", "settings?key=eq.eur_rate", { value: rates.eur.toString() }),
+    api("PATCH", "settings?key=eq.usd_rate", { value: rates.usd.toString() })
+  ]);
+  render();
+}
+
+async function saveRates() {
+  const eur = parseFloat(document.getElementById("rate-eur").value);
+  const usd = parseFloat(document.getElementById("rate-usd").value);
+  state.rates = { eur, usd };
+  await Promise.all([
+    api("PATCH", "settings?key=eq.eur_rate", { value: eur.toString() }),
+    api("PATCH", "settings?key=eq.usd_rate", { value: usd.toString() })
+  ]);
+  showToast('Курс збережено! ✅', 'success');
+  render();
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
