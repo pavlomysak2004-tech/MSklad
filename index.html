@@ -795,6 +795,8 @@ function OrderModal({ tile, onClose }) {
   };
 
   const handlePhoneChange = (val) => {
+    const digits = val.replace(/\D/g, "");
+    if (digits.length > 10) return;
     setPhone(val);
     setPhoneError(validatePhone(val));
   };
@@ -1291,7 +1293,7 @@ function RoomCalculator({ tile, onClose }) {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={e => setPhone(e.target.value)}
+                  onChange={e => { if (e.target.value.replace(/\D/g,"").length <= 10) setPhone(e.target.value); }}
                   placeholder="097 123 45 67"
                   inputMode="tel"
                   maxLength={16}
@@ -1502,6 +1504,8 @@ function PannoModal({ panno, collections, onClose }) {
   };
 
   const handlePhoneChange = (val) => {
+    const digits = val.replace(/\D/g, "");
+    if (digits.length > 10) return;
     setPhone(val);
     setPhoneError(validatePhone(val));
   };
