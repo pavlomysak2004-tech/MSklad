@@ -787,20 +787,47 @@ function OrderModal({ tile, onClose }) {
   const total = isPanno ? Math.round(pannoQty * tile.price) : Math.round(area * tile.price);
   const inputRef = useRef(null);
 
-  // Валідація телефону
+  // Маска +38 (0XX) XXX-XX-XX
+  const applyPhoneMask = (val) => {
+    let digits = val.replace(/\D/g, "");
+    if (digits.startsWith("380")) digits = digits.slice(2);
+    else if (digits.startsWith("38")) digits = digits.slice(2);
+    else if (digits.startsWith("0")) {}
+    else if (digits.length > 0) digits = digits;
+    digits = digits.slice(0, 10);
+    let result = "+38 ";
+    if (digits.length === 0) return "+38 ";
+    result += "(";
+    result += digits.slice(0, Math.min(3, digits.length));
+    if (digits.length >= 3) result += ") ";
+    if (digits.length > 3) result += digits.slice(3, Math.min(6, digits.length));
+    if (digits.length >= 6) result += "-";
+    if (digits.length > 6) result += digits.slice(6, Math.min(8, digits.length));
+    if (digits.length >= 8) result += "-";
+    if (digits.length > 8) result += digits.slice(8, 10);
+    return result;
+  };
+
   const validatePhone = (val) => {
     const digits = val.replace(/\D/g, "");
-    if (!digits) return "Введіть номер телефону";
-    if (digits.length < 10) return "Номер занадто короткий";
-    if (digits.length > 13) return "Номер занадто довгий";
+    if (digits.length < 2) return "Введіть номер телефону";
+    if (digits.length < 12) return "Номер занадто короткий";
     return "";
   };
 
   const handlePhoneChange = (val) => {
-    // Тільки цифри, +, пробіли, дужки, тире
-    const clean = val.replace(/[^\d+\s\-()]/g, "");
-    setPhone(clean);
-    setPhoneError(validatePhone(clean));
+    // Якщо стирають — дозволяємо
+    if (val.length < phone.length) {
+      const digits = val.replace(/\D/g, "");
+      if (digits.length <= 2) { setPhone("+38 "); setPhoneError("Введіть номер телефону"); return; }
+      const masked = applyPhoneMask(val);
+      setPhone(masked);
+      setPhoneError(validatePhone(masked));
+      return;
+    }
+    const masked = applyPhoneMask(val);
+    setPhone(masked);
+    setPhoneError(validatePhone(masked));
   };
 
   const isFormValid = () => {
@@ -1035,13 +1062,10 @@ function OrderModal({ tile, onClose }) {
                 type="tel"
                 value={phone}
                 onChange={e => handlePhoneChange(e.target.value)}
-                onKeyDown={e => {
-                  const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter','+','-','(',')',' '];
-                  if (!allowed.includes(e.key) && !/[0-9]/.test(e.key)) e.preventDefault();
-                }}
-                placeholder="+380XXXXXXXXX"
+                onFocus={() => { if (!phone) setPhone("+38 "); }}
+                placeholder="+38 (0__) ___-__-__"
                 inputMode="tel"
-                maxLength={16}
+                maxLength={19}
                 className={!phone ? "phone-pulse-red" : ""}
                 style={{
                   width: "100%", padding: "12px 14px", borderRadius: 10, background: "#1a1a1a",
@@ -1148,7 +1172,7 @@ function RoomCalculator({ tile, onClose }) {
   const subArea = () => setExtraArea(e => parseFloat(Math.max(-(withWaste - areaStep), e - areaStep).toFixed(4)));
 
   const submit = async () => {
-    if (!phone.trim() || phone.replace(/\D/g, "").length < 9) {
+    if (!phone.trim() || phone.replace(/\D/g, "").length < 12) {
       alert("Введіть коректний номер телефону");
       return;
     }
@@ -1300,34 +1324,56 @@ function RoomCalculator({ tile, onClose }) {
                   type="tel"
                   value={phone}
                   onChange={e => {
-                    const clean = e.target.value.replace(/[^\d+\s\-()]/g, "");
-                    setPhone(clean);
+                    const val = e.target.value;
+                    const applyMask = (v) => {
+                      let d = v.replace(/\D/g, "");
+                      if (d.startsWith("380")) d = d.slice(2);
+                      else if (d.startsWith("38")) d = d.slice(2);
+                      d = d.slice(0, 10);
+                      let r = "+38 ";
+                      if (!d.length) return "+38 ";
+                      r += "(";
+                      r += d.slice(0, Math.min(3, d.length));
+                      if (d.length >= 3) r += ") ";
+                      if (d.length > 3) r += d.slice(3, Math.min(6, d.length));
+                      if (d.length >= 6) r += "-";
+                      if (d.length > 6) r += d.slice(6, Math.min(8, d.length));
+                      if (d.length >= 8) r += "-";
+                      if (d.length > 8) r += d.slice(8, 10);
+                      return r;
+                    };
+                    if (val.length < phone.length) {
+                      const d = val.replace(/\D/g, "");
+                      if (d.length <= 2) { setPhone("+38 "); return; }
+                    }
+                    setPhone(applyMask(val));
                   }}
-                  placeholder="+380XXXXXXXXX"
+                  onFocus={() => { if (!phone) setPhone("+38 "); }}
+                  placeholder="+38 (0__) ___-__-__"
                   inputMode="tel"
-                  maxLength={16}
+                  maxLength={19}
                   className={!phone ? "phone-pulse-red" : ""}
                   style={{
                     width: "100%", padding: "12px 14px", borderRadius: 10, background: "#1a1a1a",
-                    border: phone && phone.replace(/\D/g,"").length < 10 ? "1px solid #f44336" : phone ? "1px solid #4caf50" : "1px solid #f4433666",
+                    border: phone && phone.replace(/\D/g,"").length < 12 ? "1px solid #f44336" : phone ? "1px solid #4caf50" : "1px solid #f4433666",
                     color: "#fff", fontSize: 15, outline: "none", transition: "border-color 0.3s",
                   }}
                 />
-                {phone && phone.replace(/\D/g,"").length < 10 && (
+                {phone && phone.replace(/\D/g,"").length < 12 && phone.replace(/\D/g,"").length > 2 && (
                   <div style={{ color: "#f44336", fontSize: 11, marginTop: 4 }}>⚠️ Номер занадто короткий</div>
                 )}
-                {phone && phone.replace(/\D/g,"").length >= 10 && (
+                {phone && phone.replace(/\D/g,"").length >= 12 && (
                   <div style={{ color: "#4caf50", fontSize: 11, marginTop: 4 }}>✓ Номер коректний</div>
                 )}
               </div>
 
               {/* Кнопка замовити */}
-              <button onClick={submit} disabled={sending || !phone || phone.replace(/\D/g,"").length < 10} style={{
+              <button onClick={submit} disabled={sending || !phone || phone.replace(/\D/g,"").length < 12} style={{
                 width: "100%", padding: "15px", borderRadius: 12,
-                background: phone && phone.replace(/\D/g,"").length >= 10 ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
-                border: "none", color: phone && phone.replace(/\D/g,"").length >= 10 ? "#000" : "#555",
+                background: phone && phone.replace(/\D/g,"").length >= 12 ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "#1a1a1a",
+                border: "none", color: phone && phone.replace(/\D/g,"").length >= 12 ? "#000" : "#555",
                 fontSize: 15, fontWeight: 800,
-                cursor: phone && phone.replace(/\D/g,"").length >= 10 ? "pointer" : "not-allowed",
+                cursor: phone && phone.replace(/\D/g,"").length >= 12 ? "pointer" : "not-allowed",
               }}>
                 {sending ? "Відправка..." : "Прорахувати і замовити"}
               </button>
@@ -1507,15 +1553,41 @@ function PannoModal({ panno, collections, onClose }) {
 
   const validatePhone = (val) => {
     const digits = val.replace(/\D/g, "");
-    if (!digits) return "Введіть номер телефону";
-    if (digits.length < 10) return "Номер занадто короткий";
+    if (digits.length < 2) return "Введіть номер телефону";
+    if (digits.length < 12) return "Номер занадто короткий";
     return "";
   };
 
+  const applyPhoneMask = (val) => {
+    let digits = val.replace(/\D/g, "");
+    if (digits.startsWith("380")) digits = digits.slice(2);
+    else if (digits.startsWith("38")) digits = digits.slice(2);
+    digits = digits.slice(0, 10);
+    let result = "+38 ";
+    if (digits.length === 0) return "+38 ";
+    result += "(";
+    result += digits.slice(0, Math.min(3, digits.length));
+    if (digits.length >= 3) result += ") ";
+    if (digits.length > 3) result += digits.slice(3, Math.min(6, digits.length));
+    if (digits.length >= 6) result += "-";
+    if (digits.length > 6) result += digits.slice(6, Math.min(8, digits.length));
+    if (digits.length >= 8) result += "-";
+    if (digits.length > 8) result += digits.slice(8, 10);
+    return result;
+  };
+
   const handlePhoneChange = (val) => {
-    const clean = val.replace(/[^\d+\s\-()]/g, "");
-    setPhone(clean);
-    setPhoneError(validatePhone(clean));
+    if (val.length < phone.length) {
+      const digits = val.replace(/\D/g, "");
+      if (digits.length <= 2) { setPhone("+38 "); setPhoneError("Введіть номер телефону"); return; }
+      const masked = applyPhoneMask(val);
+      setPhone(masked);
+      setPhoneError(validatePhone(masked));
+      return;
+    }
+    const masked = applyPhoneMask(val);
+    setPhone(masked);
+    setPhoneError(validatePhone(masked));
   };
 
   const handleSelectTile = (tile) => {
@@ -1671,7 +1743,8 @@ function PannoModal({ panno, collections, onClose }) {
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ color: "#f44336", fontSize: 12, marginBottom: 5, fontWeight: 600 }}>📞 Номер телефону *</div>
                   <input type="tel" value={phone} onChange={e => handlePhoneChange(e.target.value)}
-                    placeholder="+380XXXXXXXXX" inputMode="tel" maxLength={16}
+                    onFocus={() => { if (!phone) setPhone("+38 "); }}
+                    placeholder="+38 (0__) ___-__-__" inputMode="tel" maxLength={19}
                     className={!phone ? "phone-pulse-red" : ""}
                     style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "#111",
                       border: phoneError && phone ? "1px solid #f44336" : phone && !phoneError ? "1px solid #4caf50" : "1px solid #f4433666",
