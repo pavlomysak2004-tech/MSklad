@@ -2444,7 +2444,6 @@ function InfoModal({ page, onClose }) {
             {
               icon: "🏪", title: "Самовивіз", badge: "Безкоштовно",
               rows: [
-                ["Адреса", "м. Радехів, вул. Броварська 24"],
                 ["Графік", "Пн–Пт 9:00–19:00"],
                 ["Субота", "9:00–18:00"],
                 ["Неділя", "11:00–17:00"],
@@ -2491,8 +2490,6 @@ function InfoModal({ page, onClose }) {
               body: (
                 <div style={{ marginTop: 8 }}>
                   {[
-                    ["Отримувач", "ФОП Мисак Павло Володимирович"],
-                    ["Код", "3126118058"],
                     ["IBAN", "UA613052990000026005031004307"],
                     ["Банк", "АТ КБ «ПРИВАТБАНК»"],
                   ].map(([k, v], j) => (
@@ -2510,7 +2507,7 @@ function InfoModal({ page, onClose }) {
             },
             {
               icon: "💰", title: "Готівка", badge: null,
-              body: <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6, marginTop: 6 }}>Оплата готівкою при самовивозі за адресою: м. Радехів, вул. Броварська 24.</div>
+              body: <div style={{ color: "#888", fontSize: 12, lineHeight: 1.6, marginTop: 6 }}>Оплата готівкою при самовивозі.</div>
             },
           ].map((s, i) => (
             <div key={i} style={{ background: "#111", borderRadius: 14, padding: "16px", marginBottom: 12, border: "1px solid #1e1e1e" }}>
@@ -2573,10 +2570,10 @@ function InfoModal({ page, onClose }) {
           <div style={{ background: "#111", borderRadius: 14, padding: "16px", marginBottom: 12, border: "1px solid #1e1e1e" }}>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 10 }}>📋 Як оформити повернення</div>
             {[
-              "Зв'яжіться з менеджером: +380979000398 або pavlomysak2004@gmail.com",
+              "Зв'яжіться з менеджером через чат на сайті",
               "Опишіть причину та прикріпіть фото товару",
               "Отримайте підтвердження та інструкції щодо відправки",
-              "Надішліть товар на адресу: м. Радехів, вул. Броварська 24",
+              "Надішліть товар за узгодженою адресою",
               "Після отримання та перевірки — повернення коштів протягом 3–5 робочих днів",
             ].map((step, j) => (
               <div key={j} style={{ display: "flex", gap: 10, padding: "5px 0", borderBottom: j < 4 ? "1px solid #1a1a1a" : "none" }}>
@@ -2608,49 +2605,9 @@ function InfoModal({ page, onClose }) {
       icon: "📞",
       content: () => (
         <div>
-          <div style={{ background: "linear-gradient(135deg, #c9a84c22, #b8860b11)", border: "1px solid #c9a84c33", borderRadius: 16, padding: 20, marginBottom: 20, textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 8 }}>🏪</div>
-            <div style={{ color: "#c9a84c", fontSize: 18, fontWeight: 900, marginBottom: 4 }}>MS Ceramica</div>
-            <div style={{ color: "#666", fontSize: 12 }}>Гуртовий продаж керамічної плитки</div>
-          </div>
-
-          {[
-            { icon: "📞", label: "Телефон", value: "+38 097 900 03 98", href: "tel:+380979000398" },
-            { icon: "✉️", label: "Email", value: "pavlomysak2004@gmail.com", href: "mailto:pavlomysak2004@gmail.com" },
-            { icon: "📍", label: "Адреса", value: "м. Радехів, вул. Броварська 24", href: "https://maps.google.com/?q=Радехів,+Броварська+24" },
-          ].map((c, i) => (
-            <a key={i} href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 14, background: "#111", borderRadius: 14, padding: "14px 16px", marginBottom: 10, border: "1px solid #1e1e1e", textDecoration: "none" }}>
-              <span style={{ fontSize: 22, flexShrink: 0 }}>{c.icon}</span>
-              <div>
-                <div style={{ color: "#555", fontSize: 11, marginBottom: 2 }}>{c.label}</div>
-                <div style={{ color: "#c9a84c", fontSize: 14, fontWeight: 700 }}>{c.value}</div>
-              </div>
-            </a>
-          ))}
-
-          <div style={{ background: "#111", borderRadius: 14, padding: "16px", border: "1px solid #1e1e1e", marginBottom: 10 }}>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>🕐 Графік роботи</div>
-            {[
-              ["Понеділок – П'ятниця", "9:00 – 19:00"],
-              ["Субота", "9:00 – 18:00"],
-              ["Неділя", "11:00 – 17:00"],
-            ].map(([d, h], i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 2 ? "1px solid #1a1a1a" : "none" }}>
-                <span style={{ color: "#666", fontSize: 12 }}>{d}</span>
-                <span style={{ color: "#c9a84c", fontSize: 12, fontWeight: 700 }}>{h}</span>
-              </div>
-            ))}
-          </div>
-
           <div style={{ background: "#111", borderRadius: 14, padding: "16px", border: "1px solid #1e1e1e" }}>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 8 }}>💬 Написати зараз</div>
             <div style={{ display: "flex", gap: 10 }}>
-              <a href="https://t.me/+380979000398" target="_blank" rel="noopener noreferrer" style={{ flex: 1, background: "#229ED922", border: "1px solid #229ED944", borderRadius: 12, padding: "10px", textAlign: "center", textDecoration: "none", color: "#229ED9", fontSize: 12, fontWeight: 700 }}>
-                ✈️ Telegram
-              </a>
-              <a href="viber://chat?number=%2B380979000398" style={{ flex: 1, background: "#7360F222", border: "1px solid #7360F244", borderRadius: 12, padding: "10px", textAlign: "center", textDecoration: "none", color: "#7360F2", fontSize: 12, fontWeight: 700 }}>
-                📲 Viber
-              </a>
               <button onClick={() => window.__openChat && window.__openChat()} style={{ flex: 1, background: "#c9a84c22", border: "1px solid #c9a84c44", borderRadius: 12, padding: "10px", color: "#c9a84c", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                 💬 Чат
               </button>
@@ -2667,14 +2624,14 @@ function InfoModal({ page, onClose }) {
       content: () => (
         <div style={{ color: "#888", fontSize: 12, lineHeight: 1.8 }}>
           <p style={{ marginBottom: 16 }}>Дата набрання чинності: 1 січня 2025 р.</p>
-          <p style={{ marginBottom: 16 }}>ФОП Мисак Павло Володимирович («ми», «наш») є відповідальним за обробку персональних даних на сайті <span style={{ color: "#c9a84c" }}>mysak.com.ua</span>.</p>
+          <p style={{ marginBottom: 16 }}>Ми є відповідальними за обробку персональних даних на сайті <span style={{ color: "#c9a84c" }}>mysak.com.ua</span>.</p>
 
           {[
             { title: "1. Які дані ми збираємо", text: "Ім'я та прізвище, номер телефону, адресу електронної пошти, адресу доставки — лише у випадку, коли ви самостійно надаєте їх при оформленні замовлення або через форму зв'язку." },
             { title: "2. Як ми використовуємо дані", text: "Для обробки та доставки замовлень; для зв'язку щодо вашого замовлення; для відповіді на запити клієнтів. Ми не продаємо і не передаємо ваші дані третім особам без вашої згоди, крім випадків, передбачених законодавством України." },
             { title: "3. Cookies та аналітика", text: "Наш сайт використовує файли cookie для аналізу трафіку (Google Analytics, Google Tag Manager). Cookie — це невеликі текстові файли, що зберігаються у вашому браузері. Вони допомагають нам покращувати роботу сайту. Ви можете заблокувати cookies у налаштуваннях браузера, проте це може вплинути на функціональність сайту." },
             { title: "4. Зберігання даних", text: "Ваші дані зберігаються лише протягом часу, необхідного для виконання замовлення та виконання правових зобов'язань. Ми використовуємо захищені сервери Supabase (EU-West) для зберігання даних." },
-            { title: "5. Ваші права", text: "Відповідно до Закону України «Про захист персональних даних» ви маєте право на доступ, виправлення або видалення ваших персональних даних. Для цього зверніться до нас: pavlomysak2004@gmail.com." },
+            { title: "5. Ваші права", text: "Відповідно до Закону України «Про захист персональних даних» ви маєте право на доступ, виправлення або видалення ваших персональних даних. Для цього зверніться до нас через чат на сайті." },
             { title: "6. Зміни до політики", text: "Ми можемо оновлювати цю політику. Актуальна версія завжди доступна на цій сторінці." },
           ].map((s, i) => (
             <div key={i} style={{ background: "#111", borderRadius: 12, padding: 14, marginBottom: 10, border: "1px solid #1a1a1a" }}>
@@ -2685,8 +2642,7 @@ function InfoModal({ page, onClose }) {
 
           <div style={{ background: "#111", borderRadius: 12, padding: 14, border: "1px solid #1a1a1a" }}>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 6 }}>7. Контакт</div>
-            <div>З питань конфіденційності: <a href="mailto:pavlomysak2004@gmail.com" style={{ color: "#c9a84c" }}>pavlomysak2004@gmail.com</a></div>
-            <div style={{ marginTop: 4 }}>ФОП Мисак Павло Володимирович, м. Радехів, вул. Броварська 24</div>
+            <div>З питань конфіденційності зверніться через чат на сайті</div>
           </div>
         </div>
       )
@@ -2739,11 +2695,6 @@ function InfoModal({ page, onClose }) {
 function SiteFooter({ onOpenPage }) {
   return (
     <div style={{ borderTop: "1px solid #141414", background: "#080808", padding: "28px 24px 20px" }}>
-      {/* Лого + слоган */}
-      <div style={{ marginBottom: 22, textAlign: "center" }}>
-        <div style={{ color: "#c9a84c", fontSize: 16, fontWeight: 900, letterSpacing: 1 }}>MS Ceramica</div>
-        <div style={{ color: "#333", fontSize: 11, marginTop: 3 }}>Гуртовий продаж керамічної плитки</div>
-      </div>
 
       {/* Посилання */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", marginBottom: 20 }}>
@@ -2770,20 +2721,6 @@ function SiteFooter({ onOpenPage }) {
         ))}
       </div>
 
-      {/* Контактна інформація */}
-      <div style={{ borderTop: "1px solid #111", paddingTop: 16, marginBottom: 16 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-          <a href="tel:+380979000398" style={{ color: "#c9a84c", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>📞 097 900 03 98</a>
-          <span style={{ color: "#222" }}>·</span>
-          <a href="mailto:pavlomysak2004@gmail.com" style={{ color: "#555", fontSize: 12, textDecoration: "none" }}>✉️ pavlomysak2004@gmail.com</a>
-          <span style={{ color: "#222" }}>·</span>
-          <span style={{ color: "#444", fontSize: 12 }}>📍 м. Радехів, вул. Броварська 24</span>
-        </div>
-        <div style={{ textAlign: "center", color: "#2a2a2a", fontSize: 11, marginTop: 8 }}>
-          Пн–Пт 9:00–19:00 · Сб 9:00–18:00 · Нд 11:00–17:00
-        </div>
-      </div>
-
       {/* Значки оплати */}
       <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         {["Visa", "Mastercard", "IBAN", "Нова Пошта", "Накладний платіж"].map((label, i) => (
@@ -2798,7 +2735,7 @@ function SiteFooter({ onOpenPage }) {
 
       {/* Копірайт */}
       <div style={{ textAlign: "center", color: "#1e1e1e", fontSize: 10 }}>
-        © {new Date().getFullYear()} ФОП Мисак Павло Володимирович · mysak.com.ua
+        © {new Date().getFullYear()} mysak.com.ua
       </div>
     </div>
   );
@@ -2927,9 +2864,6 @@ function TileCatalog() {
           .phone-blink { animation: phonePulse 2s ease-in-out infinite; }
         `}</style>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <a href="tel:+380979000398" style={{ textDecoration: "none" }}>
-            <div className="phone-blink" style={{ fontSize: 18, fontWeight: 900, letterSpacing: 1, whiteSpace: "nowrap" }}>097 900 03 98</div>
-          </a>
           <button onClick={() => window.__openChat && window.__openChat()} style={{
             width: 38, height: 38, borderRadius: "50%",
             background: "linear-gradient(135deg, #229ED9, #1a7fb5)",
