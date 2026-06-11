@@ -11,12 +11,12 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>MS Ceramica — Гуртовий продаж плитки, сантехніки та ламінату по всій Україні</title>
+  <title>Каталог керамічної плитки</title>
   <meta name="description" content="Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні. Широкий вибір колекцій, доступні ціни, доставка по Україні.">
   <meta name="keywords" content="плитка гурт, керамічна плитка купити, плитка Україна, гуртовий продаж плитки, сантехніка гурт, ламінат гурт">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://mysak.com.ua/">
-  <meta property="og:title" content="MS Ceramica — Гуртовий продаж плитки по всій Україні">
+  <meta property="og:title" content="Каталог керамічної плитки">
   <meta property="og:description" content="Широкий вибір керамічної плитки, сантехніки та ламінату. Гуртові ціни, доставка по Україні.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://mysak.com.ua/">
@@ -2699,25 +2699,18 @@ function SiteFooter({ onOpenPage }) {
       {/* Посилання */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", marginBottom: 20 }}>
         {[
-          { href: "/delivery.html", label: "🚚 Доставка" },
-          { href: "/payment.html", label: "💳 Оплата" },
-          { href: "/returns.html", label: "🔄 Повернення" },
-          { href: "/contacts.html", label: "📞 Контакти" },
-          { key: "privacy", label: "🔒 Конфіденційність" },
-        ].map((item) => (
-          item.href
-            ? <a key={item.href} href={item.href} style={{
-                background: "transparent", border: "1px solid #1a1a1a",
-                borderRadius: 10, padding: "9px 10px",
-                color: "#555", fontSize: 12,
-                textAlign: "left", textDecoration: "none", display: "block",
-              }}>{item.label}</a>
-            : <button key={item.key} onClick={() => onOpenPage(item.key)} style={{
-                background: "transparent", border: "1px solid #1a1a1a",
-                borderRadius: 10, padding: "9px 10px",
-                color: "#555", fontSize: 12, cursor: "pointer",
-                textAlign: "left",
-              }}>{item.label}</button>
+          "🚚 Доставка",
+          "💳 Оплата",
+          "🔄 Повернення",
+          "📞 Контакти",
+          "🔒 Конфіденційність",
+        ].map((label, i) => (
+          <div key={i} style={{
+            background: "transparent", border: "1px solid #1a1a1a",
+            borderRadius: 10, padding: "9px 10px",
+            color: "#333", fontSize: 12,
+            textAlign: "left",
+          }}>{label}</div>
         ))}
       </div>
 
