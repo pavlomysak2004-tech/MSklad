@@ -596,179 +596,6 @@ function TileViewer({ tile, onClose, hideInfo }) {
   );
 }
 
-function AIVisualization({ tile, onClose }) {
-  const [activeRoom, setActiveRoom] = useState("Ванна кімната");
-  const [loading, setLoading] = useState(false);
-  const [generatedImages, setGeneratedImages] = useState({});
-
-  const rooms = ["Ванна кімната", "Кухня", "Коридор", "Вітальня"];
-  const SUPA = "https://svbmamaqrtsknuztxiuq.supabase.co";
-  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
-
-  // Завантажуємо збережені фото з бази
-  const loadSaved = async () => {
-    if (!tile.article) return {};
-    try {
-      const res = await fetch(SUPA + "/rest/v1/interior_images?article=eq." + encodeURIComponent(tile.article) + "&order=created_at.desc", {
-        headers: { "apikey": KEY, "Authorization": "Bearer " + KEY }
-      });
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        const byRoom = {};
-        // Беремо тільки перше (найновіше) фото для кожної кімнати
-        data.forEach(item => {
-          if (!byRoom[item.room]) byRoom[item.room] = item.image_url;
-        });
-        return byRoom;
-      }
-    } catch(e) {
-      console.error("Load saved error:", e.message);
-    }
-    return {};
-  };
-
-  const generateImage = async (room, force = false, currentSaved = null) => {
-    // Використовуємо currentSaved якщо переданий (при першому завантаженні)
-    // або generatedImages зі стану (при ручному виклику)
-    const images = currentSaved !== null ? currentSaved : generatedImages;
-    if (images[room] && !force) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      // Спочатку видаляємо старі записи для цієї кімнати+артикулу (щоб не накопичувались дублікати)
-      if (tile.article) {
-        await fetch(
-          SUPA + "/rest/v1/interior_images?article=eq." + encodeURIComponent(tile.article) + "&room=eq." + encodeURIComponent(room),
-          {
-            method: "DELETE",
-            headers: { "apikey": KEY, "Authorization": "Bearer " + KEY }
-          }
-        );
-      }
-      const res = await fetch(SUPA + "/functions/v1/generate-interior", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + KEY
-        },
-        body: JSON.stringify({ tileName: tile.name, tileImage: tile.image, room, article: tile.article })
-      });
-      const data = await res.json();
-      if (data.imageUrl) {
-        setGeneratedImages(prev => ({ ...prev, [room]: data.imageUrl }));
-      } else {
-        console.error("Interior error:", data.error);
-        setLoading(false);
-      }
-    } catch(e) {
-      console.error("Interior fetch error:", e.message);
-      setLoading(false);
-    }
-  };
-
-  // При відкритті — завантажуємо збережені фото
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const saved = await loadSaved();
-      // Одразу оновлюємо стан і передаємо saved напряму в generateImage
-      // щоб уникнути проблеми з React batching (стан ще не оновився)
-      setGeneratedImages(saved);
-      if (saved["Ванна кімната"]) {
-        setLoading(false);
-      } else {
-        generateImage("Ванна кімната", false, saved);
-      }
-    })();
-  }, []);
-
-  const handleRoomChange = (room) => {
-    setActiveRoom(room);
-    if (!generatedImages[room]) {
-      generateImage(room);
-    } else {
-      setLoading(false);
-    }
-  };
-
-  const currentImage = generatedImages[activeRoom];
-
-  return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-    }} onClick={onClose}>
-      <div style={{
-        background: "#0f0f0f", borderRadius: 20, maxWidth: 720, width: "100%",
-        border: "1px solid #2a2a2a", overflow: "hidden",
-        boxShadow: "0 40px 80px rgba(0,0,0,0.8)",
-      }} onClick={e => e.stopPropagation()}>
-
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>✦ AI Візуалізація інтер'єру</div>
-            <div style={{ color: "#fff", fontSize: 20, fontFamily: "serif", fontWeight: 700 }}>{tile.name}</div>
-          </div>
-          <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#666", cursor: "pointer", width: 36, height: 36, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-        </div>
-
-        <div style={{ display: "flex", gap: 8, padding: "16px 24px 0", flexWrap: "wrap" }}>
-          {rooms.map(room => (
-            <button key={room} onClick={() => handleRoomChange(room)} style={{
-              padding: "7px 16px", borderRadius: 20, border: "1px solid",
-              borderColor: activeRoom === room ? "#c9a84c" : "#2a2a2a",
-              background: activeRoom === room ? "#c9a84c11" : "transparent",
-              color: activeRoom === room ? "#c9a84c" : "#666",
-              cursor: "pointer", fontSize: 12, fontWeight: 600,
-            }}>
-              {room} {generatedImages[room] ? "✓" : ""}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: "relative", margin: "16px 24px", borderRadius: 12, overflow: "hidden", height: 300, background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {currentImage ? (
-            <>
-              <img
-                src={currentImage}
-                alt={activeRoom}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                onLoad={() => setLoading(false)}
-                onError={() => setLoading(false)}
-              />
-              {loading && (
-                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}>
-                  <div style={{ color: "#c9a84c", fontSize: 13, animation: "pulse 1.5s infinite" }}>✦ Завантаження...</div>
-                </div>
-              )}
-              <div style={{ position: "absolute", bottom: 12, left: 12, right: 12, display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>{activeRoom}</span>
-                <span style={{ color: "#c9a84c", fontSize: 11, fontWeight: 700 }}>AI Візуалізація</span>
-              </div>
-            </>
-          ) : (
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "#c9a84c", fontSize: 13, marginBottom: 8, animation: "pulse 1.5s infinite" }}>✦ AI генерує інтер'єр...</div>
-              <div style={{ color: "#444", fontSize: 11 }}>~10-20 секунд</div>
-            </div>
-          )}
-        </div>
-
-        <div style={{ padding: "0 24px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ color: "#444", fontSize: 11 }}>Оберіть кімнату</div>
-          {currentImage && !loading && (
-            <button onClick={() => generateImage(activeRoom, true)} style={{
-              padding: "6px 14px", borderRadius: 20, border: "1px solid #c9a84c",
-              background: "#c9a84c11", color: "#c9a84c", cursor: "pointer", fontSize: 11, fontWeight: 600,
-            }}>✦ Згенерувати нове</button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 
 function OrderModal({ tile, onClose }) {
@@ -1771,7 +1598,7 @@ function ShareButton({ tile }) {
   );
 }
 
-function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
+function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
@@ -1857,7 +1684,6 @@ function TileCard({ tile, onVisualize, onOrder, onView3D, onCalc, onPanno, wareh
             </>
           ) : (
             <>
-              <button onClick={(e) => { e.stopPropagation(); onVisualize(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "linear-gradient(135deg, #c9a84c, #b8860b)", border: "none", color: "#000", cursor: "pointer", fontSize: 12, fontWeight: 800 }}>✦ Інтер'єр</button>
               <button className="calc-btn" onClick={(e) => { e.stopPropagation(); onCalc(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c66", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🧮 Прорахувати</button>
               <button onClick={(e) => { e.stopPropagation(); onOrder(tile); }} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c44", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>🛒 Замовити</button>
             </>
@@ -2737,7 +2563,6 @@ function SiteFooter({ onOpenPage }) {
 function TileCatalog() {
   const { collections, pannos, loading } = useCollections();
   const [activeFilters, setActiveFilters] = useState([]);
-  const [visualizing, setVisualizing] = useState(null);
   const [ordering, setOrdering] = useState(null);
   const [viewing3D, setViewing3D] = useState(null);
   const [search, setSearch] = useState("");
@@ -2984,7 +2809,7 @@ function TileCatalog() {
         )}
         {filtered.map((tile, i) => (
           <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${i * 0.08}s` }}>
-            <TileCard tile={tile} onVisualize={setVisualizing} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} />
+            <TileCard tile={tile} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} />
           </div>
         ))}
       </div>
@@ -3108,7 +2933,7 @@ function TileCatalog() {
       {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
       {pannoModal && <PannoModal panno={pannoModal} collections={collections} onClose={() => setPannoModal(null)} />}
       <LiveChat />
-      {visualizing && <AIVisualization tile={visualizing} onClose={() => setVisualizing(null)} />}
+
       {ordering && <OrderModal tile={ordering} onClose={() => setOrdering(null)} />}
       {infoPage && <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />}
     </div>
