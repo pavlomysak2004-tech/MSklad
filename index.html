@@ -1255,7 +1255,7 @@ function ReviewsSection({ reviews }) {
   );
 }
 
-function StockBar({ stock, reserve, totalStock, unit, expectedDate }) {
+function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }) {
   const total = totalStock || (stock + reserve);
   if (!total && !stock && !reserve) return null;
 
@@ -1302,12 +1302,67 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate }) {
         )}
       </div>
       {expectedDate && (
-        <div style={{ marginTop: 4, display: "inline-block", background: "#c9a84c18", border: "1px solid #c9a84c44", borderRadius: 6, padding: "2px 8px" }}>
+        <div onClick={onIncoming ? (e) => { e.stopPropagation(); onIncoming(); } : undefined}
+          style={{ marginTop: 4, display: "inline-block", background: "#c9a84c18", border: "1px solid #c9a84c44", borderRadius: 6, padding: "2px 8px", cursor: onIncoming ? "pointer" : "default" }}>
           <span style={{ color: "#c9a84c", fontSize: 10, fontWeight: 700 }}>
             📦 Очікується {new Date(expectedDate).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
           </span>
         </div>
       )}
+    </div>
+  );
+}
+
+function IncomingModal({ tiles, onClose, onOrder }) {
+  // Групуємо по даті
+  const byDate = {};
+  tiles.forEach(t => {
+    const d = t.expectedDate;
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(t);
+  });
+  const dates = Object.keys(byDate).sort();
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
+      <div style={{ background: "#0f0f0f", borderRadius: 20, maxWidth: 560, width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", border: "1px solid #2a2a2a", boxShadow: "0 40px 80px rgba(0,0,0,0.8)" }} onClick={e => e.stopPropagation()}>
+
+        <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div>
+            <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 2 }}>📦 Очікується поступлення</div>
+            <div style={{ color: "#666", fontSize: 12 }}>{tiles.length} {tiles.length === 1 ? "позиція" : tiles.length < 5 ? "позиції" : "позицій"}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#1a1a1a", border: "none", color: "#666", cursor: "pointer", width: 36, height: 36, borderRadius: "50%", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+        </div>
+
+        <div style={{ overflowY: "auto", padding: "16px 24px 24px" }}>
+          {dates.map(date => (
+            <div key={date} style={{ marginBottom: 20 }}>
+              <div style={{ color: "#c9a84c", fontSize: 12, fontWeight: 700, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ background: "#c9a84c22", border: "1px solid #c9a84c44", borderRadius: 20, padding: "3px 12px" }}>
+                  {new Date(date).toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" })}
+                </span>
+              </div>
+              {byDate[date].map(tile => (
+                <div key={tile.id} style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 0", borderBottom: "1px solid #1a1a1a" }}>
+                  <img src={tile.image} alt={tile.name} style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", flexShrink: 0, background: "#1a1a1a" }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: "#ddd", fontSize: 13, fontWeight: 600, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tile.name}</div>
+                    <div style={{ color: "#555", fontSize: 11 }}>{tile.article} {tile.size ? "· " + tile.size : ""}</div>
+                    {tile.stock > 0 && <div style={{ color: "#4caf5088", fontSize: 11, marginTop: 2 }}>В наявності: {tile.stock} {tile.unit || "м²"}</div>}
+                  </div>
+                  <button onClick={() => { onOrder(tile); onClose(); }} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 10, background: "transparent", border: "1px solid #c9a84c66", color: "#c9a84c", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                    🛒 Замовити
+                  </button>
+                </div>
+              ))}
+            </div>
+          ))}
+          {tiles.length === 0 && (
+            <div style={{ textAlign: "center", padding: 40, color: "#444" }}>Немає очікуваних поступлень</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1607,7 +1662,7 @@ function ShareButton({ tile }) {
   );
 }
 
-function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
+function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onIncoming }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
@@ -1649,7 +1704,7 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
             <span key={f} style={{ padding: "2px 8px", borderRadius: 20, background: "#7b68ee22", border: "1px solid #7b68ee44", color: "#7b68ee", fontSize: 10, fontWeight: 700 }}>{f}</span>
           ))}
         </div>
-        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} expectedDate={tile.expectedDate} />
+        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} expectedDate={tile.expectedDate} onIncoming={onIncoming} />
         {!warehouseMode && tile.description ? <ExpandableDesc text={tile.description.replace(/^#+\s*/gm, "").trim()} /> : null}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
@@ -2582,6 +2637,7 @@ function TileCatalog() {
   const [pannoModal, setPannoModal] = useState(null);
   const [priceRange, setPriceRange] = useState([0, 999999]);
   const [infoPage, setInfoPage] = useState(null);
+  const [incomingModal, setIncomingModal] = useState(false);
   const cardRefs = useRef({});
 
   const scrollToCard = (id) => {
@@ -2818,7 +2874,7 @@ function TileCatalog() {
         )}
         {filtered.map((tile, i) => (
           <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${i * 0.08}s` }}>
-            <TileCard tile={tile} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} />
+            <TileCard tile={tile} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(true)} />
           </div>
         ))}
       </div>
@@ -2945,6 +3001,7 @@ function TileCatalog() {
 
       {ordering && <OrderModal tile={ordering} onClose={() => setOrdering(null)} />}
       {infoPage && <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />}
+      {incomingModal && <IncomingModal tiles={[...collections, ...pannos].filter(t => t.expectedDate)} onClose={() => setIncomingModal(false)} onOrder={setOrdering} />}
     </div>
   );
 }
