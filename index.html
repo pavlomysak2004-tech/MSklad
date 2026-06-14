@@ -315,6 +315,7 @@ function useCollections() {
             salePercent: item.sale_percent || 0,
             saleUntil: item.sale_until || null,
             expectedDate: item.expected_date || null,
+            expectedQty: item.expected_qty || null,
             reviews: item.reviews || [],
             bundleArticles: item.bundle_articles || [],
             image: photos[0] || existing.image,
@@ -357,6 +358,7 @@ function useCollections() {
               image: photos[0] || "",
               images: photos.length > 0 ? photos : [""],
               expectedDate: item.expected_date || null,
+              expectedQty: item.expected_qty || null,
               isPanno: true,
             };
           });
@@ -1362,12 +1364,12 @@ function IncomingModal({ tiles, onClose }) {
                           В наявності: {fmtQty(tile.stock, tile.unit)}
                         </span>
                       )}
-                      {fmtQty(tile.totalStock - tile.stock, tile.unit) && tile.totalStock > tile.stock && (
+                      {tile.expectedQty && (
                         <span style={{ color: "#c9a84c", fontSize: 11, background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 4, padding: "1px 6px" }}>
-                          Поступить: {fmtQty(tile.totalStock - tile.stock, tile.unit)}
+                          Поступить: {fmtQty(tile.expectedQty, tile.unit)}
                         </span>
                       )}
-                      {!fmtQty(tile.stock, tile.unit) && (
+                      {!tile.expectedQty && (
                         <span style={{ color: "#c9a84c", fontSize: 11, background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 4, padding: "1px 6px" }}>
                           Очікується поступлення
                         </span>

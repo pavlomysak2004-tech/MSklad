@@ -2512,9 +2512,10 @@ async function handleIncomingFile(file) {
       itemsList.innerHTML = parsed.items.map((item, i) => `
         <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
           <input value="${item.article}" onchange="incomingParsed.items[${i}].article=this.value"
-            style="flex:0 0 140px;padding:6px 8px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#c9a84c;font-size:11px;">
+            style="flex:0 0 130px;padding:6px 8px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#c9a84c;font-size:11px;">
           <span style="color:#555;font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.name}">${item.name}</span>
-          <span style="color:#444;font-size:11px;flex:0 0 60px;text-align:right;">${item.qty} м²</span>
+          <input type="number" value="${item.qty}" onchange="incomingParsed.items[${i}].qty=parseFloat(this.value)||0"
+            style="flex:0 0 70px;padding:6px 8px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#aaa;font-size:11px;text-align:right;">
         </div>
       `).join('');
 
@@ -2537,19 +2538,19 @@ async function saveIncomingData() {
   if (articles.length === 0) { showToast('Артикули не розпізнано', 'error'); return; }
 
   try {
-    // Оновлюємо expected_date по артикулу в таблиці collections
+    // Оновлюємо expected_date і expected_qty по артикулу
     let updated = 0;
-    for (const article of articles) {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
+    for (const item of incomingParsed.items.filter(i => i.article && !i.article.startsWith('item_'))) {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/collections?article=eq.' + encodeURIComponent(item.article), {
         method: 'PATCH',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-        body: JSON.stringify({ expected_date: date })
+        body: JSON.stringify({ expected_date: date, expected_qty: item.qty || null })
       });
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) updated++;
     }
 
-    showToast('Збережено: ' + updated + ' з ' + articles.length + ' товарів оновлено ✅', 'success');
+    showToast('Збережено: ' + updated + ' з ' + incomingParsed.items.length + ' товарів оновлено ✅', 'success');
     loadIncomingCurrent();
   } catch(e) {
     showToast('Помилка збереження: ' + e.message, 'error');
@@ -2560,7 +2561,7 @@ async function loadIncomingCurrent() {
   const el = document.getElementById('incoming-current');
   if (!el) return;
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/collections?expected_date=not.is.null&select=article,name,expected_date&order=expected_date', {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/collections?expected_date=not.is.null&select=article,name,expected_date,expected_qty&order=expected_date', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const data = await res.json();
@@ -2571,10 +2572,11 @@ async function loadIncomingCurrent() {
           <div style="color:#aaa;font-size:12px;">${item.name}</div>
           <div style="color:#555;font-size:11px;">${item.article}</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;flex-direction:column;text-align:right;">
           <span style="color:#c9a84c;font-size:12px;font-weight:700;">${item.expected_date}</span>
-          <button onclick="clearExpectedDate('${item.article}')" style="background:transparent;border:1px solid #333;color:#555;cursor:pointer;font-size:10px;padding:3px 7px;border-radius:6px;">✕</button>
+          ${item.expected_qty ? `<span style="color:#777;font-size:11px;">${Math.round(item.expected_qty)} м²</span>` : ''}
         </div>
+        <button onclick="clearExpectedDate('${item.article}')" style="background:transparent;border:1px solid #333;color:#555;cursor:pointer;font-size:10px;padding:3px 7px;border-radius:6px;flex-shrink:0;">✕</button>
       </div>
     `).join('');
   } catch(e) {
@@ -2586,7 +2588,7 @@ async function clearExpectedDate(article) {
   await fetch(SUPABASE_URL + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
     method: 'PATCH',
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ expected_date: null })
+    body: JSON.stringify({ expected_date: null, expected_qty: null })
   });
   showToast('Очікування скасовано', 'success');
   loadIncomingCurrent();
