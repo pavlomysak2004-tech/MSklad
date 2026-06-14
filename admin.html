@@ -2476,9 +2476,9 @@ async function handleIncomingFile(file) {
     const mimeType = file.type || 'image/jpeg';
 
     try {
-      const response = await fetch(SUPA + '/functions/v1/claude-proxy', {
+      const response = await fetch(SUPABASE_URL + '/functions/v1/claude-proxy', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1000,
@@ -2540,9 +2540,9 @@ async function saveIncomingData() {
     // Оновлюємо expected_date по артикулу в таблиці collections
     let updated = 0;
     for (const article of articles) {
-      const res = await fetch(SUPA + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
         method: 'PATCH',
-        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify({ expected_date: date })
       });
       const data = await res.json();
@@ -2560,8 +2560,8 @@ async function loadIncomingCurrent() {
   const el = document.getElementById('incoming-current');
   if (!el) return;
   try {
-    const res = await fetch(SUPA + '/rest/v1/collections?expected_date=not.is.null&select=article,name,expected_date&order=expected_date', {
-      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+    const res = await fetch(SUPABASE_URL + '/rest/v1/collections?expected_date=not.is.null&select=article,name,expected_date&order=expected_date', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const data = await res.json();
     if (!data.length) { el.innerHTML = '<span style="color:#444;">Немає очікуваних поступлень</span>'; return; }
@@ -2583,9 +2583,9 @@ async function loadIncomingCurrent() {
 }
 
 async function clearExpectedDate(article) {
-  await fetch(SUPA + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
+  await fetch(SUPABASE_URL + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
     method: 'PATCH',
-    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ expected_date: null })
   });
   showToast('Очікування скасовано', 'success');
