@@ -314,6 +314,7 @@ function useCollections() {
             salePrice: item.sale_price || 0,
             salePercent: item.sale_percent || 0,
             saleUntil: item.sale_until || null,
+            expectedDate: item.expected_date || null,
             reviews: item.reviews || [],
             bundleArticles: item.bundle_articles || [],
             image: photos[0] || existing.image,
@@ -355,6 +356,7 @@ function useCollections() {
               tags: item.tags || ["Панно"],
               image: photos[0] || "",
               images: photos.length > 0 ? photos : [""],
+              expectedDate: item.expected_date || null,
               isPanno: true,
             };
           });
@@ -1253,7 +1255,7 @@ function ReviewsSection({ reviews }) {
   );
 }
 
-function StockBar({ stock, reserve, totalStock, unit }) {
+function StockBar({ stock, reserve, totalStock, unit, expectedDate }) {
   const total = totalStock || (stock + reserve);
   if (!total && !stock && !reserve) return null;
 
@@ -1299,6 +1301,13 @@ function StockBar({ stock, reserve, totalStock, unit }) {
           <span style={{ color: "#ff980077", fontSize: 10 }}>резерв {reserve.toLocaleString()} {unit}</span>
         )}
       </div>
+      {expectedDate && (
+        <div style={{ marginTop: 4, display: "inline-block", background: "#c9a84c18", border: "1px solid #c9a84c44", borderRadius: 6, padding: "2px 8px" }}>
+          <span style={{ color: "#c9a84c", fontSize: 10, fontWeight: 700 }}>
+            📦 Очікується {new Date(expectedDate).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1640,7 +1649,7 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode }) {
             <span key={f} style={{ padding: "2px 8px", borderRadius: 20, background: "#7b68ee22", border: "1px solid #7b68ee44", color: "#7b68ee", fontSize: 10, fontWeight: 700 }}>{f}</span>
           ))}
         </div>
-        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} />
+        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} expectedDate={tile.expectedDate} />
         {!warehouseMode && tile.description ? <ExpandableDesc text={tile.description.replace(/^#+\s*/gm, "").trim()} /> : null}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>

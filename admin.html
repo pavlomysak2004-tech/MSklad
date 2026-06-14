@@ -177,6 +177,7 @@ let state = {
   tabOrder: (() => {
     const saved = JSON.parse(localStorage.getItem('msklad_tab_order') || 'null') || ['collections','pannos','rates','orders','reports'];
     if (!saved.includes('banners')) saved.push('banners');
+    if (!saved.includes('incoming')) saved.push('incoming');
     return saved;
   })(),
   banners: [],
@@ -255,7 +256,8 @@ function renderAdmin() {
             rates: '💱 Курс валют',
             orders: '📋 Замовлення',
             reports: '📊 Звіти',
-            banners: '🖼 Банер'
+            banners: '🖼 Банер',
+            incoming: '📦 Поступлення'
           };
           return state.tabOrder.map((tab, idx) => {
             const isActive = state.tab === tab;
@@ -290,6 +292,7 @@ function renderAdmin() {
         ${state.tab==='orders' ? renderOrders() : ''}
         ${state.tab==='reports' ? renderReports() : ''}
         ${state.tab==='banners' ? renderBanners() : ''}
+        ${state.tab==='incoming' ? renderIncoming() : ''}
       </div>
 
       ${state.modal ? renderModal() : ''}
@@ -1869,6 +1872,7 @@ function switchTab(tab) {
   state.tab = tab;
   state.collectionSearch = "";
   render();
+  if (tab === 'incoming') setTimeout(loadIncomingCurrent, 50);
 }
 
 let tabDragSrc = null;
@@ -2404,6 +2408,188 @@ async function saveRates() {
   ]);
   showToast('Курс збережено! ✅', 'success');
   render();
+}
+
+
+// ===== INCOMING (Очікується поступлення) =====
+
+function renderIncoming() {
+  return `
+    <div style="max-width:700px;margin:0 auto;padding:0 8px;">
+      <div style="color:#c9a84c;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">📦 Очікується поступлення</div>
+
+      <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <div style="color:#aaa;font-size:13px;margin-bottom:12px;">Завантажте скрін документа «Замовлення постачальнику» з 1С — Claude розпізнає номенклатуру і дату поступлення.</div>
+        <div id="incoming-drop-zone" onclick="document.getElementById('incoming-file-input').click()"
+          style="border:2px dashed #2a2a2a;border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.2s;"
+          ondragover="event.preventDefault();this.style.borderColor='#c9a84c';"
+          ondragleave="this.style.borderColor='#2a2a2a';"
+          ondrop="event.preventDefault();this.style.borderColor='#2a2a2a';handleIncomingFile(event.dataTransfer.files[0]);">
+          <div style="font-size:32px;margin-bottom:8px;">📎</div>
+          <div style="color:#555;font-size:13px;">Натисніть або перетягніть скрін сюди</div>
+          <div style="color:#333;font-size:11px;margin-top:4px;">PNG, JPG</div>
+        </div>
+        <input type="file" id="incoming-file-input" accept="image/*" style="display:none" onchange="handleIncomingFile(this.files[0])">
+      </div>
+
+      <div id="incoming-preview" style="display:none;background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <img id="incoming-img" style="width:100%;border-radius:8px;margin-bottom:16px;">
+        <div id="incoming-status" style="color:#c9a84c;font-size:13px;text-align:center;padding:12px;">⟳ Розпізнаємо дані...</div>
+        <div id="incoming-result" style="display:none;">
+          <div style="color:#aaa;font-size:12px;margin-bottom:8px;">Розпізнані дані (відредагуйте якщо потрібно):</div>
+          <div style="color:#666;font-size:11px;margin-bottom:4px;">Дата поступлення:</div>
+          <input id="incoming-date" type="date" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;font-size:13px;margin-bottom:12px;box-sizing:border-box;">
+          <div style="color:#666;font-size:11px;margin-bottom:4px;">Товари (артикул → назва):</div>
+          <div id="incoming-items-list" style="margin-bottom:16px;"></div>
+          <button onclick="saveIncomingData()" style="width:100%;padding:12px;border-radius:10px;background:#c9a84c;border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;">✅ Зберегти в базу</button>
+        </div>
+      </div>
+
+      <div id="incoming-saved-list" style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:20px;">
+        <div style="color:#aaa;font-size:12px;margin-bottom:12px;">Поточні очікування:</div>
+        <div id="incoming-current" style="color:#555;font-size:12px;">Завантаження...</div>
+      </div>
+    </div>
+  `;
+}
+
+// Зберігаємо розпізнані дані тимчасово
+var incomingParsed = { date: null, articles: [] };
+
+async function handleIncomingFile(file) {
+  if (!file) return;
+  const preview = document.getElementById('incoming-preview');
+  const img = document.getElementById('incoming-img');
+  const status = document.getElementById('incoming-status');
+  const result = document.getElementById('incoming-result');
+
+  preview.style.display = 'block';
+  result.style.display = 'none';
+  status.style.display = 'block';
+  status.textContent = '⟳ Розпізнаємо дані...';
+
+  // Показуємо прев'ю
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    img.src = e.target.result;
+    const base64 = e.target.result.split(',')[1];
+    const mimeType = file.type || 'image/jpeg';
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: { type: 'base64', media_type: mimeType, data: base64 }
+              },
+              {
+                type: 'text',
+                text: 'Це скрін документа "Замовлення постачальнику" з 1С. Витягни: 1) дату надходження (поле "Бажана дата надходження" або дата документа), 2) список товарів з артикулами. Відповідай ТІЛЬКИ JSON без зайвого тексту: {"date":"YYYY-MM-DD","items":[{"article":"артикул","name":"назва товару","qty":кількість}]}. Артикул — це код виду 00-00012345. Якщо артикул не видно — використай порядковий номер як "item_N".'
+              }
+            ]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content.map(i => i.text || '').join('');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+
+      incomingParsed = parsed;
+
+      // Заповнюємо форму
+      document.getElementById('incoming-date').value = parsed.date || '';
+
+      const itemsList = document.getElementById('incoming-items-list');
+      itemsList.innerHTML = parsed.items.map((item, i) => `
+        <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
+          <input value="${item.article}" onchange="incomingParsed.items[${i}].article=this.value"
+            style="flex:0 0 140px;padding:6px 8px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#c9a84c;font-size:11px;">
+          <span style="color:#555;font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.name}">${item.name}</span>
+          <span style="color:#444;font-size:11px;flex:0 0 60px;text-align:right;">${item.qty} м²</span>
+        </div>
+      `).join('');
+
+      status.style.display = 'none';
+      result.style.display = 'block';
+
+    } catch(e) {
+      status.textContent = '❌ Помилка розпізнавання: ' + e.message;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveIncomingData() {
+  const date = document.getElementById('incoming-date').value;
+  if (!date) { showToast('Вкажіть дату поступлення', 'error'); return; }
+  if (!incomingParsed.items || incomingParsed.items.length === 0) { showToast('Немає товарів', 'error'); return; }
+
+  const articles = incomingParsed.items.map(i => i.article).filter(a => a && !a.startsWith('item_'));
+  if (articles.length === 0) { showToast('Артикули не розпізнано', 'error'); return; }
+
+  try {
+    // Оновлюємо expected_date по артикулу в таблиці collections
+    let updated = 0;
+    for (const article of articles) {
+      const res = await fetch(SUPA + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
+        method: 'PATCH',
+        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify({ expected_date: date })
+      });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) updated++;
+    }
+
+    showToast('Збережено: ' + updated + ' з ' + articles.length + ' товарів оновлено ✅', 'success');
+    loadIncomingCurrent();
+  } catch(e) {
+    showToast('Помилка збереження: ' + e.message, 'error');
+  }
+}
+
+async function loadIncomingCurrent() {
+  const el = document.getElementById('incoming-current');
+  if (!el) return;
+  try {
+    const res = await fetch(SUPA + '/rest/v1/collections?expected_date=not.is.null&select=article,name,expected_date&order=expected_date', {
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+    });
+    const data = await res.json();
+    if (!data.length) { el.innerHTML = '<span style="color:#444;">Немає очікуваних поступлень</span>'; return; }
+    el.innerHTML = data.map(item => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a1a;">
+        <div>
+          <div style="color:#aaa;font-size:12px;">${item.name}</div>
+          <div style="color:#555;font-size:11px;">${item.article}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="color:#c9a84c;font-size:12px;font-weight:700;">${item.expected_date}</span>
+          <button onclick="clearExpectedDate('${item.article}')" style="background:transparent;border:1px solid #333;color:#555;cursor:pointer;font-size:10px;padding:3px 7px;border-radius:6px;">✕</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = '<span style="color:#f44;">Помилка завантаження</span>';
+  }
+}
+
+async function clearExpectedDate(article) {
+  await fetch(SUPA + '/rest/v1/collections?article=eq.' + encodeURIComponent(article), {
+    method: 'PATCH',
+    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expected_date: null })
+  });
+  showToast('Очікування скасовано', 'success');
+  loadIncomingCurrent();
 }
 
 // Init
