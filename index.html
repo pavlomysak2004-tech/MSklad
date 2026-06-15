@@ -267,26 +267,35 @@ const staticCollections = [
 
 const staticPannos = [];
 
+const CACHE_KEY = "msklad_catalog_v1";
+const CACHE_TTL = 5 * 60 * 1000; // 5 хвилин
+
 function useCollections() {
-  const [collections, setCollections] = useState(staticCollections);
-  const [pannos, setPannos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Завантажуємо кеш миттєво
+  const cached = (() => {
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+      if (c && Date.now() - c.ts < CACHE_TTL) return c;
+    } catch(e) {}
+    return null;
+  })();
+
+  const [collections, setCollections] = useState(cached?.collections || staticCollections);
+  const [pannos, setPannos] = useState(cached?.pannos || []);
+  const [loading, setLoading] = useState(!cached);
 
   useEffect(() => {
+    const HEADERS = {
+      "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+    };
+
     const fetchFromSupabase = async () => {
       try {
-        const HEADERS = {
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
-        };
-        const FIELDS = "id,article,name,size,price_uah,stock,reserve,unit,tile_area,description,tags,finish,finish_tags,sale_price,sale_percent,sale_until,expected_date,expected_qty,reviews,bundle_articles,sort_order,collection_photos(url,sort_order)";
-
-        // Паралельні запити
         const [res, resP] = await Promise.all([
-          fetch("https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.false&is_visible=eq.true&select=" + FIELDS + "&order=sort_order,created_at", { headers: HEADERS }),
-          fetch("https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.true&is_visible=eq.true&select=" + FIELDS + "&order=sort_order,created_at", { headers: HEADERS })
+          fetch("https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.false&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at", { headers: HEADERS }),
+          fetch("https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.true&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at", { headers: HEADERS })
         ]);
-
         const data = await res.json();
         if (!data || !Array.isArray(data)) return;
 
@@ -356,6 +365,10 @@ function useCollections() {
             };
           });
           setPannos(parsedPannos);
+          // Зберігаємо в кеш
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), collections: parsed, pannos: parsedPannos }));
+          } catch(e) {}
         }
 
       } catch(e) {
