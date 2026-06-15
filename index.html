@@ -1336,7 +1336,7 @@ function IncomingModal({ tiles, activeTile, onClose }) {
 
   const TileRow = ({ tile, featured }) => (
     <div style={{ display: "flex", gap: 12, alignItems: "center", padding: featured ? "12px 0" : "10px 0", borderBottom: "1px solid #1a1a1a" }}>
-      <img src={tile.image} alt={tile.name} style={{ width: featured ? 72 : 52, height: featured ? 72 : 52, borderRadius: 10, objectFit: "cover", flexShrink: 0, background: "#1a1a1a" }} />
+      <img src={tile.image} alt={tile.name} loading="lazy" decoding="async" style={{ width: featured ? 72 : 52, height: featured ? 72 : 52, borderRadius: 10, objectFit: "cover", flexShrink: 0, background: "#1a1a1a" }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: featured ? "#fff" : "#ddd", fontSize: featured ? 15 : 13, fontWeight: 700, marginBottom: 3, lineHeight: 1.3, wordBreak: "break-word" }}>{tile.name}</div>
         <div style={{ color: "#555", fontSize: 11, marginBottom: 5 }}>{tile.size || ""}</div>
@@ -1640,7 +1640,7 @@ function PannoModal({ panno, collections, onClose }) {
                 border: "1px solid " + (selectedTile?.id === tile.id ? "#c9a84c" : "#1e1e1e"),
                 cursor: "pointer", transition: "all 0.2s",
               }}>
-                <img src={tile.image} alt={tile.name} style={{ width: 52, height: 60, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                <img src={tile.image} alt={tile.name} loading="lazy" decoding="async" style={{ width: 52, height: 60, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ color: selectedTile?.id === tile.id ? "#c9a84c" : "#fff", fontSize: 14, fontWeight: 700 }}>{tile.name}</div>
                   <div style={{ color: "#555", fontSize: 11, marginTop: 2 }}>{tile.size}</div>
@@ -1705,7 +1705,7 @@ function ShareButton({ tile }) {
   );
 }
 
-function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onIncoming }) {
+function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onIncoming, index }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
@@ -1718,7 +1718,7 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onI
     }}>
       {/* Фото — клік відкриває 3D-перегляд */}
       <div style={{ position: "relative", height: 220, overflow: "hidden" }} onClick={() => { const imgs = tile.images || [tile.image]; if (imgs[0] && onView3D) onView3D(tile); }}>
-        <img src={tile.image} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", background: "#111", display: "block" }} />
+        <img src={tile.image} alt={tile.name} loading={index < 4 ? "eager" : "lazy"} decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", background: "#111", display: "block" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #111 0%, transparent 60%)", pointerEvents: "none" }} />
         {/* Підказка 3D */}
         <div style={{
@@ -2913,9 +2913,9 @@ function TileCatalog() {
             <div style={{ color: "#c9a84c", fontSize: 13, animation: "pulse 1.5s infinite" }}>⟳ Завантаження колекцій...</div>
           </div>
         )}
-        {filtered.map((tile, i) => (
+        {filtered.map((tile, idx) => (
           <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${i * 0.08}s` }}>
-            <TileCard tile={tile} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
+            <TileCard tile={tile} index={idx} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
           </div>
         ))}
       </div>
@@ -3015,7 +3015,7 @@ function TileCatalog() {
                 >
                   {/* Мініатюра */}
                   <div style={{ width: 48, height: 56, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: activeCard === tile.id ? "1px solid #c9a84c" : "1px solid #2a2a2a" }}>
-                    <img src={tile.image} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={tile.image} alt={tile.name} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                   {/* Інфо */}
                   <div style={{ flex: 1, minWidth: 0 }}>
