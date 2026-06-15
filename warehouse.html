@@ -140,24 +140,21 @@
   .spinner { width: 32px; height: 32px; border: 3px solid #f0f2f5; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
 
   /* SERIES NAV */
-  .app-body { display: flex; position: relative; }
+  .app-body { display: flex; flex-direction: column; }
   .series-nav {
-    position: fixed; right: 0; top: 50%; transform: translateY(-50%);
-    z-index: 50; display: flex; flex-direction: column; align-items: center;
-    gap: 2px; padding: 6px 2px; background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(8px); border-radius: 10px 0 0 10px;
-    box-shadow: -2px 0 12px rgba(0,0,0,0.08);
-    max-height: 70vh; overflow-y: auto;
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 10px 16px 10px; background: #fff;
+    border-bottom: 1px solid #f0f2f5;
   }
-  .series-nav::-webkit-scrollbar { display: none; }
   .series-btn {
-    width: 28px; height: 22px; border: none; background: transparent;
-    font-size: 9px; font-weight: 800; color: #888; cursor: pointer;
-    border-radius: 6px; transition: all 0.15s; letter-spacing: 0.3px;
-    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid #e0e0e0; background: #f7f8fa;
+    color: #555; font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+    font-family: monospace;
   }
-  .series-btn:active, .series-btn.active { background: #1a1a2e; color: #fff; }
-  .series-separator { width: 16px; height: 1px; background: #f0f2f5; margin: 2px 0; }
+  .series-btn:active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; transform: scale(0.95); }
+  .series-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
 
   /* SECTION HEADER */
   .section-header {
@@ -231,7 +228,7 @@
   </div>
 
   <div class="app-body">
-  <div id="grid-wrap" style="flex:1;min-width:0;padding-right:32px;">
+  <div id="grid-wrap" style="flex:1;min-width:0;">
     <div class="loading"><div class="spinner"></div>Завантаження...</div>
   </div>
 </div>
@@ -423,45 +420,24 @@ function renderCards() {
     return;
   }
 
-  // Групуємо по серії
-  const grouped = {};
-  const noSeries = [];
-  items.forEach(item => {
-    const s = extractSeries(item.name);
-    if (s) {
-      if (!grouped[s]) grouped[s] = [];
-      grouped[s].push(item);
-    } else {
-      noSeries.push(item);
-    }
-  });
+  // Сортуємо: спочатку є в наявності
+  items = [...items].sort((a, b) => b.stock - a.stock);
 
-  // Сортуємо серії
-  const series = Object.keys(grouped).sort();
+  // Рендеримо картки з id для навігації
+  document.getElementById("grid-wrap").innerHTML = `<div class="grid">${items.map(item => cardHTML(item)).join("")}</div>`;
+  renderSeriesNav(items);
+}
 
-  // Рендеримо секції
-  let html = "";
-  series.forEach(s => {
-    const sItems = grouped[s].sort((a, b) => b.stock - a.stock);
-    html += `<div class="series-section" id="series-${s}">
-      <div class="section-header">${s}</div>
-      <div class="grid">${sItems.map(item => cardHTML(item)).join("")}</div>
-    </div>`;
-  });
-  if (noSeries.length) {
-    const sorted = noSeries.sort((a, b) => b.stock - a.stock);
-    html += `<div class="series-section" id="series-other">
-      <div class="section-header">Інші</div>
-      <div class="grid">${sorted.map(item => cardHTML(item)).join("")}</div>
-    </div>`;
-  }
-
-  document.getElementById("grid-wrap").innerHTML = html;
-  renderSeriesNav(series, noSeries.length > 0);
+function extractCode(name) {
+  // Витягуємо повний код маркування: JS12028, CV1201, SG1201 тощо
+  const m = name.match(/\b([A-Z]{2,4}\d{3,}[A-Z0-9]*)\b/);
+  return m ? m[1] : null;
 }
 
 function cardHTML(item) {
-  return `<div class="card ${item.stock <= 0 ? 'zero' : ''}" onclick='openModal(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+  const code = extractCode(item.name);
+  const cardId = code ? `card-${code}` : `card-${item.article}`;
+  return `<div class="card ${item.stock <= 0 ? 'zero' : ''}" id="${cardId}" onclick='openModal(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
     ${item.image
       ? `<img class="card-img" src="${item.image}" alt="${item.name}" loading="lazy">`
       : `<div class="card-img no-photo">🪨</div>`
@@ -474,48 +450,46 @@ function cardHTML(item) {
   </div>`;
 }
 
-function renderSeriesNav(series, hasOther) {
+function renderSeriesNav(items) {
   // Видаляємо старий nav
-  const old = document.getElementById("series-nav");
-  if (old) old.remove();
-  if (!series.length) return;
+  const oldNav = document.getElementById("series-nav");
+  if (oldNav) oldNav.remove();
+
+  // Витягуємо унікальні коди маркування
+  const codes = [];
+  items.forEach(item => {
+    const code = extractCode(item.name);
+    if (code && !codes.includes(code)) codes.push(code);
+  });
+
+  if (!codes.length) return;
 
   const nav = document.createElement("div");
   nav.className = "series-nav";
   nav.id = "series-nav";
 
-  series.forEach((s, i) => {
+  codes.forEach(code => {
     const btn = document.createElement("button");
     btn.className = "series-btn";
-    btn.textContent = s;
+    btn.textContent = code;
     btn.onclick = () => {
-      document.getElementById("series-" + s)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const el = document.getElementById("card-" + code);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.style.boxShadow = "0 0 0 3px #1a1a2e";
+        setTimeout(() => { el.style.boxShadow = ""; }, 1200);
+      }
       document.querySelectorAll(".series-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      setTimeout(() => btn.classList.remove("active"), 600);
+      setTimeout(() => btn.classList.remove("active"), 800);
     };
     nav.appendChild(btn);
-    if (i < series.length - 1) {
-      const sep = document.createElement("div");
-      sep.className = "series-separator";
-      nav.appendChild(sep);
-    }
   });
 
-  if (hasOther) {
-    const sep = document.createElement("div");
-    sep.className = "series-separator";
-    nav.appendChild(sep);
-    const btn = document.createElement("button");
-    btn.className = "series-btn";
-    btn.textContent = "···";
-    btn.onclick = () => {
-      document.getElementById("series-other")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-    nav.appendChild(btn);
-  }
-
-  document.getElementById("app").appendChild(nav);
+  // Вставляємо nav перед grid-wrap (всередині app-body)
+  const appBody = document.querySelector(".app-body");
+  const gridWrap = document.getElementById("grid-wrap");
+  appBody.insertBefore(nav, gridWrap);
 }
 
 // MODAL
