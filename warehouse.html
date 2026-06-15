@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Склад — МС Кераміка</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  /* PIN SCREEN */
+  #pin-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    padding: 24px;
+  }
+  .pin-logo { color: #fff; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.5; margin-bottom: 8px; }
+  .pin-title { color: #fff; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .pin-sub { color: rgba(255,255,255,0.4); font-size: 14px; margin-bottom: 48px; }
+  .pin-dots { display: flex; gap: 14px; margin-bottom: 40px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); background: transparent; transition: all 0.15s; }
+  .pin-dot.filled { background: #fff; border-color: #fff; }
+  .pin-grid { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+  .pin-btn {
+    width: 72px; height: 72px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.08); color: #fff;
+    font-size: 24px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .pin-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.93); }
+  .pin-btn.del { font-size: 20px; background: transparent; }
+  .pin-btn.zero { grid-column: 2; }
+  .pin-error { color: #ff6b6b; font-size: 13px; margin-top: 16px; min-height: 20px; text-align: center; }
+
+  /* MAIN APP */
+  #app { display: none; min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: #fff; padding: 12px 16px 0;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .warehouse-name { font-size: 17px; font-weight: 800; color: #1a1a2e; }
+  .warehouse-badge { background: #1a1a2e; color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: 1px; }
+  .logout-btn { background: transparent; border: 1px solid #e0e0e0; color: #888; font-size: 12px; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
+
+  /* SEARCH */
+  .search-wrap { position: relative; margin-bottom: 10px; }
+  .search-input {
+    width: 100%; padding: 10px 14px 10px 38px;
+    border: 1.5px solid #e8e8e8; border-radius: 10px;
+    font-size: 15px; color: #1a1a2e; background: #f7f8fa;
+    outline: none; transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: #1a1a2e; background: #fff; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 16px; pointer-events: none; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid #f0f2f5; }
+  .tab-btn {
+    flex: 1; padding: 10px 0; border: none; background: transparent;
+    font-size: 13px; font-weight: 600; color: #aaa; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .tab-btn.active { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+
+  /* STATS BAR */
+  .stats-bar { background: #fff; padding: 10px 16px; display: flex; gap: 20px; border-bottom: 1px solid #f0f2f5; }
+  .stat { text-align: center; }
+  .stat-val { font-size: 18px; font-weight: 800; color: #1a1a2e; }
+  .stat-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* GRID */
+  .grid { padding: 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (min-width: 480px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 700px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+
+  /* CARD */
+  .card {
+    background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+  .card:active { transform: scale(0.97); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .card-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: #f0f2f5; display: block; }
+  .card-img.no-photo { display: flex; align-items: center; justify-content: center; font-size: 32px; color: #ccc; }
+  .card-body { padding: 8px 10px 10px; }
+  .card-name { font-size: 12px; font-weight: 700; color: #1a1a2e; line-height: 1.3; margin-bottom: 4px; word-break: break-word; }
+  .card-article { font-size: 10px; color: #bbb; margin-bottom: 6px; }
+  .card-stock { font-size: 15px; font-weight: 800; }
+  .card-stock.has { color: #1a8a4a; }
+  .card-stock.low { color: #e67e22; }
+  .card-stock.none { color: #ccc; }
+  .card-unit { font-size: 10px; font-weight: 500; color: #aaa; }
+  .card.zero { opacity: 0.5; }
+
+  /* DETAIL MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+  }
+  .modal {
+    background: #fff; border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 560px; max-height: 85vh;
+    overflow-y: auto; padding-bottom: env(safe-area-inset-bottom);
+  }
+  .modal-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 0; }
+  .modal-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #f0f2f5; }
+  .modal-body { padding: 16px 20px 24px; }
+  .modal-name { font-size: 20px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; line-height: 1.3; }
+  .modal-article { font-size: 12px; color: #bbb; margin-bottom: 16px; }
+  .modal-stock-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 20px; }
+  .modal-stock-num { font-size: 40px; font-weight: 900; line-height: 1; }
+  .modal-stock-num.has { color: #1a8a4a; }
+  .modal-stock-num.low { color: #e67e22; }
+  .modal-stock-num.none { color: #ccc; }
+  .modal-stock-unit { font-size: 16px; color: #aaa; font-weight: 500; }
+  .modal-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .meta-item { background: #f7f8fa; border-radius: 10px; padding: 10px 12px; }
+  .meta-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .meta-val { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+  .close-btn { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: #f0f2f5; border: none; font-size: 18px; color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  /* EMPTY */
+  .empty { padding: 60px 20px; text-align: center; color: #bbb; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { font-size: 15px; }
+
+  /* LOADING */
+  .loading { padding: 60px 20px; text-align: center; color: #bbb; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 32px; height: 32px; border: 3px solid #f0f2f5; border-top-color: #1a1a2e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+
+  /* UPDATED */
+  .updated-bar { background: #f7f8fa; padding: 6px 16px; font-size: 11px; color: #bbb; text-align: center; border-bottom: 1px solid #f0f2f5; }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-logo">МС Кераміка</div>
+  <div class="pin-title">Склад</div>
+  <div class="pin-sub">Введіть PIN-код</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-grid">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn zero" onclick="pinPress('0')">0</button>
+    <button class="pin-btn del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="warehouse-name" id="wh-name">Склад</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="warehouse-badge" id="wh-badge">СКЛАД</span>
+        <button class="logout-btn" onclick="logout()">Вийти</button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search" type="search" placeholder="Пошук товару..." oninput="renderCards()" autocomplete="off">
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-all" onclick="setTab('all')">Всі товари</button>
+      <button class="tab-btn" id="tab-has" onclick="setTab('has')">Є в наявності</button>
+    </div>
+  </div>
+
+  <div class="updated-bar" id="updated-bar">Оновлення...</div>
+
+  <div class="stats-bar" id="stats-bar" style="display:none;">
+    <div class="stat"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Позицій</div></div>
+    <div class="stat"><div class="stat-val" id="stat-has">0</div><div class="stat-label">В наявності</div></div>
+    <div class="stat"><div class="stat-val" id="stat-zero">0</div><div class="stat-label">Відсутні</div></div>
+  </div>
+
+  <div id="grid-wrap">
+    <div class="loading"><div class="spinner"></div>Завантаження...</div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal" style="display:none;" onclick="closeModal(event)">
+  <div class="modal" id="modal-inner">
+    <div class="modal-handle"></div>
+    <img class="modal-img" id="modal-img" src="" alt="">
+    <div class="modal-body" style="position:relative;">
+      <div class="modal-name" id="modal-name"></div>
+      <div class="modal-article" id="modal-article"></div>
+      <div class="modal-stock-row">
+        <div class="modal-stock-num" id="modal-stock"></div>
+        <div class="modal-stock-unit" id="modal-unit"></div>
+      </div>
+      <div class="modal-meta" id="modal-meta"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA = "https://svbmamaqrtsknuztxiuq.supabase.co";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+
+const PINS = {
+  "1111": "Склад Городоцька",
+  "2222": "Склад Горохів2",
+  "3333": "Склад Мишуги",
+  "4444": "Склад Рава",
+  "5555": "Склад Яворів"
+};
+
+let pinInput = "";
+let currentWarehouse = "";
+let allItems = [];
+let currentTab = "all";
+
+// PIN LOGIC
+function pinPress(d) {
+  if (pinInput.length >= 4) return;
+  pinInput += d;
+  updateDots();
+  if (pinInput.length === 4) setTimeout(checkPin, 100);
+}
+
+function pinDel() {
+  pinInput = pinInput.slice(0, -1);
+  updateDots();
+  document.getElementById("pin-error").textContent = "";
+}
+
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById("d" + i).classList.toggle("filled", i < pinInput.length);
+  }
+}
+
+function checkPin() {
+  const wh = PINS[pinInput];
+  if (wh) {
+    currentWarehouse = wh;
+    sessionStorage.setItem("wh_pin", pinInput);
+    sessionStorage.setItem("wh_name", wh);
+    document.getElementById("pin-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    document.getElementById("wh-name").textContent = wh;
+    document.getElementById("wh-badge").textContent = wh.replace("Склад ", "").toUpperCase();
+    loadData();
+  } else {
+    document.getElementById("pin-error").textContent = "Невірний PIN. Спробуйте ще раз.";
+    pinInput = "";
+    updateDots();
+    // Shake dots
+    const dots = document.querySelector(".pin-dots");
+    dots.style.animation = "none";
+    setTimeout(() => { dots.style.animation = ""; }, 10);
+  }
+}
+
+function logout() {
+  sessionStorage.clear();
+  pinInput = "";
+  updateDots();
+  document.getElementById("pin-error").textContent = "";
+  document.getElementById("app").style.display = "none";
+  document.getElementById("pin-screen").style.display = "flex";
+  allItems = [];
+}
+
+// Restore session
+const savedPin = sessionStorage.getItem("wh_pin");
+if (savedPin && PINS[savedPin]) {
+  pinInput = savedPin;
+  checkPin();
+}
+
+// DATA
+async function loadData() {
+  try {
+    // Завантажуємо warehouse_stock + дані колекцій паралельно
+    const [stockRes, collRes] = await Promise.all([
+      fetch(`${SUPA}/rest/v1/warehouse_stock?warehouse=eq.${encodeURIComponent(currentWarehouse)}&select=article,stock`, {
+        headers: { apikey: KEY, Authorization: "Bearer " + KEY }
+      }),
+      fetch(`${SUPA}/rest/v1/collections?is_visible=eq.true&select=article,name,size,unit,collection_photos(url,sort_order)&order=sort_order,created_at`, {
+        headers: { apikey: KEY, Authorization: "Bearer " + KEY }
+      })
+    ]);
+
+    const stockData = await stockRes.json();
+    const collData = await collRes.json();
+
+    // Мапи stock по артикулу
+    const stockMap = {};
+    (stockData || []).forEach(r => { stockMap[r.article] = r.stock || 0; });
+
+    // Збираємо тільки товари що є в цьому складі
+    allItems = (collData || []).map(item => {
+      const photos = (item.collection_photos || [])
+        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+        .map(p => p.url);
+      return {
+        article: item.article || "",
+        name: item.name || "",
+        size: item.size || "",
+        unit: item.unit || "м²",
+        stock: stockMap[item.article] || 0,
+        image: photos[0] || ""
+      };
+    }).filter(i => i.article);
+
+    // Оновлення часу
+    const now = new Date().toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" });
+    document.getElementById("updated-bar").textContent = "Оновлено о " + now;
+
+    updateStats();
+    renderCards();
+
+  } catch(e) {
+    document.getElementById("grid-wrap").innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Помилка завантаження</div></div>`;
+  }
+}
+
+function updateStats() {
+  const has = allItems.filter(i => i.stock > 0).length;
+  document.getElementById("stat-total").textContent = allItems.length;
+  document.getElementById("stat-has").textContent = has;
+  document.getElementById("stat-zero").textContent = allItems.length - has;
+  document.getElementById("stats-bar").style.display = "flex";
+}
+
+function setTab(tab) {
+  currentTab = tab;
+  document.getElementById("tab-all").classList.toggle("active", tab === "all");
+  document.getElementById("tab-has").classList.toggle("active", tab === "has");
+  renderCards();
+}
+
+function fmtStock(stock) {
+  if (stock <= 0) return "0";
+  if (stock === Math.floor(stock)) return String(Math.round(stock));
+  return stock.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function stockClass(stock) {
+  if (stock <= 0) return "none";
+  if (stock < 10) return "low";
+  return "has";
+}
+
+function renderCards() {
+  const q = document.getElementById("search").value.toLowerCase().trim();
+  let items = allItems;
+  if (currentTab === "has") items = items.filter(i => i.stock > 0);
+  if (q) items = items.filter(i => i.name.toLowerCase().includes(q) || i.article.toLowerCase().includes(q));
+
+  // Сортуємо: спочатку є в наявності
+  items = [...items].sort((a, b) => b.stock - a.stock);
+
+  if (!items.length) {
+    document.getElementById("grid-wrap").innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">${q ? "Нічого не знайдено" : "Товарів немає"}</div></div>`;
+    return;
+  }
+
+  document.getElementById("grid-wrap").innerHTML = `<div class="grid">${items.map(item => `
+    <div class="card ${item.stock <= 0 ? 'zero' : ''}" onclick="openModal(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+      ${item.image
+        ? `<img class="card-img" src="${item.image}" alt="${item.name}" loading="lazy">`
+        : `<div class="card-img no-photo">🪨</div>`
+      }
+      <div class="card-body">
+        <div class="card-name">${item.name}</div>
+        <div class="card-article">${item.article}</div>
+        <div class="card-stock ${stockClass(item.stock)}">${fmtStock(item.stock)} <span class="card-unit">${item.unit}</span></div>
+      </div>
+    </div>
+  `).join("")}</div>`;
+}
+
+// MODAL
+function openModal(item) {
+  const sc = stockClass(item.stock);
+  document.getElementById("modal-img").src = item.image || "";
+  document.getElementById("modal-img").style.display = item.image ? "block" : "none";
+  document.getElementById("modal-name").textContent = item.name;
+  document.getElementById("modal-article").textContent = item.article;
+  document.getElementById("modal-stock").textContent = fmtStock(item.stock);
+  document.getElementById("modal-stock").className = "modal-stock-num " + sc;
+  document.getElementById("modal-unit").textContent = item.unit;
+  document.getElementById("modal-meta").innerHTML = `
+    <div class="meta-item"><div class="meta-label">Розмір</div><div class="meta-val">${item.size || "—"}</div></div>
+    <div class="meta-item"><div class="meta-label">Статус</div><div class="meta-val" style="color:${sc === 'has' ? '#1a8a4a' : sc === 'low' ? '#e67e22' : '#ccc'}">${item.stock > 0 ? (item.stock < 10 ? "Мало" : "В наявності") : "Відсутній"}</div></div>
+  `;
+  document.getElementById("modal").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById("modal")) {
+    document.getElementById("modal").style.display = "none";
+    document.body.style.overflow = "";
+  }
+}
+</script>
+</body>
+</html>
