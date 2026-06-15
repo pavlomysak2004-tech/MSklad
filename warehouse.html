@@ -141,19 +141,22 @@
 
   /* SERIES NAV */
   .app-body { display: flex; flex-direction: column; }
-  #series-nav-wrap { }
-  .series-nav {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-    padding: 8px 12px 10px; background: #fff;
+  #series-nav-wrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    background: #fff; border-bottom: 1px solid #f0f2f5;
   }
-  @media (min-width: 480px) { .series-nav { grid-template-columns: repeat(6, 1fr); } }
-  @media (min-width: 700px) { .series-nav { grid-template-columns: repeat(8, 1fr); } }
+  #series-nav-wrap::-webkit-scrollbar { display: none; }
+  .series-nav {
+    display: flex; flex-wrap: nowrap; gap: 6px;
+    padding: 8px 12px 10px;
+    width: max-content;
+  }
   .series-btn {
     border: 1.5px solid #e0e0e0; background: #f7f8fa;
     color: #555; font-size: 11px; font-weight: 700;
     padding: 4px 10px; border-radius: 20px; cursor: pointer;
     transition: all 0.15s; white-space: nowrap;
-    font-family: monospace; text-align: center;
+    font-family: monospace; flex-shrink: 0;
   }
   .series-btn:active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; transform: scale(0.95); }
   .series-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
