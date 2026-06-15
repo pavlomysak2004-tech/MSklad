@@ -275,15 +275,18 @@ function useCollections() {
   useEffect(() => {
     const fetchFromSupabase = async () => {
       try {
-        const res = await fetch(
-          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.false&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at",
-          {
-            headers: {
-              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
-              "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
-            }
-          }
-        );
+        const HEADERS = {
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
+        };
+        const FIELDS = "id,article,name,size,price_uah,stock,reserve,unit,tile_area,description,tags,finish,finish_tags,sale_price,sale_percent,sale_until,expected_date,expected_qty,reviews,bundle_articles,sort_order,collection_photos(url,sort_order)";
+
+        // Паралельні запити
+        const [res, resP] = await Promise.all([
+          fetch("https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.false&is_visible=eq.true&select=" + FIELDS + "&order=sort_order,created_at", { headers: HEADERS }),
+          fetch("https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.true&is_visible=eq.true&select=" + FIELDS + "&order=sort_order,created_at", { headers: HEADERS })
+        ]);
+
         const data = await res.json();
         if (!data || !Array.isArray(data)) return;
 
@@ -326,16 +329,6 @@ function useCollections() {
 
         setCollections(parsed);
 
-        // Завантажуємо панно
-        const resP = await fetch(
-          "https://svbmamaqrtsknuztxiuq.supabase.co/rest/v1/collections?is_panno=eq.true&is_visible=eq.true&select=*,collection_photos(url,sort_order)&order=sort_order,created_at",
-          {
-            headers: {
-              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o",
-              "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o"
-            }
-          }
-        );
         const pannosData = await resP.json();
         if (Array.isArray(pannosData)) {
           const parsedPannos = pannosData.map((item, i) => {
