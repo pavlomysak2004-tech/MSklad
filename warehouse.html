@@ -78,9 +78,9 @@
   .stat-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
 
   /* GRID */
-  .grid { padding: 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  @media (min-width: 480px) { .grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 700px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+  .grid { padding: 10px 12px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  @media (min-width: 480px) { .grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
+  @media (min-width: 700px) { .grid { grid-template-columns: repeat(5, 1fr); gap: 12px; } }
 
   /* CARD */
   .card {
@@ -92,14 +92,14 @@
   .card:active { transform: scale(0.97); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
   .card-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: #f0f2f5; display: block; }
   .card-img.no-photo { display: flex; align-items: center; justify-content: center; font-size: 32px; color: #ccc; }
-  .card-body { padding: 8px 10px 10px; }
-  .card-name { font-size: 12px; font-weight: 700; color: #1a1a2e; line-height: 1.3; margin-bottom: 4px; word-break: break-word; }
-  .card-article { font-size: 10px; color: #bbb; margin-bottom: 6px; }
-  .card-stock { font-size: 15px; font-weight: 800; }
+  .card-body { padding: 5px 7px 7px; }
+  .card-name { font-size: 10px; font-weight: 700; color: #1a1a2e; line-height: 1.3; margin-bottom: 2px; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-article { font-size: 9px; color: #bbb; margin-bottom: 4px; }
+  .card-stock { font-size: 13px; font-weight: 800; }
   .card-stock.has { color: #1a8a4a; }
   .card-stock.low { color: #e67e22; }
   .card-stock.none { color: #ccc; }
-  .card-unit { font-size: 10px; font-weight: 500; color: #aaa; }
+  .card-unit { font-size: 9px; font-weight: 500; color: #aaa; }
   .card.zero { opacity: 0.5; }
 
   /* DETAIL MODAL */
@@ -141,19 +141,19 @@
 
   /* SERIES NAV */
   .app-body { display: flex; flex-direction: column; }
-  #series-nav-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  #series-nav-wrap::-webkit-scrollbar { display: none; }
+  #series-nav-wrap { }
   .series-nav {
-    display: flex; flex-wrap: nowrap; gap: 6px;
-    padding: 8px 16px 10px; background: #fff;
-    min-width: max-content;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    padding: 8px 12px 10px; background: #fff;
   }
+  @media (min-width: 480px) { .series-nav { grid-template-columns: repeat(6, 1fr); } }
+  @media (min-width: 700px) { .series-nav { grid-template-columns: repeat(8, 1fr); } }
   .series-btn {
     border: 1.5px solid #e0e0e0; background: #f7f8fa;
     color: #555; font-size: 11px; font-weight: 700;
     padding: 4px 10px; border-radius: 20px; cursor: pointer;
     transition: all 0.15s; white-space: nowrap;
-    font-family: monospace; flex-shrink: 0;
+    font-family: monospace; text-align: center;
   }
   .series-btn:active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; transform: scale(0.95); }
   .series-btn.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
