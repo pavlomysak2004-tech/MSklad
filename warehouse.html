@@ -405,17 +405,9 @@ function stockClass(stock) {
   return "has";
 }
 
-function getSeries(item) {
-  // Витягуємо серію з назви — літери+цифри після пробілу (JS12028, CV1201, SG1201 тощо)
-  const m = item.name.match(/\b([A-Z]{1,4}\d{4,}(?:[A-Z]+)?)\b/);
-  if (m) return m[1].replace(/\d+.*$/, match => match.replace(/[A-Z]+$/, '').slice(0, 0)).replace(/[^A-Z]/g, '') || m[1].slice(0, 2 + (m[1].match(/^[A-Z]+/)?.[0].length > 2 ? 0 : 0));
-  // Спрощено: беремо перші літери з назви
-  const m2 = item.name.match(/([A-Z]{2,4})\d/);
-  return m2 ? m2[1] : "—";
-}
-
+// Витягуємо код маркування з назви (JS12028 → JS, CV1201 → CV)
 function extractSeries(name) {
-  const m = name.match(/\b([A-Z]{2,4})\d/);
+  const m = name.match(/\b([A-Z]{2,4})\d{3,}/);
   return m ? m[1] : null;
 }
 
