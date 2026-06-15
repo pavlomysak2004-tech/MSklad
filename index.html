@@ -2914,7 +2914,7 @@ function TileCatalog() {
           </div>
         )}
         {filtered.map((tile, idx) => (
-          <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${i * 0.08}s` }}>
+          <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${idx * 0.08}s` }}>
             <TileCard tile={tile} index={idx} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
           </div>
         ))}
