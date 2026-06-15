@@ -144,6 +144,8 @@
   #series-nav-wrap {
     overflow-x: auto; -webkit-overflow-scrolling: touch;
     background: #fff; border-bottom: 1px solid #f0f2f5;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 80%, transparent 100%);
   }
   #series-nav-wrap::-webkit-scrollbar { display: none; }
   .series-nav {
@@ -496,6 +498,12 @@ function renderSeriesNav(items) {
   const wrap = document.getElementById("series-nav-wrap");
   wrap.innerHTML = "";
   wrap.appendChild(nav);
+
+  // Натяк що можна свайпати — трохи прокручуємо і повертаємо
+  setTimeout(() => {
+    wrap.scrollTo({ left: 60, behavior: "smooth" });
+    setTimeout(() => wrap.scrollTo({ left: 0, behavior: "smooth" }), 500);
+  }, 600);
 }
 
 // MODAL
