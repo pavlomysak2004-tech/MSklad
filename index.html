@@ -26,9 +26,9 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"Store","name":"MS Ceramica","description":"Гуртовий продаж керамічної плитки, сантехніки та ламінату по всій Україні","url":"https://mysak.com.ua","areaServed":"UA"}
   </script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js" crossorigin></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0a0a0a; color: #fff; font-family: sans-serif; }
@@ -38,7 +38,24 @@
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div id="fallback-msg" style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#c9a84c;font-family:sans-serif;font-size:14px;text-align:center;padding:20px;">
+      ⏳ Завантаження каталогу...
+    </div>
+  </div>
+  <script>
+    // Якщо через 8 секунд React не змонтувався — показуємо повідомлення про помилку
+    window.__loadTimeout = setTimeout(function() {
+      var root = document.getElementById('root');
+      if (root && !root.querySelector('[data-app-mounted]')) {
+        root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#f44336;font-family:sans-serif;font-size:14px;text-align:center;padding:20px;flex-direction:column;gap:12px;">' +
+          '<div>⚠️ Не вдалося завантажити сторінку</div>' +
+          '<div style="color:#777;font-size:12px;">Перевірте інтернет-з\'єднання та оновіть сторінку</div>' +
+          '<button onclick="location.reload()" style="background:#c9a84c;color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:8px;">Оновити сторінку</button>' +
+          '</div>';
+      }
+    }, 8000);
+  </script>
   <script type="text/babel" data-presets="react">
     const { useState, useRef, useCallback, useEffect } = React;
 
@@ -3065,8 +3082,26 @@ function TileCatalog() {
 
 
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<TileCatalog />);
+    try {
+      const rootEl = document.getElementById('root');
+      rootEl.innerHTML = '';
+      const root = ReactDOM.createRoot(rootEl);
+      root.render(<TileCatalog />);
+      const marker = document.createElement('div');
+      marker.setAttribute('data-app-mounted', 'true');
+      marker.style.display = 'none';
+      rootEl.appendChild(marker);
+      if (window.__loadTimeout) clearTimeout(window.__loadTimeout);
+    } catch(err) {
+      console.error('Render error:', err);
+      const rootEl = document.getElementById('root');
+      if (rootEl) {
+        rootEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#f44336;font-family:sans-serif;font-size:14px;text-align:center;padding:20px;flex-direction:column;gap:12px;">' +
+          '<div>⚠️ Помилка завантаження сторінки</div>' +
+          '<button onclick="location.reload()" style="background:#c9a84c;color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:8px;">Оновити сторінку</button>' +
+          '</div>';
+      }
+    }
   </script>
 </body>
 </html>
