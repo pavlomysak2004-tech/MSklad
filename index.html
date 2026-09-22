@@ -375,7 +375,7 @@ function useCollections() {
               totalStock: (item.stock || 0) + (item.reserve || 0),
               unit: item.unit || "шт",
               description: item.description || "",
-              tags: item.tags || ["Панно"],
+              tags: item.tags || [],
               image: photos[0] || "",
               images: photos.length > 0 ? photos : [""],
               expectedDate: item.expected_date || null,
