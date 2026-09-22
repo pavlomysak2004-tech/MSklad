@@ -1313,7 +1313,7 @@ function StockBar({ stock, reserve, totalStock, unit, name, expectedDate, onInco
     statusColor = "#4caf50";
     statusLabel = "Багато";
     displayStock = PANNO_LIMIT + "+ " + unit;
-  } else if (stock > 10 || unit === "к-т") {
+  } else if (stock > (unit === "к-т" ? 5 : 10)) {
     statusColor = "#4caf50";
     statusLabel = "Є";
     displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
