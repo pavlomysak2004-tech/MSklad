@@ -175,10 +175,10 @@ let state = {
   autoRate: true,
   collectionSearch: "",
   tabOrder: (() => {
-    const saved = JSON.parse(localStorage.getItem('msklad_tab_order') || 'null') || ['collections','pannos','rates','orders','reports'];
+    const saved = JSON.parse(localStorage.getItem('msklad_tab_order') || 'null') || ['collections','rates','orders','reports'];
     if (!saved.includes('banners')) saved.push('banners');
     if (!saved.includes('incoming')) saved.push('incoming');
-    return saved;
+    return saved.filter(t => t !== 'pannos');
   })(),
   banners: [],
   bannerAutoplay: 4,
@@ -251,8 +251,7 @@ function renderAdmin() {
       <div class="nav-tabs" id="nav-tabs-container">
         ${(() => {
           const labels = {
-            collections: '🏷 Колекції',
-            pannos: '🎨 Панно',
+            collections: '🏷 Товари',
             rates: '💱 Курс валют',
             orders: '📋 Замовлення',
             reports: '📊 Звіти',
@@ -286,8 +285,7 @@ function renderAdmin() {
 
       <!-- Content -->
       <div style="padding:0 16px 40px;">
-        ${state.tab==='collections' ? renderCollections(false) : ''}
-        ${state.tab==='pannos' ? renderCollections(true) : ''}
+        ${state.tab==='collections' ? renderCollections() : ''}
         ${state.tab==='rates' ? renderRates() : ''}
         ${state.tab==='orders' ? renderOrders() : ''}
         ${state.tab==='reports' ? renderReports() : ''}
@@ -299,10 +297,9 @@ function renderAdmin() {
     </div>`;
 }
 
-function renderCollections(isPanno) {
+function renderCollections() {
   const searchVal = state.collectionSearch || "";
   const items = state.collections.filter(c => {
-    if (c.is_panno !== isPanno) return false;
     if (!searchVal) return true;
     const q = searchVal.toLowerCase();
     return (c.name || "").toLowerCase().includes(q) ||
@@ -314,7 +311,7 @@ function renderCollections(isPanno) {
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div id="collections-count" style="color:#777;font-size:13px;">${items.length} позицій</div>
-        <button class="btn-gold" onclick="openAddModal(${isPanno})">+ Додати</button>
+        <button class="btn-gold" onclick="openAddModal(false)">+ Додати</button>
       </div>
       <div style="margin-bottom:12px;position:relative;">
         <input type="text" id="collection-search-input"
@@ -367,7 +364,7 @@ function renderCollectionRow(item) {
     <div class="collection-row">
       ${thumb ? `<img class="collection-thumb" src="${thumb}" onerror="this.style.display='none'">` : `<div class="collection-thumb" style="display:flex;align-items:center;justify-content:center;color:#333;font-size:20px;">📷</div>`}
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name} ${item.is_panno ? '<span style="background:#7b68ee22;color:#7b68ee;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;border:1px solid #7b68ee44;vertical-align:middle;">ПАННО</span>' : ''}</div>
         <div style="color:#555;font-size:11px;margin-top:2px;">${item.size || "—"} · ${item.article || ""}</div>
         ${priceHtml}
         ${tagsHtml}
@@ -1811,12 +1808,10 @@ function clearSearch() {
 }
 
 function renderCollectionsList() {
-  const isPanno = state.tab === "pannos";
   const container = document.getElementById("collections-list-container");
   if (container) {
     const searchVal = state.collectionSearch || "";
     const items = state.collections.filter(c => {
-      if (c.is_panno !== isPanno) return false;
       if (!searchVal) return true;
       const q = searchVal.toLowerCase();
       return (c.name || "").toLowerCase().includes(q) ||
