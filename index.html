@@ -1288,6 +1288,7 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
 
   const LIMIT = 200;
   const PANNO_LIMIT = 15;
+  const STEPS_LIMIT = 30;
 
   // Визначаємо статус і колір по вільному залишку
   let statusColor, statusLabel, displayStock;
@@ -1299,7 +1300,7 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
     statusColor = "#ff9800";
     statusLabel = "Є";
     displayStock = "0 " + unit;
-  } else if (stock > LIMIT && unit !== "к-т") {
+  } else if (stock > LIMIT && unit !== "к-т" && unit !== "сходинка") {
     statusColor = "#4caf50";
     statusLabel = "Багато";
     displayStock = LIMIT + "+ " + unit;
@@ -1307,7 +1308,11 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
     statusColor = "#4caf50";
     statusLabel = "Багато";
     displayStock = PANNO_LIMIT + "+ " + unit;
-  } else if (stock > 10 || unit === "к-т") {
+  } else if (unit === "сходинка" && stock > STEPS_LIMIT) {
+    statusColor = "#4caf50";
+    statusLabel = "Багато";
+    displayStock = STEPS_LIMIT + "+ " + unit;
+  } else if (stock > 10 || unit === "к-т" || unit === "сходинка") {
     statusColor = "#4caf50";
     statusLabel = "Є";
     displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
@@ -1351,10 +1356,11 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
 function IncomingModal({ tiles, activeTile, onClose }) {
   const LIMIT = 200;
   const PANNO_LIMIT = 15;
+  const STEPS_LIMIT = 30;
   const fmtQty = (qty, unit) => {
     if (!qty || qty <= 0) return null;
     const u = unit || "м²";
-    const limit = u === "к-т" ? PANNO_LIMIT : LIMIT;
+    const limit = u === "к-т" ? PANNO_LIMIT : (u === "сходинка" ? STEPS_LIMIT : LIMIT);
     return qty > limit ? `${limit}+ ${u}` : `${Math.round(qty)} ${u}`;
   };
 
