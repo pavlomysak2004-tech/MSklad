@@ -1282,13 +1282,14 @@ function ReviewsSection({ reviews }) {
   );
 }
 
-function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }) {
+function StockBar({ stock, reserve, totalStock, unit, name, expectedDate, onIncoming }) {
   const total = totalStock || (stock + reserve);
   if (!total && !stock && !reserve) return null;
 
   const LIMIT = 200;
   const PANNO_LIMIT = 15;
   const STEPS_LIMIT = 30;
+  const isSteps = /сходинк/i.test(name || "");
 
   // Визначаємо статус і колір по вільному залишку
   let statusColor, statusLabel, displayStock;
@@ -1300,7 +1301,11 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
     statusColor = "#ff9800";
     statusLabel = "Є";
     displayStock = "0 " + unit;
-  } else if (stock > LIMIT && unit !== "к-т" && unit !== "сходинка") {
+  } else if (isSteps && stock > STEPS_LIMIT) {
+    statusColor = "#4caf50";
+    statusLabel = "Багато";
+    displayStock = STEPS_LIMIT + "+ " + unit;
+  } else if (stock > LIMIT && unit !== "к-т" && !isSteps) {
     statusColor = "#4caf50";
     statusLabel = "Багато";
     displayStock = LIMIT + "+ " + unit;
@@ -1308,11 +1313,7 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
     statusColor = "#4caf50";
     statusLabel = "Багато";
     displayStock = PANNO_LIMIT + "+ " + unit;
-  } else if (unit === "сходинка" && stock > STEPS_LIMIT) {
-    statusColor = "#4caf50";
-    statusLabel = "Багато";
-    displayStock = STEPS_LIMIT + "+ " + unit;
-  } else if (stock > 10 || unit === "к-т" || unit === "сходинка") {
+  } else if (stock > 10 || unit === "к-т") {
     statusColor = "#4caf50";
     statusLabel = "Є";
     displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
@@ -1357,10 +1358,10 @@ function IncomingModal({ tiles, activeTile, onClose }) {
   const LIMIT = 200;
   const PANNO_LIMIT = 15;
   const STEPS_LIMIT = 30;
-  const fmtQty = (qty, unit) => {
+  const fmtQty = (qty, unit, name) => {
     if (!qty || qty <= 0) return null;
     const u = unit || "м²";
-    const limit = u === "к-т" ? PANNO_LIMIT : (u === "сходинка" ? STEPS_LIMIT : LIMIT);
+    const limit = /сходинк/i.test(name || "") ? STEPS_LIMIT : (u === "к-т" ? PANNO_LIMIT : LIMIT);
     return qty > limit ? `${limit}+ ${u}` : `${Math.round(qty)} ${u}`;
   };
 
@@ -1371,14 +1372,14 @@ function IncomingModal({ tiles, activeTile, onClose }) {
         <div style={{ color: featured ? "#fff" : "#ddd", fontSize: featured ? 15 : 13, fontWeight: 700, marginBottom: 3, lineHeight: 1.3, wordBreak: "break-word" }}>{tile.name}</div>
         <div style={{ color: "#555", fontSize: 11, marginBottom: 5 }}>{tile.size || ""}</div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {fmtQty(tile.stock, tile.unit) && (
+          {fmtQty(tile.stock, tile.unit, tile.name) && (
             <span style={{ color: "#4caf50", fontSize: 11, background: "#4caf5011", border: "1px solid #4caf5033", borderRadius: 4, padding: "2px 7px" }}>
-              В наявності: {fmtQty(tile.stock, tile.unit)}
+              В наявності: {fmtQty(tile.stock, tile.unit, tile.name)}
             </span>
           )}
           {tile.expectedQty ? (
             <span style={{ color: "#c9a84c", fontSize: 11, background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 4, padding: "2px 7px" }}>
-              Поступить: {fmtQty(tile.expectedQty, tile.unit)}
+              Поступить: {fmtQty(tile.expectedQty, tile.unit, tile.name)}
             </span>
           ) : (
             <span style={{ color: "#c9a84c", fontSize: 11, background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 4, padding: "2px 7px" }}>
@@ -1777,7 +1778,7 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onI
             <span key={f} style={{ padding: "2px 8px", borderRadius: 20, background: "#7b68ee22", border: "1px solid #7b68ee44", color: "#7b68ee", fontSize: 10, fontWeight: 700 }}>{f}</span>
           ))}
         </div>
-        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} expectedDate={tile.expectedDate} onIncoming={onIncoming} />
+        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} name={tile.name} expectedDate={tile.expectedDate} onIncoming={onIncoming} />
         {!warehouseMode && tile.description ? <ExpandableDesc text={tile.description.replace(/^#+\s*/gm, "").trim()} /> : null}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
