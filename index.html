@@ -2748,11 +2748,11 @@ function TileCatalog() {
 
     return () => { scrollTimers.current.forEach(clearTimeout); scrollTimers.current = []; };
   }, [loading]);
-  // Динамічні фільтри з усіх тегів + Панно окремо
+  // Динамічні фільтри з усіх тегів
   const allTags = Array.from(new Set(
     [...collections, ...pannos].flatMap(c => c.tags || [])
   )).filter(t => t).sort();
-  const filters = ["Всі", "Панно", ...allTags.filter(t => t !== "Панно")];
+  const filters = ["Всі", ...allTags];
   const allItems = [...collections, ...pannos];
   const allPrices = allItems.map(t => t.price).filter(p => p > 0);
   const minPrice = allPrices.length ? Math.min(...allPrices) : 0;
@@ -2769,7 +2769,7 @@ function TileCatalog() {
   const filtered = allItems.filter(t => {
     // Якщо нічого не вибрано — показуємо все
     const matchFilter = activeFilters.length === 0 || activeFilters.every(f =>
-      f === "Панно" ? t.isPanno : (t.tags || []).includes(f)
+      (t.tags || []).includes(f)
     );
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
       (t.subtitle || "").toLowerCase().includes(search.toLowerCase());
