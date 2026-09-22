@@ -1409,6 +1409,16 @@ function renderModal() {
             <input type="text" id="f-size" value="${item.size || ''}" placeholder="60×120 см" autocomplete="off" inputmode="text">
           </div>
 
+          <!-- Одиниця виміру -->
+          <div style="margin-bottom:14px;">
+            <div class="label">Одиниця виміру</div>
+            <select id="f-unit">
+              <option value="м²" ${(item.unit || 'м²') === 'м²' ? 'selected' : ''}>м² (плитка)</option>
+              <option value="к-т" ${item.unit === 'к-т' ? 'selected' : ''}>к-т (комплект)</option>
+              <option value="шт" ${item.unit === 'шт' ? 'selected' : ''}>шт (штука)</option>
+            </select>
+          </div>
+
           <!-- Комплект -->
           <div style="margin-bottom:14px;">
             <div class="label">Артикули комплекту (якщо є)</div>
@@ -2284,6 +2294,7 @@ async function saveItem() {
       name: document.getElementById("f-name").value.trim(),
       article: document.getElementById("f-article").value.trim(),
       size: document.getElementById("f-size").value.trim(),
+      unit: document.getElementById("f-unit")?.value || "м²",
       price_uah: Math.max(0, parseFloat(document.getElementById("f-price-uah").value) || 0),
       price_eur: Math.max(0, parseFloat(document.getElementById("f-price-eur").value) || 0),
       price_usd: Math.max(0, parseFloat(document.getElementById("f-price-usd").value) || 0),
