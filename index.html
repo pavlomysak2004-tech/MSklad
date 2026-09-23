@@ -3140,8 +3140,8 @@ function TileCatalog() {
       {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
       {chatPhoneModal && <ChatPhoneModal tile={chatPhoneModal} onClose={() => setChatPhoneModal(null)} onSubmit={(phone) => {
         // Send phone to Telegram so manager knows who to call
-        const msg = `📱 Клієнт хоче запитати про товар\n\nТовар: ${chatPhoneModal.name}${chatPhoneModal.article ? "\nАртикул: " + chatPhoneModal.article : ""}\nТелефон: ${phone}`;
-        fetch(TG_PROXY, { method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY}, body:JSON.stringify({text:msg}) }).catch(()=>{});
+        const msg = `📱 <b>Клієнт хоче запитати про товар</b>\n\nТовар: ${chatPhoneModal.name}${chatPhoneModal.article ? "\nАртикул: " + chatPhoneModal.article : ""}\n📞 Телефон: <b>${phone}</b>`;
+        fetch(TG_PROXY, { method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY}, body:JSON.stringify({action:"sendMessage", text:msg, parse_mode:"HTML"}) }).catch(()=>{});
         setChatPhoneModal(null);
         window.__openChat && window.__openChat();
       }} />}
