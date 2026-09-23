@@ -2862,9 +2862,13 @@ function TileCatalog() {
     const matchPrice = effectivePrice >= priceRange[0] && effectivePrice <= priceRange[1];
     return matchFilter && matchSearch && matchPrice;
   }).sort((a, b) => {
-    // Новинки — завжди першими
+    const aOnSale = !!getSaleInfo(a) && a.stock > 0;
+    const bOnSale = !!getSaleInfo(b) && b.stock > 0;
+    // Новинки першими, потім акції, решта
     if (a.isNew && !b.isNew) return -1;
     if (!a.isNew && b.isNew) return 1;
+    if (aOnSale && !bOnSale) return -1;
+    if (!aOnSale && bOnSale) return 1;
     return 0;
   });
 
