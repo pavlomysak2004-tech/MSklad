@@ -419,6 +419,8 @@ function useCollections() {
             image: photos[0] || existing.image,
             images: photos.length > 0 ? photos : existing.images || [existing.image],
             isPanno: false,
+            isNew: item.is_new && item.new_until ? new Date(item.new_until) >= new Date() : false,
+            newUntil: item.new_until || null,
           };
         });
 
@@ -448,6 +450,8 @@ function useCollections() {
               expectedDate: item.expected_date || null,
               expectedQty: item.expected_qty || null,
               isPanno: true,
+              isNew: item.is_new && item.new_until ? new Date(item.new_until) >= new Date() : false,
+              newUntil: item.new_until || null,
             };
           });
           setPannos(parsedPannos);
@@ -1820,7 +1824,11 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehou
             <span key={tag} style={{ background: (tagColors[tag]||"#666")+"22", color: tagColors[tag]||"#ccc", border: `1px solid ${(tagColors[tag]||"#666")}44`, borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 700 }}>{tag}</span>
           ))}
         </div>
-        
+        {tile.isNew && (
+          <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#22c55e,#16a34a)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20, letterSpacing: 0.5, boxShadow: "0 2px 8px rgba(34,197,94,0.5)", display: "flex", alignItems: "center", gap: 4 }}>
+            ✦ НОВИНКА
+          </div>
+        )}
       </div>
       <div style={{ padding: "16px 18px 18px" }}>
         <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{!warehouseMode && tile.subtitle}</div>
@@ -2839,11 +2847,16 @@ function TileCatalog() {
     const matchFilter = activeFilters.length === 0 || activeFilters.every(f =>
       f === "Панно" ? t.isPanno : (t.tags || []).includes(f)
     );
-    const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
+    const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
       (t.subtitle || "").toLowerCase().includes(search.toLowerCase());
     const effectivePrice = (() => { const s = getSaleInfo(t); return s ? s.salePrice : t.price; })();
     const matchPrice = effectivePrice >= priceRange[0] && effectivePrice <= priceRange[1];
     return matchFilter && matchSearch && matchPrice;
+  }).sort((a, b) => {
+    // Новинки — завжди першими
+    if (a.isNew && !b.isNew) return -1;
+    if (!a.isNew && b.isNew) return 1;
+    return 0;
   });
 
   return (
