@@ -1828,7 +1828,7 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehou
           const sale = getSaleInfo(tile);
           if (sale) return (
             <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#ef4444,#dc2626)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20, letterSpacing: 0.5, boxShadow: "0 2px 8px rgba(239,68,68,0.5)", display: "flex", alignItems: "center", gap: 4 }}>
-              🔥 -{sale.percent}%
+              🔥 АКЦІЯ -{sale.percent}%
             </div>
           );
           if (tile.isNew) return (
