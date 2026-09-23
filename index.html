@@ -82,6 +82,73 @@ const SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTr0m9YOJOve
 const TG_PROXY = "https://svbmamaqrtsknuztxiuq.supabase.co/functions/v1/telegram-proxy";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
 
+function ChatPhoneModal({ tile, onClose, onSubmit }) {
+  const [phone, setPhone] = React.useState("");
+  const [phoneError, setPhoneError] = React.useState("");
+  const [touched, setTouched] = React.useState(false);
+
+  const validatePhone = (val) => {
+    const d = val.replace(/\D/g, "");
+    if (!d) return "Введіть номер телефону";
+    if (d.length < 10) return "Номер занадто короткий";
+    return "";
+  };
+
+  const handleChange = (val) => {
+    const digits = val.replace(/\D/g, "");
+    if (digits.length > 12) return;
+    setPhone(val);
+    if (touched) setPhoneError(validatePhone(val));
+  };
+
+  const handleSubmit = () => {
+    setTouched(true);
+    const err = validatePhone(phone);
+    if (err) { setPhoneError(err); return; }
+    onSubmit(phone);
+  };
+
+  const isValid = phone.trim() && !validatePhone(phone);
+
+  return (
+    <div onClick={onClose} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9998,padding:16 }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:"#111",border:"1px solid #2a2a3a",borderRadius:16,padding:24,width:"100%",maxWidth:360,position:"relative" }}>
+        <button onClick={onClose} style={{ position:"absolute",top:12,right:12,background:"none",border:"none",color:"#777",fontSize:20,cursor:"pointer",lineHeight:1 }}>✕</button>
+        <div style={{ textAlign:"center",marginBottom:16 }}>
+          <div style={{ fontSize:28,marginBottom:6 }}>💬</div>
+          <div style={{ fontSize:16,fontWeight:700,color:"#fff",marginBottom:4 }}>Запитати про товар</div>
+          {tile && <div style={{ fontSize:12,color:"#888",marginBottom:2 }}>{tile.name}</div>}
+          <div style={{ fontSize:12,color:"#aaa" }}>Залиште номер — менеджер зв'яжеться з вами</div>
+        </div>
+        <style>{`
+          @keyframes phonePulseRedChat {
+            0%   { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+            50%  { border-color: #f44336cc; box-shadow: 0 0 10px rgba(244,67,51,0.4); }
+            100% { border-color: #f4433666; box-shadow: 0 0 0px rgba(244,67,51,0); }
+          }
+          .chat-phone-pulse { animation: phonePulseRedChat 1.5s ease-in-out infinite; }
+        `}</style>
+        <input
+          type="tel"
+          placeholder="📱 Номер телефону *"
+          value={phone}
+          autoFocus
+          onChange={e => handleChange(e.target.value)}
+          onBlur={() => { setTouched(true); setPhoneError(validatePhone(phone)); }}
+          className={!isValid ? "chat-phone-pulse" : ""}
+          style={{ width:"100%", padding:"12px 14px", borderRadius:10, background:"#1a1a1a", border:`1.5px solid ${touched && phoneError ? "#f44336" : "#333"}`, color:"#fff", fontSize:15, outline:"none", marginBottom:4 }}
+          onKeyDown={e => { if(e.key==="Enter") handleSubmit(); }}
+        />
+        {touched && phoneError && <div style={{ color:"#f44336",fontSize:11,marginBottom:8,paddingLeft:4 }}>{phoneError}</div>}
+        {!touched && <div style={{ marginBottom:8 }} />}
+        <button onClick={handleSubmit} style={{ width:"100%", padding:"12px 0", borderRadius:10, background: isValid ? "linear-gradient(135deg,#a78bfa,#7c3aed)" : "#222", border: isValid ? "none" : "1px solid #333", color: isValid ? "#fff" : "#555", cursor: isValid ? "pointer" : "not-allowed", fontWeight:700, fontSize:14, transition:"all 0.2s" }}>
+          Перейти до чату →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function LiveChat() {
   const [open, setOpen] = useState(false);
   React.useEffect(() => { window.__openChat = () => setOpen(true); }, []);
@@ -375,7 +442,7 @@ function useCollections() {
               totalStock: (item.stock || 0) + (item.reserve || 0),
               unit: item.unit || "шт",
               description: item.description || "",
-              tags: item.tags || [],
+              tags: item.tags || ["Панно"],
               image: photos[0] || "",
               images: photos.length > 0 ? photos : [""],
               expectedDate: item.expected_date || null,
@@ -1282,14 +1349,11 @@ function ReviewsSection({ reviews }) {
   );
 }
 
-function StockBar({ stock, reserve, totalStock, unit, name, expectedDate, onIncoming }) {
+function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }) {
   const total = totalStock || (stock + reserve);
   if (!total && !stock && !reserve) return null;
 
   const LIMIT = 200;
-  const PANNO_LIMIT = 15;
-  const STEPS_LIMIT = 30;
-  const isSteps = /сходинк/i.test(name || "");
 
   // Визначаємо статус і колір по вільному залишку
   let statusColor, statusLabel, displayStock;
@@ -1301,19 +1365,11 @@ function StockBar({ stock, reserve, totalStock, unit, name, expectedDate, onInco
     statusColor = "#ff9800";
     statusLabel = "Є";
     displayStock = "0 " + unit;
-  } else if (isSteps && stock > STEPS_LIMIT) {
-    statusColor = "#4caf50";
-    statusLabel = "Багато";
-    displayStock = STEPS_LIMIT + "+ " + unit;
-  } else if (stock > LIMIT && unit !== "к-т" && !isSteps) {
+  } else if (stock > LIMIT && unit !== "к-т") {
     statusColor = "#4caf50";
     statusLabel = "Багато";
     displayStock = LIMIT + "+ " + unit;
-  } else if (unit === "к-т" && stock > PANNO_LIMIT) {
-    statusColor = "#4caf50";
-    statusLabel = "Багато";
-    displayStock = PANNO_LIMIT + "+ " + unit;
-  } else if (stock > (unit === "к-т" ? 5 : 10)) {
+  } else if (stock > 10 || unit === "к-т") {
     statusColor = "#4caf50";
     statusLabel = "Є";
     displayStock = Number(stock).toFixed(2).replace(/\.00$/, "") + " " + unit;
@@ -1356,13 +1412,10 @@ function StockBar({ stock, reserve, totalStock, unit, name, expectedDate, onInco
 
 function IncomingModal({ tiles, activeTile, onClose }) {
   const LIMIT = 200;
-  const PANNO_LIMIT = 15;
-  const STEPS_LIMIT = 30;
-  const fmtQty = (qty, unit, name) => {
+  const fmtQty = (qty, unit) => {
     if (!qty || qty <= 0) return null;
     const u = unit || "м²";
-    const limit = /сходинк/i.test(name || "") ? STEPS_LIMIT : (u === "к-т" ? PANNO_LIMIT : LIMIT);
-    return qty > limit ? `${limit}+ ${u}` : `${Math.round(qty)} ${u}`;
+    return qty > LIMIT ? `${LIMIT}+ ${u}` : `${Math.round(qty)} ${u}`;
   };
 
   const TileRow = ({ tile, featured }) => (
@@ -1372,14 +1425,14 @@ function IncomingModal({ tiles, activeTile, onClose }) {
         <div style={{ color: featured ? "#fff" : "#ddd", fontSize: featured ? 15 : 13, fontWeight: 700, marginBottom: 3, lineHeight: 1.3, wordBreak: "break-word" }}>{tile.name}</div>
         <div style={{ color: "#555", fontSize: 11, marginBottom: 5 }}>{tile.size || ""}</div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {fmtQty(tile.stock, tile.unit, tile.name) && (
+          {fmtQty(tile.stock, tile.unit) && (
             <span style={{ color: "#4caf50", fontSize: 11, background: "#4caf5011", border: "1px solid #4caf5033", borderRadius: 4, padding: "2px 7px" }}>
-              В наявності: {fmtQty(tile.stock, tile.unit, tile.name)}
+              В наявності: {fmtQty(tile.stock, tile.unit)}
             </span>
           )}
           {tile.expectedQty ? (
             <span style={{ color: "#c9a84c", fontSize: 11, background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 4, padding: "2px 7px" }}>
-              Поступить: {fmtQty(tile.expectedQty, tile.unit, tile.name)}
+              Поступить: {fmtQty(tile.expectedQty, tile.unit)}
             </span>
           ) : (
             <span style={{ color: "#c9a84c", fontSize: 11, background: "#c9a84c11", border: "1px solid #c9a84c33", borderRadius: 4, padding: "2px 7px" }}>
@@ -1736,7 +1789,7 @@ function ShareButton({ tile }) {
   );
 }
 
-function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onIncoming, index }) {
+function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehouseMode, onIncoming, index }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
@@ -1778,7 +1831,7 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onI
             <span key={f} style={{ padding: "2px 8px", borderRadius: 20, background: "#7b68ee22", border: "1px solid #7b68ee44", color: "#7b68ee", fontSize: 10, fontWeight: 700 }}>{f}</span>
           ))}
         </div>
-        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} name={tile.name} expectedDate={tile.expectedDate} onIncoming={onIncoming} />
+        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} expectedDate={tile.expectedDate} onIncoming={onIncoming} />
         {!warehouseMode && tile.description ? <ExpandableDesc text={tile.description.replace(/^#+\s*/gm, "").trim()} /> : null}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
@@ -1807,7 +1860,7 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, warehouseMode, onI
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {/* Кнопка запитати */}
-          <button onClick={(e) => { e.stopPropagation(); window.__openChat && window.__openChat(); }}
+          <button onClick={(e) => { e.stopPropagation(); onAskChat && onAskChat(tile); }}
             style={{ width: "100%", padding: "9px 0", borderRadius: 10, background: "linear-gradient(135deg, #1a1a2e, #16213e)", border: "1px solid #3a3a5c", color: "#a78bfa", cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.2s" }}
             onMouseOver={e => e.currentTarget.style.borderColor="#a78bfa"}
             onMouseOut={e => e.currentTarget.style.borderColor="#3a3a5c"}>
@@ -2708,6 +2761,7 @@ function TileCatalog() {
   const [calcTile, setCalcTile] = useState(null);
   const [warehouseMode, setWarehouseMode] = useState(false);
   const [pannoModal, setPannoModal] = useState(null);
+  const [chatPhoneModal, setChatPhoneModal] = useState(null); // tile or null
   const [priceRange, setPriceRange] = useState([0, 999999]);
   const [infoPage, setInfoPage] = useState(null);
   const [incomingModal, setIncomingModal] = useState(false);
@@ -2762,11 +2816,11 @@ function TileCatalog() {
 
     return () => { scrollTimers.current.forEach(clearTimeout); scrollTimers.current = []; };
   }, [loading]);
-  // Динамічні фільтри з усіх тегів
+  // Динамічні фільтри з усіх тегів + Панно окремо
   const allTags = Array.from(new Set(
     [...collections, ...pannos].flatMap(c => c.tags || [])
   )).filter(t => t).sort();
-  const filters = ["Всі", ...allTags];
+  const filters = ["Всі", "Панно", ...allTags.filter(t => t !== "Панно")];
   const allItems = [...collections, ...pannos];
   const allPrices = allItems.map(t => t.price).filter(p => p > 0);
   const minPrice = allPrices.length ? Math.min(...allPrices) : 0;
@@ -2783,7 +2837,7 @@ function TileCatalog() {
   const filtered = allItems.filter(t => {
     // Якщо нічого не вибрано — показуємо все
     const matchFilter = activeFilters.length === 0 || activeFilters.every(f =>
-      (t.tags || []).includes(f)
+      f === "Панно" ? t.isPanno : (t.tags || []).includes(f)
     );
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
       (t.subtitle || "").toLowerCase().includes(search.toLowerCase());
@@ -2946,7 +3000,7 @@ function TileCatalog() {
         )}
         {filtered.map((tile, idx) => (
           <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${idx * 0.08}s` }}>
-            <TileCard tile={tile} index={idx} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
+            <TileCard tile={tile} index={idx} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} onAskChat={setChatPhoneModal} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
           </div>
         ))}
       </div>
@@ -3084,6 +3138,13 @@ function TileCatalog() {
 
       {viewing3D && <TileViewer tile={viewing3D} onClose={() => setViewing3D(null)} hideInfo={warehouseMode} />}
       {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
+      {chatPhoneModal && <ChatPhoneModal tile={chatPhoneModal} onClose={() => setChatPhoneModal(null)} onSubmit={(phone) => {
+        // Send phone to Telegram so manager knows who to call
+        const msg = `📱 Клієнт хоче запитати про товар\n\nТовар: ${chatPhoneModal.name}${chatPhoneModal.article ? "\nАртикул: " + chatPhoneModal.article : ""}\nТелефон: ${phone}`;
+        fetch(TG_PROXY, { method:"POST", headers:{"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY}, body:JSON.stringify({text:msg}) }).catch(()=>{});
+        setChatPhoneModal(null);
+        window.__openChat && window.__openChat();
+      }} />}
       {pannoModal && <PannoModal panno={pannoModal} collections={collections} onClose={() => setPannoModal(null)} />}
       <LiveChat />
 
