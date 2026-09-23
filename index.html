@@ -1824,11 +1824,20 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehou
             <span key={tag} style={{ background: (tagColors[tag]||"#666")+"22", color: tagColors[tag]||"#ccc", border: `1px solid ${(tagColors[tag]||"#666")}44`, borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 700 }}>{tag}</span>
           ))}
         </div>
-        {tile.isNew && (
-          <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#22c55e,#16a34a)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20, letterSpacing: 0.5, boxShadow: "0 2px 8px rgba(34,197,94,0.5)", display: "flex", alignItems: "center", gap: 4 }}>
-            ✦ НОВИНКА
-          </div>
-        )}
+        {(() => {
+          const sale = getSaleInfo(tile);
+          if (sale) return (
+            <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#ef4444,#dc2626)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20, letterSpacing: 0.5, boxShadow: "0 2px 8px rgba(239,68,68,0.5)", display: "flex", alignItems: "center", gap: 4 }}>
+              🔥 -{sale.percent}%
+            </div>
+          );
+          if (tile.isNew) return (
+            <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#22c55e,#16a34a)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20, letterSpacing: 0.5, boxShadow: "0 2px 8px rgba(34,197,94,0.5)", display: "flex", alignItems: "center", gap: 4 }}>
+              ✦ НОВИНКА
+            </div>
+          );
+          return null;
+        })()}
       </div>
       <div style={{ padding: "16px 18px 18px" }}>
         <div style={{ color: "#c9a84c", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{!warehouseMode && tile.subtitle}</div>
