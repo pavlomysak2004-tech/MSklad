@@ -3266,6 +3266,40 @@ function TilePage({ article }) {
   const [imgIdx, setImgIdx] = useState(0);
   const [ordering, setOrdering] = useState(false);
 
+  // Динамічні мета-теги для SEO і превью в месенджерах
+  useEffect(() => {
+    if (!tile) return;
+    const title = tile.name + (tile.size ? " " + tile.size : "") + " — MS Ceramica";
+    const desc = [
+      tile.name,
+      tile.size ? "Розмір: " + tile.size : "",
+      tile.price ? "Ціна: " + tile.price.toLocaleString() + " грн/м²" : "",
+      "Гуртовий продаж плитки. Lviv, mysak.com.ua",
+    ].filter(Boolean).join(". ");
+    const imgUrl = tile.image || "";
+    const pageUrl = window.location.origin + "/tile/" + encodeURIComponent(tile.article || String(tile.id));
+
+    document.title = title;
+
+    const setMeta = (sel, attr, val) => {
+      let el = document.querySelector(sel);
+      if (!el) { el = document.createElement("meta"); document.head.appendChild(el); }
+      el.setAttribute(attr, val);
+    };
+    setMeta('meta[name="description"]', "content", desc);
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", desc);
+    setMeta('meta[property="og:url"]', "content", pageUrl);
+    setMeta('meta[property="og:type"]', "content", "product");
+    if (imgUrl) setMeta('meta[property="og:image"]', "content", imgUrl);
+    setMeta('meta[name="twitter:card"]', "content", "summary_large_image");
+    setMeta('meta[name="twitter:title"]', "content", title);
+    setMeta('meta[name="twitter:description"]', "content", desc);
+    if (imgUrl) setMeta('meta[name="twitter:image"]', "content", imgUrl);
+
+    return () => { document.title = "MS Ceramica — Гуртова плитка"; };
+  }, [tile]);
+
   useEffect(() => {
     const HEADERS = { apikey: SUPA_KEY, Authorization: "Bearer " + SUPA_KEY };
     const SUPA_URL = "https://svbmamaqrtsknuztxiuq.supabase.co";
