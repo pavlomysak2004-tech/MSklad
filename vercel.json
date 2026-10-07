@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/tile/:article", "destination": "/index.html" },
-    { "source": "/sitemap.xml", "destination": "https://script.google.com/macros/s/AKfycbxEL9RS_CFBFlNo_VJUMoNQy-nOAyOWUeqdgwfRnaLQ9FhE00g91511cYh6aOnlF8kw/exec?action=sitemap" }
+    { "source": "/tile/:article", "destination": "/index.html" }
   ]
 }
