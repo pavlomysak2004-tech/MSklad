@@ -1,9 +1,5 @@
 {
-  "redirects": [
-    {
-      "source": "/index.html",
-      "destination": "/",
-      "permanent": true
-    }
+  "rewrites": [
+    { "source": "/tile/:article", "destination": "/index.html" }
   ]
 }

@@ -618,7 +618,7 @@ function TileViewer({ tile, onClose, hideInfo }) {
           e.stopPropagation();
           const imgUrl = images[current];
           if (!imgUrl) return;
-          const shareUrl = window.location.origin + window.location.pathname + "?tile=" + String(tile.id);
+          const shareUrl = window.location.origin + "/tile/" + encodeURIComponent(tile.article || String(tile.id));
           // Спробуємо поширити зображення як файл (iOS Safari підтримує)
           if (navigator.share) {
             try {
@@ -1765,7 +1765,7 @@ function ShareButton({ tile }) {
 
   const handleShare = async (e) => {
     e.stopPropagation();
-    const url = window.location.origin + window.location.pathname + "?tile=" + String(tile.id);
+    const url = window.location.origin + "/tile/" + encodeURIComponent(tile.article || String(tile.id));
     if (navigator.share) {
       try {
         await navigator.share({
@@ -2808,9 +2808,17 @@ function TileCatalog() {
     }
   };
 
-  // Читаємо ?tile= один раз при монтуванні і зберігаємо
+  // Читаємо /tile/АРТИКУЛ або ?tile= один раз при монтуванні
   const targetTileId = useRef((() => {
     try {
+      // Варіант 1: /tile/АРТИКУЛ
+      const pathMatch = window.location.pathname.match(/^\/tile\/(.+)/);
+      if (pathMatch) {
+        const article = decodeURIComponent(pathMatch[1]);
+        window.history.replaceState({}, "", "/");
+        return article; // повертаємо артикул (рядок)
+      }
+      // Варіант 2: ?tile= (зворотна сумісність)
       const p = new URLSearchParams(window.location.search).get("tile");
       if (p) window.history.replaceState({}, "", window.location.pathname);
       return p ? (isNaN(p) ? p : Number(p)) : null;
@@ -2822,7 +2830,13 @@ function TileCatalog() {
   // Скролимо тільки після повного завантаження (loading=false) і коли ref є в DOM
   useEffect(() => {
     if (!targetTileId.current || scrolledRef.current || loading) return;
-    const id = targetTileId.current;
+    // Якщо targetTileId — рядок (артикул) — знаходимо числовий id товару
+    const raw = targetTileId.current;
+    const allLoaded = [...collections, ...pannos];
+    const id = (typeof raw === "string" && isNaN(raw))
+      ? (() => { const t = allLoaded.find(x => x.article === raw); return t ? t.id : null; })()
+      : raw;
+    if (!id) return;
     // Невеликий timeout щоб React встиг оновити DOM після останнього setState
     const t = setTimeout(() => {
       const el = cardRefs.current[id];
@@ -3199,11 +3213,205 @@ function TileCatalog() {
 
 
 
+// ── Сторінка окремого товару ──────────────────────────────────────────────────
+function TilePage({ article }) {
+  const [tile, setTile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [imgIdx, setImgIdx] = useState(0);
+  const [ordering, setOrdering] = useState(false);
+
+  useEffect(() => {
+    const HEADERS = { apikey: SUPA_KEY, Authorization: "Bearer " + SUPA_KEY };
+    const SUPA_URL = "https://svbmamaqrtsknuztxiuq.supabase.co";
+    fetch(
+      SUPA_URL + "/rest/v1/collections?article=eq." + encodeURIComponent(article) +
+      "&is_visible=eq.true&select=*,collection_photos(url,sort_order)&limit=1",
+      { headers: HEADERS }
+    )
+      .then(r => r.json())
+      .then(data => {
+        if (!data || !data[0]) { setNotFound(true); setLoading(false); return; }
+        const item = data[0];
+        const photos = (item.collection_photos || [])
+          .sort((a, b) => a.sort_order - b.sort_order).map(p => p.url);
+        setTile({
+          id: item.id,
+          article: item.article || "",
+          name: item.name || "",
+          size: item.size || "",
+          price: item.price_uah || 0,
+          salePrice: item.sale_price || 0,
+          salePercent: item.sale_percent || 0,
+          saleUntil: item.sale_until || null,
+          stock: item.stock || 0,
+          reserve: item.reserve || 0,
+          totalStock: (item.stock || 0) + (item.reserve || 0),
+          unit: item.unit || "м²",
+          description: item.description || "",
+          tags: item.tags || [],
+          finishTags: item.finish_tags || [],
+          isNew: item.is_new && item.new_until ? new Date(item.new_until) >= new Date() : false,
+          expectedDate: item.expected_date || null,
+          expectedQty: item.expected_qty || null,
+          image: photos[0] || "",
+          images: photos.length > 0 ? photos : [],
+          isPanno: item.is_panno || false,
+        });
+        setLoading(false);
+      })
+      .catch(() => { setNotFound(true); setLoading(false); });
+  }, [article]);
+
+  const goBack = () => { window.location.href = "/"; };
+
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", color: "#c9a84c", fontSize: 14 }}>
+      ⏳ Завантаження...
+    </div>
+  );
+
+  if (notFound || !tile) return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", gap: 16, padding: 24 }}>
+      <div style={{ color: "#555", fontSize: 48 }}>🔍</div>
+      <div style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>Товар не знайдено</div>
+      <div style={{ color: "#555", fontSize: 13 }}>Артикул: {article}</div>
+      <button onClick={goBack} style={{ background: "#c9a84c", color: "#000", border: "none", padding: "12px 28px", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", marginTop: 8 }}>
+        ← До каталогу
+      </button>
+    </div>
+  );
+
+  const images = tile.images.length > 0 ? tile.images : [tile.image].filter(Boolean);
+  const sale = getSaleInfo(tile);
+  const shareUrl = window.location.href;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#fff" }}>
+      {/* Хедер */}
+      <div style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(10,10,10,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #1e1e1e", padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+        <button onClick={goBack} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, color: "#888", fontSize: 13, padding: "6px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+          ← Каталог
+        </button>
+        <div style={{ color: "#c9a84c", fontSize: 13, fontWeight: 700, letterSpacing: 1 }}>MS CERAMICA</div>
+      </div>
+
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px" }}>
+        {/* Фото */}
+        <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "1/1" }}>
+          {images[imgIdx] ? (
+            <img src={images[imgIdx]} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#333", fontSize: 40 }}>🖼</div>
+          )}
+          {/* Бейдж */}
+          {sale ? (
+            <div style={{ position: "absolute", top: 12, right: 12, background: "linear-gradient(135deg,#ef4444,#dc2626)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "5px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(239,68,68,0.5)" }}>
+              🔥 АКЦІЯ -{sale.percent}%
+            </div>
+          ) : tile.isNew ? (
+            <div style={{ position: "absolute", top: 12, right: 12, background: "linear-gradient(135deg,#22c55e,#16a34a)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "5px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(34,197,94,0.5)" }}>
+              ✦ НОВИНКА
+            </div>
+          ) : null}
+          {/* Теги зліва */}
+          <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 5, flexWrap: "wrap", maxWidth: "60%" }}>
+            {tile.tags.map(tag => (
+              <span key={tag} style={{ background: (tagColors[tag]||"#666")+"22", color: tagColors[tag]||"#ccc", border: `1px solid ${(tagColors[tag]||"#666")}44`, borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 700 }}>{tag}</span>
+            ))}
+          </div>
+          {/* Перемикач фото */}
+          {images.length > 1 && (
+            <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6 }}>
+              {images.map((_, i) => (
+                <button key={i} onClick={() => setImgIdx(i)} style={{ width: i === imgIdx ? 20 : 8, height: 8, borderRadius: 4, background: i === imgIdx ? "#c9a84c" : "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.2s" }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Назва і артикул */}
+        <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>{tile.article}</div>
+        <div style={{ color: "#fff", fontSize: 24, fontFamily: "serif", fontWeight: 700, lineHeight: 1.2, marginBottom: 8 }}>{tile.name}</div>
+
+        {/* Розмір і фінішування */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16, alignItems: "center" }}>
+          {tile.size && <div style={{ color: "#888", fontSize: 13 }}>📐 {tile.size}</div>}
+          {(tile.finishTags || []).map(f => (
+            <span key={f} style={{ padding: "3px 10px", borderRadius: 20, background: "#7b68ee22", border: "1px solid #7b68ee44", color: "#7b68ee", fontSize: 11, fontWeight: 700 }}>{f}</span>
+          ))}
+        </div>
+
+        {/* Ціна */}
+        <div style={{ background: "#111", borderRadius: 14, padding: "16px 18px", marginBottom: 16, border: "1px solid #1e1e1e" }}>
+          {sale ? (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ color: "#f44336", fontSize: 32, fontWeight: 800 }}>{sale.salePrice.toLocaleString()}</span>
+              <span style={{ color: "#f44336", fontSize: 15 }}>грн/{tile.unit}</span>
+              <span style={{ color: "#444", fontSize: 15, textDecoration: "line-through" }}>{tile.price.toLocaleString()} грн</span>
+              {sale.daysLeft <= 3 && <span style={{ color: "#f44336", fontSize: 11, fontWeight: 700 }}>⏰ ще {sale.daysLeft} дн.</span>}
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ color: "#fff", fontSize: 32, fontWeight: 800 }}>{tile.price.toLocaleString()}</span>
+              <span style={{ color: "#888", fontSize: 15 }}>грн/{tile.unit}</span>
+            </div>
+          )}
+          {/* Залишок */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #1a1a1a" }}>
+            <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock} unit={tile.unit} expectedDate={tile.expectedDate} />
+          </div>
+        </div>
+
+        {/* Опис */}
+        {tile.description ? (
+          <div style={{ background: "#111", borderRadius: 14, padding: "14px 18px", marginBottom: 16, border: "1px solid #1e1e1e", color: "#aaa", fontSize: 13, lineHeight: 1.6 }}>
+            {tile.description.replace(/^#+\s*/gm, "").trim()}
+          </div>
+        ) : null}
+
+        {/* Кнопки дій */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+          <button onClick={() => setOrdering(true)} style={{ flex: 1, background: "linear-gradient(135deg,#c9a84c,#b8923e)", color: "#000", border: "none", borderRadius: 12, padding: "14px", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+            Замовити
+          </button>
+          <button onClick={async () => {
+            if (navigator.share) {
+              try { await navigator.share({ title: tile.name + " — MS Ceramica", url: shareUrl }); } catch(_) {}
+            } else {
+              try { await navigator.clipboard.writeText(shareUrl); } catch(_) {}
+            }
+          }} style={{ width: 50, background: "#111", border: "1px solid #2a2a2a", borderRadius: 12, color: "#888", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            ⎙
+          </button>
+        </div>
+
+        {/* Посилання на каталог */}
+        <button onClick={goBack} style={{ width: "100%", background: "none", border: "1px solid #1e1e1e", borderRadius: 12, padding: "12px", color: "#555", fontSize: 13, cursor: "pointer" }}>
+          ← Переглянути весь каталог
+        </button>
+      </div>
+
+      {ordering && <OrderModal tile={tile} onClose={() => setOrdering(false)} />}
+    </div>
+  );
+}
+
+// ── Рендер: TilePage або TileCatalog залежно від URL ─────────────────────────
+function App() {
+  const pathMatch = window.location.pathname.match(/^\/tile\/(.+)/);
+  if (pathMatch) {
+    const article = decodeURIComponent(pathMatch[1]);
+    return <TilePage article={article} />;
+  }
+  return <TileCatalog />;
+}
+
     try {
       const rootEl = document.getElementById('root');
       rootEl.innerHTML = '';
       const root = ReactDOM.createRoot(rootEl);
-      root.render(<TileCatalog />);
+      root.render(<App />);
       const marker = document.createElement('div');
       marker.setAttribute('data-app-mounted', 'true');
       marker.style.display = 'none';
