@@ -3056,7 +3056,10 @@ function TileCatalog() {
         )}
         {filtered.map((tile, idx) => (
           <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${idx * 0.08}s` }}>
-            <TileCard tile={tile} index={idx} onOrder={setOrdering} onView3D={setViewing3D} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} onAskChat={setChatPhoneModal} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
+            <TileCard tile={tile} index={idx} onOrder={setOrdering} onView3D={(t) => {
+              setViewing3D(t);
+              window.history.pushState({}, "", "/tile/" + encodeURIComponent(t.article || String(t.id)));
+            }} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} onAskChat={setChatPhoneModal} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
           </div>
         ))}
       </div>
@@ -3192,7 +3195,10 @@ function TileCatalog() {
         </>
       )}
 
-      {viewing3D && <TileViewer tile={viewing3D} onClose={() => setViewing3D(null)} hideInfo={warehouseMode} />}
+      {viewing3D && <TileViewer tile={viewing3D} onClose={() => {
+        setViewing3D(null);
+        window.history.replaceState({}, "", "/");
+      }} hideInfo={warehouseMode} />}
       {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
       {chatPhoneModal && <ChatPhoneModal tile={chatPhoneModal} onClose={() => setChatPhoneModal(null)} onSubmit={(phone) => {
         // Send phone to Telegram so manager knows who to call
