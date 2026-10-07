@@ -56,6 +56,24 @@
       }
     }, 8000);
   </script>
+  <script>
+    // Зберігаємо початковий tile target ДО монтування React (виконується один раз)
+    (function() {
+      try {
+        var pathMatch = window.location.pathname.match(/^\/tile\/(.+)/);
+        if (pathMatch) {
+          window.__initialTileTarget = decodeURIComponent(pathMatch[1]);
+          window.history.replaceState({}, "", "/");
+        } else {
+          var p = new URLSearchParams(window.location.search).get("tile");
+          if (p) {
+            window.__initialTileTarget = isNaN(p) ? p : Number(p);
+            window.history.replaceState({}, "", window.location.pathname);
+          }
+        }
+      } catch(_) {}
+    })();
+  </script>
   <script type="text/babel" data-presets="react">
     const { useState, useRef, useCallback, useEffect } = React;
 
@@ -2823,22 +2841,8 @@ function TileCatalog() {
     }
   };
 
-  // Читаємо /tile/АРТИКУЛ або ?tile= один раз при монтуванні
-  const targetTileId = useRef((() => {
-    try {
-      // Варіант 1: /tile/АРТИКУЛ
-      const pathMatch = window.location.pathname.match(/^\/tile\/(.+)/);
-      if (pathMatch) {
-        const article = decodeURIComponent(pathMatch[1]);
-        window.history.replaceState({}, "", "/");
-        return article; // повертаємо артикул (рядок)
-      }
-      // Варіант 2: ?tile= (зворотна сумісність)
-      const p = new URLSearchParams(window.location.search).get("tile");
-      if (p) window.history.replaceState({}, "", window.location.pathname);
-      return p ? (isNaN(p) ? p : Number(p)) : null;
-    } catch(_) { return null; }
-  })());
+  // Читаємо /tile/АРТИКУЛ або ?tile= один раз при монтуванні (значення вже збережено глобально до рендеру)
+  const targetTileId = useRef(window.__initialTileTarget || null);
   const scrolledRef = useRef(false);
   const scrollTimers = useRef([]);
 
