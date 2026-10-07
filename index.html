@@ -637,8 +637,9 @@ function TileViewer({ tile, onClose, hideInfo }) {
           const imgUrl = images[current];
           if (!imgUrl) return;
           const shareUrl = window.location.origin + "/tile/" + encodeURIComponent(tile.article || String(tile.id));
-          // Спробуємо поширити зображення як файл (iOS Safari підтримує)
-          if (navigator.share) {
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          // На мобільному — системний діалог з файлом
+          if (isMobile && navigator.share) {
             try {
               const res = await fetch(imgUrl);
               const blob = await res.blob();
@@ -664,6 +665,15 @@ function TileViewer({ tile, onClose, hideInfo }) {
                 url: shareUrl,
               });
             } catch(_) {}
+            return;
+          }
+          // На десктопі — копіюємо в буфер
+          try {
+            await navigator.clipboard.writeText(shareUrl);
+            e.currentTarget.textContent = "✓";
+            setTimeout(() => { try { e.currentTarget.textContent = "⎙"; } catch(_){} }, 2000);
+          } catch(_) {
+            prompt("Скопіюйте посилання:", shareUrl);
           }
         }} style={{
           width: 40, height: 40, borderRadius: "50%",
