@@ -3424,10 +3424,10 @@ function TilePage({ article }) {
 
 // ── Рендер: TilePage або TileCatalog залежно від URL ─────────────────────────
 function App() {
-  const pathMatch = window.location.pathname.match(/^\/tile\/(.+)/);
-  if (pathMatch) {
-    const article = decodeURIComponent(pathMatch[1]);
-    return <TilePage article={article} />;
+  // __initialTileTarget встановлюється до React якщо URL був /tile/АРТИКУЛ
+  const initTarget = window.__initialTileTarget;
+  if (initTarget && typeof initTarget === "string" && isNaN(initTarget)) {
+    return <TilePage article={initTarget} />;
   }
   return <TileCatalog />;
 }
