@@ -1762,50 +1762,64 @@ function PannoModal({ panno, collections, onClose }) {
 
 function ShareButton({ tile }) {
   const [copied, setCopied] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const url = window.location.origin + "/tile/" + encodeURIComponent(tile.article || String(tile.id));
 
   const handleShare = async (e) => {
     e.stopPropagation();
-    const url = window.location.origin + "/tile/" + encodeURIComponent(tile.article || String(tile.id));
+    // Телефон — системне меню
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: tile.name + " — MS Ceramica",
-          text: tile.name + " · " + (tile.size || "") + " · " + tile.price.toLocaleString() + " грн/м²",
-          url,
-        });
+        await navigator.share({ title: tile.name + " — MS Ceramica", url });
+        return;
       } catch(err) {
-        // Користувач скасував або браузер відхилив — просто копіюємо
-        if (err.name !== "AbortError") {
-          try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch(_) {}
-        }
+        if (err.name === "AbortError") return;
       }
-    } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch(_) {}
+    }
+    // Комп'ютер — спробуємо clipboard, якщо відмовить — показуємо попап
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch(_) {
+      setShowPopup(true);
     }
   };
 
   return (
-    <button
-      onClick={handleShare}
-      title="Поділитись товаром"
-      style={{
-        width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-        background: copied ? "#4caf5022" : "#1a1a1a",
-        border: "1px solid " + (copied ? "#4caf50" : "#2a2a2a"),
-        color: copied ? "#4caf50" : "#666",
-        cursor: "pointer", fontSize: 15,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "all 0.2s",
-      }}
-      onMouseOver={e => { if (!copied) { e.currentTarget.style.borderColor="#c9a84c"; e.currentTarget.style.color="#c9a84c"; } }}
-      onMouseOut={e => { if (!copied) { e.currentTarget.style.borderColor="#2a2a2a"; e.currentTarget.style.color="#666"; } }}
-    >
-      {copied ? "✓" : "⎙"}
-    </button>
+    <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
+      <button
+        onClick={handleShare}
+        title="Поділитись товаром"
+        style={{
+          width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+          background: copied ? "#4caf5022" : "#1a1a1a",
+          border: "1px solid " + (copied ? "#4caf50" : "#2a2a2a"),
+          color: copied ? "#4caf50" : "#666",
+          cursor: "pointer", fontSize: 15,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all 0.2s",
+        }}
+        onMouseOver={e => { if (!copied) { e.currentTarget.style.borderColor="#c9a84c"; e.currentTarget.style.color="#c9a84c"; } }}
+        onMouseOut={e => { if (!copied) { e.currentTarget.style.borderColor="#2a2a2a"; e.currentTarget.style.color="#666"; } }}
+      >
+        {copied ? "✓" : "⎙"}
+      </button>
+      {showPopup && (
+        <div style={{ position: "absolute", bottom: 44, right: 0, background: "#1a1a1a", border: "1px solid #333", borderRadius: 10, padding: "10px 12px", width: 260, zIndex: 999, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+          <div style={{ color: "#888", fontSize: 11, marginBottom: 6 }}>Скопіюй посилання:</div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <input readOnly value={url} onFocus={e => e.target.select()}
+              style={{ flex: 1, background: "#111", border: "1px solid #333", borderRadius: 6, padding: "5px 8px", color: "#fff", fontSize: 11, minWidth: 0 }} />
+            <button onClick={() => { navigator.clipboard.writeText(url).catch(()=>{}); setCopied(true); setShowPopup(false); setTimeout(() => setCopied(false), 2000); }}
+              style={{ background: "#c9a84c", color: "#000", border: "none", borderRadius: 6, padding: "5px 10px", fontWeight: 700, fontSize: 11, cursor: "pointer", flexShrink: 0 }}>
+              Копіювати
+            </button>
+          </div>
+          <button onClick={() => setShowPopup(false)} style={{ position: "absolute", top: 6, right: 8, background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: 14 }}>×</button>
+        </div>
+      )}
+    </div>
   );
 }
 
