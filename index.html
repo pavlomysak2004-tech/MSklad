@@ -525,6 +525,13 @@ function TileViewer({ tile, onClose, hideInfo }) {
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
 
+  // Закрити при натисканні кнопки "назад" в браузері
+  useEffect(() => {
+    const handlePopState = () => { onClose(); };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [onClose]);
+
   const prev = (e) => { e && e.stopPropagation(); setCurrent(i => (i - 1 + total) % total); setZoom(false); };
   const next = (e) => { e && e.stopPropagation(); setCurrent(i => (i + 1) % total); setZoom(false); };
 
@@ -3226,7 +3233,10 @@ function TileCatalog() {
 
       {viewing3D && <TileViewer tile={viewing3D} onClose={() => {
         setViewing3D(null);
-        window.history.replaceState({}, "", "/");
+        // Якщо ще на /tile/... — повертаємось назад, інакше просто очищаємо URL
+        if (window.location.pathname.startsWith("/tile/")) {
+          window.history.replaceState({}, "", "/");
+        }
       }} hideInfo={warehouseMode} />}
       {calcTile && <RoomCalculator tile={calcTile} onClose={() => setCalcTile(null)} />}
       {chatPhoneModal && <ChatPhoneModal tile={chatPhoneModal} onClose={() => setChatPhoneModal(null)} onSubmit={(phone) => {
