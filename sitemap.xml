@@ -1,4 +1,4 @@
-Інформація	<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://mysak.com.ua/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00018472</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -54,8 +54,7 @@
   <url><loc>https://mysak.com.ua/tile/00-00021568</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00021569</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00021572</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mysak.com.ua/tile/00-00021573</loc><lastmo
-d>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mysak.com.ua/tile/00-00021573</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00021574</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00021576</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00021577</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -85,3 +84,4 @@ d>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></u
   <url><loc>https://mysak.com.ua/tile/00-00021829</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00021830</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mysak.com.ua/tile/00-00021933</loc><lastmod>2026-10-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+</urlset>
