@@ -211,17 +211,33 @@ async function doPrint() {
       correctLevel: QRCode.CorrectLevel.M
     });
 
-    item.innerHTML += `
-      <div class="qr-name">${t.name}</div>
-      ${t.size ? `<div class="qr-size">📐 ${t.size}</div>` : ''}
-      <div class="qr-article">${t.article}</div>
-      <div class="qr-brand">mysak.com.ua</div>
-    `;
+    const nameDiv = document.createElement("div");
+    nameDiv.className = "qr-name";
+    nameDiv.textContent = t.name;
+    item.appendChild(nameDiv);
+
+    if (t.size) {
+      const sizeDiv = document.createElement("div");
+      sizeDiv.className = "qr-size";
+      sizeDiv.textContent = "📐 " + t.size;
+      item.appendChild(sizeDiv);
+    }
+
+    const artDiv = document.createElement("div");
+    artDiv.className = "qr-article";
+    artDiv.textContent = t.article;
+    item.appendChild(artDiv);
+
+    const brandDiv = document.createElement("div");
+    brandDiv.className = "qr-brand";
+    brandDiv.textContent = "mysak.com.ua";
+    item.appendChild(brandDiv);
+
     printGrid.appendChild(item);
   }
 
-  // Невелика затримка щоб QR-коди відмалювались
-  await new Promise(r => setTimeout(r, 500));
+  // Чекаємо поки всі QR canvas відмалюються
+  await new Promise(r => setTimeout(r, 800));
   window.print();
 }
 
