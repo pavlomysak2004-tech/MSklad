@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/tile/:article", "destination": "/index.html" }
+    { "source": "/tile/:article", "destination": "/index.html" },
+    { "source": "/qr", "destination": "/qr.html" }
   ]
 }

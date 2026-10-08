@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Друк QR-кодів — MS Ceramica</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; color: #fff; font-family: sans-serif; min-height: 100vh; }
+
+  /* ── Шапка ── */
+  .header { background: #111; border-bottom: 1px solid #222; padding: 16px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .logo { color: #c9a84c; font-weight: 800; font-size: 16px; letter-spacing: 2px; }
+  .header-title { color: #fff; font-size: 14px; }
+  .header-actions { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  /* ── Пошук і фільтр ── */
+  .toolbar { padding: 14px 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #0f0f0f; border-bottom: 1px solid #1a1a1a; }
+  .search-input { flex: 1; min-width: 200px; padding: 9px 14px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; color: #fff; font-size: 13px; outline: none; }
+  .search-input:focus { border-color: #c9a84c; }
+  .select-all-btn, .deselect-btn { padding: 8px 14px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; color: #aaa; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .select-all-btn:hover, .deselect-btn:hover { border-color: #c9a84c; color: #c9a84c; }
+  .selected-count { color: #c9a84c; font-size: 13px; font-weight: 700; white-space: nowrap; }
+
+  /* ── Кнопки дій ── */
+  .btn-print { padding: 10px 22px; background: linear-gradient(135deg, #c9a84c, #b8923e); border: none; border-radius: 8px; color: #000; font-weight: 800; font-size: 13px; cursor: pointer; }
+  .btn-print:disabled { background: #222; color: #444; cursor: not-allowed; }
+
+  /* ── Список товарів ── */
+  .tiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; padding: 16px 20px; }
+
+  .tile-item { background: #111; border: 1.5px solid #1e1e1e; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.15s; }
+  .tile-item:hover { border-color: #333; }
+  .tile-item.selected { border-color: #c9a84c; background: #c9a84c11; }
+
+  .tile-checkbox { width: 20px; height: 20px; border-radius: 6px; border: 2px solid #333; background: #1a1a1a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; transition: all 0.15s; }
+  .tile-item.selected .tile-checkbox { background: #c9a84c; border-color: #c9a84c; color: #000; }
+
+  .tile-img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #1a1a1a; flex-shrink: 0; }
+  .tile-img-placeholder { width: 48px; height: 48px; border-radius: 8px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; color: #333; font-size: 20px; flex-shrink: 0; }
+
+  .tile-info { flex: 1; min-width: 0; }
+  .tile-name { color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile-article { color: #555; font-size: 11px; margin-top: 2px; }
+  .tile-size { color: #888; font-size: 11px; }
+
+  .loading { text-align: center; padding: 60px 20px; color: #555; font-size: 14px; }
+  .empty { text-align: center; padding: 40px 20px; color: #444; font-size: 13px; }
+
+  /* ── Друк ── */
+  @media print {
+    body { background: #fff; color: #000; }
+    .header, .toolbar, .tiles-grid { display: none !important; }
+    .print-area { display: block !important; }
+  }
+
+  .print-area { display: none; }
+
+  .print-grid { display: flex; flex-wrap: wrap; gap: 0; }
+  .print-qr-item {
+    width: 62mm; padding: 4mm;
+    display: flex; flex-direction: column; align-items: center;
+    border: 0.5px solid #ddd;
+    page-break-inside: avoid;
+  }
+  .print-qr-item .qr-box { width: 44mm; height: 44mm; }
+  .print-qr-item .qr-name { font-size: 7pt; font-weight: 700; text-align: center; margin-top: 2mm; max-width: 54mm; word-break: break-word; line-height: 1.2; }
+  .print-qr-item .qr-article { font-size: 6pt; color: #666; text-align: center; margin-top: 1mm; }
+  .print-qr-item .qr-size { font-size: 6pt; color: #888; text-align: center; }
+  .print-qr-item .qr-brand { font-size: 6pt; color: #999; text-align: center; margin-top: 1mm; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">MS CERAMICA</div>
+  <div class="header-title">Друк QR-кодів</div>
+  <div class="header-actions">
+    <span class="selected-count" id="selectedCount">Вибрано: 0</span>
+    <button class="btn-print" id="printBtn" disabled onclick="doPrint()">🖨 Друкувати</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input class="search-input" id="searchInput" placeholder="🔍 Пошук за назвою або артикулом..." oninput="filterTiles()">
+  <button class="select-all-btn" onclick="selectAll()">Вибрати всі</button>
+  <button class="deselect-btn" onclick="deselectAll()">Зняти всі</button>
+</div>
+
+<div id="tilesGrid" class="tiles-grid">
+  <div class="loading">⏳ Завантаження каталогу...</div>
+</div>
+
+<div class="print-area" id="printArea">
+  <div class="print-grid" id="printGrid"></div>
+</div>
+
+<script>
+const SUPA_URL = "https://svbmamaqrtsknuztxiuq.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2Ym1hbWFxcnRza251enR4aXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDkzMTcsImV4cCI6MjA5NDc4NTMxN30.4ieisyQMCsW2hon_vzNTTt00fRJe5eCXWklUBD9QC_o";
+const SITE_URL = "https://mysak.com.ua";
+
+let allTiles = [];
+let selected = new Set();
+let filtered = [];
+
+async function loadTiles() {
+  try {
+    let tiles = [], offset = 0, pageSize = 1000;
+    while (true) {
+      const res = await fetch(
+        SUPA_URL + "/rest/v1/collections?is_visible=eq.true&select=id,article,name,size,collection_photos(url,sort_order)&order=name.asc&limit=" + pageSize + "&offset=" + offset,
+        { headers: { apikey: SUPA_KEY, Authorization: "Bearer " + SUPA_KEY } }
+      );
+      const page = await res.json();
+      if (!page || page.length === 0) break;
+      tiles = tiles.concat(page.map(t => ({
+        id: t.id,
+        article: t.article || String(t.id),
+        name: t.name || "",
+        size: t.size || "",
+        image: (t.collection_photos || []).sort((a,b) => a.sort_order - b.sort_order)[0]?.url || null
+      })));
+      if (page.length < pageSize) break;
+      offset += pageSize;
+    }
+    allTiles = tiles;
+    filtered = tiles;
+    renderTiles();
+  } catch(e) {
+    document.getElementById("tilesGrid").innerHTML = '<div class="loading">⚠️ Помилка завантаження</div>';
+  }
+}
+
+function renderTiles() {
+  const grid = document.getElementById("tilesGrid");
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty">Нічого не знайдено</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(t => `
+    <div class="tile-item ${selected.has(t.article) ? 'selected' : ''}" onclick="toggleTile('${t.article}')">
+      <div class="tile-checkbox">${selected.has(t.article) ? '✓' : ''}</div>
+      ${t.image
+        ? `<img class="tile-img" src="${t.image}" alt="" loading="lazy">`
+        : `<div class="tile-img-placeholder">🖼</div>`}
+      <div class="tile-info">
+        <div class="tile-name">${t.name}</div>
+        <div class="tile-article">${t.article}</div>
+        ${t.size ? `<div class="tile-size">📐 ${t.size}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+  updateCount();
+}
+
+function toggleTile(article) {
+  if (selected.has(article)) selected.delete(article);
+  else selected.add(article);
+  renderTiles();
+}
+
+function selectAll() {
+  filtered.forEach(t => selected.add(t.article));
+  renderTiles();
+}
+
+function deselectAll() {
+  filtered.forEach(t => selected.delete(t.article));
+  renderTiles();
+}
+
+function filterTiles() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  filtered = allTiles.filter(t =>
+    t.name.toLowerCase().includes(q) || t.article.toLowerCase().includes(q)
+  );
+  renderTiles();
+}
+
+function updateCount() {
+  const n = selected.size;
+  document.getElementById("selectedCount").textContent = "Вибрано: " + n;
+  document.getElementById("printBtn").disabled = n === 0;
+}
+
+async function doPrint() {
+  const toPrint = allTiles.filter(t => selected.has(t.article));
+  if (toPrint.length === 0) return;
+
+  const printGrid = document.getElementById("printGrid");
+  printGrid.innerHTML = "";
+
+  // Генеруємо QR для кожного вибраного товару
+  for (const t of toPrint) {
+    const url = SITE_URL + "/tile/" + encodeURIComponent(t.article);
+    const item = document.createElement("div");
+    item.className = "print-qr-item";
+
+    const qrBox = document.createElement("div");
+    qrBox.className = "qr-box";
+    item.appendChild(qrBox);
+
+    new QRCode(qrBox, {
+      text: url,
+      width: 166,
+      height: 166,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    item.innerHTML += `
+      <div class="qr-name">${t.name}</div>
+      ${t.size ? `<div class="qr-size">📐 ${t.size}</div>` : ''}
+      <div class="qr-article">${t.article}</div>
+      <div class="qr-brand">mysak.com.ua</div>
+    `;
+    printGrid.appendChild(item);
+  }
+
+  // Невелика затримка щоб QR-коди відмалювались
+  await new Promise(r => setTimeout(r, 500));
+  window.print();
+}
+
+loadTiles();
+</script>
+</body>
+</html>
