@@ -3276,6 +3276,7 @@ function TilePage({ article }) {
   const [ordering, setOrdering] = useState(false);
   const tileSwipeStart = useRef(null);
   const [swipeOffsetX, setSwipeOffsetX] = useState(0);
+  const tileImagesCount = useRef(1);
 
   // Динамічні мета-теги для SEO і превью в месенджерах
   useEffect(() => {
@@ -3374,6 +3375,7 @@ function TilePage({ article }) {
   );
 
   const images = tile.images.length > 0 ? tile.images : [tile.image].filter(Boolean);
+  tileImagesCount.current = images.length;
   const sale = getSaleInfo(tile);
   const shareUrl = window.location.href;
   const handleTileSwipeStart = (e) => {
@@ -3391,7 +3393,7 @@ function TilePage({ article }) {
     tileSwipeStart.current = null;
     setSwipeOffsetX(0);
     if (Math.abs(dx) < 40) return;
-    if (dx < 0) setImgIdx(i => Math.min(i + 1, images.length - 1));
+    if (dx < 0) setImgIdx(i => Math.min(i + 1, tileImagesCount.current - 1));
     else setImgIdx(i => Math.max(i - 1, 0));
   };
 
