@@ -3385,6 +3385,7 @@ function TilePage({ article }) {
   const handleTileSwipeMove = (e) => {
     if (tileSwipeStart.current === null) return;
     const dx = e.touches[0].clientX - tileSwipeStart.current;
+    if (Math.abs(dx) > 10 && e.cancelable) e.preventDefault();
     setSwipeOffsetX(dx);
   };
   const handleTileSwipeEnd = (e) => {
@@ -3409,7 +3410,7 @@ function TilePage({ article }) {
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px" }}>
         {/* Фото */}
-        <div onTouchStart={handleTileSwipeStart} onTouchMove={handleTileSwipeMove} onTouchEnd={handleTileSwipeEnd} style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "1/1" }}>
+        <div onTouchStart={handleTileSwipeStart} onTouchMove={handleTileSwipeMove} onTouchEnd={handleTileSwipeEnd} style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "1/1", touchAction: "pan-y", userSelect: "none" }}>
           {images[imgIdx] ? (
             <img src={images[imgIdx]} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", transform: `translateX(${swipeOffsetX}px)`, transition: swipeOffsetX === 0 ? "transform 0.25s" : "none" }} />
           ) : (
