@@ -3415,24 +3415,6 @@ function TilePage({ article }) {
           )}
         </div>
 
-        {/* Відео YouTube */}
-        {tile.videoUrl && (() => {
-          const m = tile.videoUrl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
-          const vid = m ? m[1] : null;
-          return vid ? (
-            <div style={{ borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "16/9" }}>
-              <iframe
-                src={"https://www.youtube.com/embed/" + vid}
-                width="100%" height="100%"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ display: "block" }}
-              />
-            </div>
-          ) : null;
-        })()}
-
         {/* Назва і артикул */}
         <div style={{ color: "#c9a84c", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>{tile.article}</div>
         <div style={{ color: "#fff", fontSize: 24, fontFamily: "serif", fontWeight: 700, lineHeight: 1.2, marginBottom: 8 }}>{tile.name}</div>
@@ -3472,6 +3454,24 @@ function TilePage({ article }) {
             {tile.description.replace(/^#+\s*/gm, "").trim()}
           </div>
         ) : null}
+
+        {/* Відео YouTube */}
+        {tile.videoUrl && (() => {
+          const m = tile.videoUrl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+          const vid = m ? m[1] : null;
+          return vid ? (
+            <div style={{ borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "16/9" }}>
+              <iframe
+                src={"https://www.youtube.com/embed/" + vid}
+                width="100%" height="100%"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ display: "block" }}
+              />
+            </div>
+          ) : null;
+        })()}
 
         {/* Кнопки дій */}
         <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
