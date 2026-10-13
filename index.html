@@ -3375,6 +3375,16 @@ function TilePage({ article }) {
   const images = tile.images.length > 0 ? tile.images : [tile.image].filter(Boolean);
   const sale = getSaleInfo(tile);
   const shareUrl = window.location.href;
+  const tileSwipeStart = useRef(null);
+  const handleTileSwipeStart = (e) => { tileSwipeStart.current = e.touches[0].clientX; };
+  const handleTileSwipeEnd = (e) => {
+    if (tileSwipeStart.current === null) return;
+    const dx = e.changedTouches[0].clientX - tileSwipeStart.current;
+    tileSwipeStart.current = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) setImgIdx(i => Math.min(i + 1, images.length - 1));
+    else setImgIdx(i => Math.max(i - 1, 0));
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#fff" }}>
@@ -3388,7 +3398,7 @@ function TilePage({ article }) {
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px" }}>
         {/* Фото */}
-        <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "1/1" }}>
+        <div onTouchStart={handleTileSwipeStart} onTouchEnd={handleTileSwipeEnd} style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "1/1" }}>
           {images[imgIdx] ? (
             <img src={images[imgIdx]} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
           ) : (
