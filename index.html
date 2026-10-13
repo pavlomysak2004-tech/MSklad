@@ -3417,7 +3417,7 @@ function TilePage({ article }) {
 
         {/* Відео YouTube */}
         {tile.videoUrl && (() => {
-          const m = tile.videoUrl.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+          const m = tile.videoUrl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
           const vid = m ? m[1] : null;
           return vid ? (
             <div style={{ borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "16/9" }}>
