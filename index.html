@@ -1390,7 +1390,7 @@ function ReviewsSection({ reviews }) {
 
 function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }) {
   const total = totalStock || (stock + reserve);
-  if (!total && !stock && !reserve) return null;
+  if (!total && !stock && !reserve && !expectedDate) return null;
 
   const LIMIT = 200;
   const PANNO_LIMIT = 15;
