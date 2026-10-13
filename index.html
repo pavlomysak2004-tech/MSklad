@@ -1915,7 +1915,6 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehou
           ))}
         </div>
         <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} expectedDate={tile.expectedDate} onIncoming={onIncoming} />
-        {!warehouseMode && tile.description ? <ExpandableDesc text={tile.description.replace(/^#+\s*/gm, "").trim()} /> : null}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
             {(() => {
