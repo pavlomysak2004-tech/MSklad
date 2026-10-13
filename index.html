@@ -3432,6 +3432,13 @@ function TilePage({ article }) {
               <span key={tag} style={{ background: (tagColors[tag]||"#666")+"22", color: tagColors[tag]||"#ccc", border: `1px solid ${(tagColors[tag]||"#666")}44`, borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 700 }}>{tag}</span>
             ))}
           </div>
+          {/* Стрілки ліво/право */}
+          {images.length > 1 && imgIdx > 0 && (
+            <button onClick={() => setImgIdx(i => i - 1)} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: 36, height: 36, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>‹</button>
+          )}
+          {images.length > 1 && imgIdx < images.length - 1 && (
+            <button onClick={() => setImgIdx(i => i + 1)} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: 36, height: 36, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>›</button>
+          )}
           {/* Перемикач фото */}
           {images.length > 1 && (
             <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6 }}>
