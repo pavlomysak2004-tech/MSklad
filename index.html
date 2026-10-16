@@ -440,6 +440,7 @@ function useCollections() {
             isPanno: false,
             isNew: item.is_new && item.new_until ? new Date(item.new_until) >= new Date() : false,
             newUntil: item.new_until || null,
+            videoUrl: item.video_url || null,
           };
         });
 
@@ -518,7 +519,8 @@ function StockBadge({ stock }) {
 function TileViewer({ tile, onClose, hideInfo }) {
   const [current, setCurrent] = useState(0);
   const images = tile.images && tile.images.length > 0 ? tile.images : [tile.image].filter(Boolean);
-  const videoId = tile.video_url ? (() => { const m = tile.video_url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; })() : null;
+  const _vurl = tile.videoUrl || tile.video_url || null;
+  const videoId = _vurl ? (() => { const m = _vurl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; })() : null;
   const slides = videoId ? [...images, "__video__"] : images;
   const total = slides.length;
   const isVideo = slides[current] === "__video__";
