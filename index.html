@@ -3376,7 +3376,9 @@ function TilePage({ article }) {
   );
 
   const images = tile.images.length > 0 ? tile.images : [tile.image].filter(Boolean);
-  tileImagesCount.current = images.length;
+  const tileVideoId = tile.videoUrl ? (() => { const m = tile.videoUrl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; })() : null;
+  const slides = tileVideoId ? [...images, "__video__"] : images;
+  tileImagesCount.current = slides.length;
   const sale = getSaleInfo(tile);
   const shareUrl = window.location.href;
   const handleTileSwipeStart = (e) => {
@@ -3397,6 +3399,7 @@ function TilePage({ article }) {
     if (Math.abs(dx) < 40) return;
     if (dx < 0) setImgIdx(i => Math.min(i + 1, tileImagesCount.current - 1));
     else setImgIdx(i => Math.max(i - 1, 0));
+    setSwipeOffsetX(0);
   };
 
   return (
@@ -3411,14 +3414,24 @@ function TilePage({ article }) {
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px" }}>
         {/* Фото */}
-        <div onTouchStart={handleTileSwipeStart} onTouchMove={handleTileSwipeMove} onTouchEnd={handleTileSwipeEnd} style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "1/1", touchAction: "pan-y", userSelect: "none" }}>
-          {images[imgIdx] ? (
-            <img src={images[imgIdx]} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", transform: `translateX(${swipeOffsetX}px)`, transition: swipeOffsetX === 0 ? "transform 0.25s" : "none" }} />
+        <div onTouchStart={handleTileSwipeStart} onTouchMove={handleTileSwipeMove} onTouchEnd={handleTileSwipeEnd}
+          style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: slides[imgIdx] === "__video__" ? "16/9" : "1/1", touchAction: "pan-y", userSelect: "none" }}>
+          {slides[imgIdx] === "__video__" ? (
+            <iframe
+              src={"https://www.youtube.com/embed/" + tileVideoId + "?autoplay=0"}
+              width="100%" height="100%"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ display: "block", position: "absolute", top: 0, left: 0 }}
+            />
+          ) : slides[imgIdx] ? (
+            <img src={slides[imgIdx]} alt={tile.name} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", transform: `translateX(${swipeOffsetX}px)`, transition: swipeOffsetX === 0 ? "transform 0.25s" : "none" }} />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#333", fontSize: 40 }}>🖼</div>
           )}
-          {/* Бейдж */}
-          {sale ? (
+          {/* Бейдж — тільки на фото */}
+          {slides[imgIdx] !== "__video__" && (sale ? (
             <div style={{ position: "absolute", top: 12, right: 12, background: "linear-gradient(135deg,#ef4444,#dc2626)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "5px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(239,68,68,0.5)" }}>
               🔥 АКЦІЯ -{sale.percent}%
             </div>
@@ -3426,25 +3439,29 @@ function TilePage({ article }) {
             <div style={{ position: "absolute", top: 12, right: 12, background: "linear-gradient(135deg,#22c55e,#16a34a)", color: "#fff", fontSize: 11, fontWeight: 800, padding: "5px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(34,197,94,0.5)" }}>
               ✦ НОВИНКА
             </div>
-          ) : null}
-          {/* Теги зліва */}
-          <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 5, flexWrap: "wrap", maxWidth: "60%" }}>
-            {tile.tags.map(tag => (
-              <span key={tag} style={{ background: (tagColors[tag]||"#666")+"22", color: tagColors[tag]||"#ccc", border: `1px solid ${(tagColors[tag]||"#666")}44`, borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 700 }}>{tag}</span>
-            ))}
-          </div>
+          ) : null)}
+          {/* Теги зліва — тільки на фото */}
+          {slides[imgIdx] !== "__video__" && (
+            <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 5, flexWrap: "wrap", maxWidth: "60%" }}>
+              {tile.tags.map(tag => (
+                <span key={tag} style={{ background: (tagColors[tag]||"#666")+"22", color: tagColors[tag]||"#ccc", border: `1px solid ${(tagColors[tag]||"#666")}44`, borderRadius: 20, padding: "2px 9px", fontSize: 10, fontWeight: 700 }}>{tag}</span>
+              ))}
+            </div>
+          )}
           {/* Стрілки ліво/право */}
-          {images.length > 1 && imgIdx > 0 && (
+          {slides.length > 1 && imgIdx > 0 && (
             <button onClick={() => setImgIdx(i => i - 1)} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: 36, height: 36, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>‹</button>
           )}
-          {images.length > 1 && imgIdx < images.length - 1 && (
+          {slides.length > 1 && imgIdx < slides.length - 1 && (
             <button onClick={() => setImgIdx(i => i + 1)} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: 36, height: 36, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>›</button>
           )}
-          {/* Перемикач фото */}
-          {images.length > 1 && (
-            <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6 }}>
-              {images.map((_, i) => (
-                <button key={i} onClick={() => setImgIdx(i)} style={{ width: i === imgIdx ? 20 : 8, height: 8, borderRadius: 4, background: i === imgIdx ? "#c9a84c" : "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.2s" }} />
+          {/* Крапки-перемикач */}
+          {slides.length > 1 && (
+            <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6, zIndex: 2 }}>
+              {slides.map((s, i) => (
+                <button key={i} onClick={() => setImgIdx(i)} style={{ width: i === imgIdx ? 20 : 8, height: 8, borderRadius: 4, background: i === imgIdx ? "#c9a84c" : "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.2s", fontSize: s === "__video__" ? 7 : undefined }}>
+                  {s === "__video__" && i !== imgIdx ? "▶" : ""}
+                </button>
               ))}
             </div>
           )}
@@ -3490,23 +3507,6 @@ function TilePage({ article }) {
           </div>
         ) : null}
 
-        {/* Відео YouTube */}
-        {tile.videoUrl && (() => {
-          const m = tile.videoUrl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
-          const vid = m ? m[1] : null;
-          return vid ? (
-            <div style={{ borderRadius: 16, overflow: "hidden", background: "#111", marginBottom: 16, aspectRatio: "16/9" }}>
-              <iframe
-                src={"https://www.youtube.com/embed/" + vid}
-                width="100%" height="100%"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ display: "block" }}
-              />
-            </div>
-          ) : null;
-        })()}
 
         {/* Кнопки дій */}
         <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
