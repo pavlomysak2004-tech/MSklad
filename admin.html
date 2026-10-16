@@ -304,20 +304,40 @@ function renderAdmin() {
 
 function renderCollections(isPanno) {
   const searchVal = state.collectionSearch || "";
+  const activeFilter = state.collectionFilter || "all";
+  const now = new Date();
   const items = state.collections.filter(c => {
     if (c.is_panno !== isPanno) return false;
-    if (!searchVal) return true;
-    const q = searchVal.toLowerCase();
-    return (c.name || "").toLowerCase().includes(q) ||
-           (c.article || "").toLowerCase().includes(q) ||
-           (c.size || "").toLowerCase().includes(q);
+    if (searchVal) {
+      const q = searchVal.toLowerCase();
+      if (!(c.name||"").toLowerCase().includes(q) &&
+          !(c.article||"").toLowerCase().includes(q) &&
+          !(c.size||"").toLowerCase().includes(q)) return false;
+    }
+    if (activeFilter === "hidden") return !c.is_visible;
+    if (activeFilter === "new") return c.is_new && c.new_until && new Date(c.new_until) >= now;
+    if (activeFilter === "sale") return (c.sale_price > 0 || c.sale_percent > 0);
+    return true;
   });
+
+  const filters = [
+    { key: "all", label: "Всі", count: state.collections.filter(c=>c.is_panno===isPanno).length },
+    { key: "hidden", label: "🚫 Не активні", count: state.collections.filter(c=>c.is_panno===isPanno && !c.is_visible).length },
+    { key: "new", label: "✦ Новинки", count: state.collections.filter(c=>c.is_panno===isPanno && c.is_new && c.new_until && new Date(c.new_until)>=now).length },
+    { key: "sale", label: "🔥 Акція", count: state.collections.filter(c=>c.is_panno===isPanno && (c.sale_price>0||c.sale_percent>0)).length },
+  ];
 
   return `
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div id="collections-count" style="color:#777;font-size:13px;">${items.length} позицій</div>
         <button class="btn-gold" onclick="openAddModal(${isPanno})">+ Додати</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        ${filters.map(f => `
+          <button onclick="setCollectionFilter('${f.key}')" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid ${activeFilter===f.key?'#c9a84c':'#2a2a2a'};background:${activeFilter===f.key?'#c9a84c22':'#111'};color:${activeFilter===f.key?'#c9a84c':'#666'};">
+            ${f.label} <span style="opacity:0.7;">${f.count}</span>
+          </button>`).join('')}
       </div>
       <div style="margin-bottom:12px;position:relative;">
         <input type="text" id="collection-search-input"
@@ -328,7 +348,7 @@ function renderCollections(isPanno) {
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#555;font-size:18px;">×</span>` : ''}
       </div>
       <div id="collections-list-container">
-        ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal ? 'Нічого не знайдено' : 'Немає позицій') + '</div>' : ''}
+        ${items.length === 0 ? '<div style="text-align:center;padding:40px;color:#333;">' + (searchVal||activeFilter!=="all" ? 'Нічого не знайдено' : 'Немає позицій') + '</div>' : ''}
         ${items.map(item => renderCollectionRow(item)).join('')}
       </div>
     </div>`;
@@ -1832,6 +1852,11 @@ function clearSearch() {
   renderCollectionsList();
 }
 
+function setCollectionFilter(key) {
+  state.collectionFilter = key;
+  render();
+}
+
 function renderCollectionsList() {
   const isPanno = state.tab === "pannos";
   const container = document.getElementById("collections-list-container");
@@ -1903,6 +1928,7 @@ function doLogin() {
 function switchTab(tab) {
   state.tab = tab;
   state.collectionSearch = "";
+  state.collectionFilter = "all";
   render();
 }
 
