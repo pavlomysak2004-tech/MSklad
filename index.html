@@ -1458,7 +1458,7 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
 
   return (
     <div style={{ padding: "8px 0 4px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor, display: "inline-block", flexShrink: 0 }} />
           <span style={{ color: statusColor, fontSize: 12, fontWeight: 700 }}>{statusLabel}</span>
@@ -1474,7 +1474,7 @@ function StockBar({ stock, reserve, totalStock, unit, expectedDate, onIncoming }
         const urgent = stock < 50;
         return (
           <div onClick={onIncoming ? (e) => { e.stopPropagation(); onIncoming(); } : undefined}
-            style={{ marginTop: 4, display: "inline-block", background: urgent ? "#ff980018" : "#c9a84c18", border: "1px solid " + (urgent ? "#ff980066" : "#c9a84c44"), borderRadius: 6, padding: "2px 8px", cursor: onIncoming ? "pointer" : "default", animation: urgent ? "urgentPulse 1.4s ease-in-out infinite" : "none" }}>
+            style={{ marginTop: 4, display: "inline-block", maxWidth: "100%", boxSizing: "border-box", background: urgent ? "#ff980018" : "#c9a84c18", border: "1px solid " + (urgent ? "#ff980066" : "#c9a84c44"), borderRadius: 6, padding: "2px 8px", cursor: onIncoming ? "pointer" : "default", animation: urgent ? "urgentPulse 1.4s ease-in-out infinite" : "none" }}>
             <span style={{ color: urgent ? "#ff9800" : "#c9a84c", fontSize: 10, fontWeight: 700 }}>
               {urgent ? "⚡" : "📦"} Очікується {new Date(expectedDate).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
             </span>
@@ -1883,8 +1883,22 @@ function ShareButton({ tile }) {
   );
 }
 
-function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehouseMode, onIncoming, index }) {
+// Телефон: 2 колонки + компактна картка
+function useCompactGrid() {
+  const q = "(max-width: 768px)";
+  const [compact, setCompact] = useState(() => typeof window !== "undefined" && window.matchMedia(q).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(q);
+    const h = () => setCompact(mq.matches);
+    mq.addEventListener ? mq.addEventListener("change", h) : mq.addListener(h);
+    return () => { mq.removeEventListener ? mq.removeEventListener("change", h) : mq.removeListener(h); };
+  }, []);
+  return compact;
+}
+
+function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehouseMode, onIncoming, index, compact }) {
   const [hovered, setHovered] = useState(false);
+  if (compact) return <TileCardCompact tile={tile} onOrder={onOrder} onView3D={onView3D} onPanno={onPanno} warehouseMode={warehouseMode} onIncoming={onIncoming} index={index} />;
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
       background: "#111", borderRadius: 16,
@@ -1990,6 +2004,52 @@ function TileCard({ tile, onOrder, onView3D, onCalc, onPanno, onAskChat, warehou
             </>
           )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Компактна картка для 2 колонок на телефоні: фото, назва, розмір, наявність, ціна, «Замовити»
+function TileCardCompact({ tile, onOrder, onView3D, onPanno, warehouseMode, onIncoming, index }) {
+  const sale = getSaleInfo(tile);
+  const open = () => { if (onView3D) onView3D(tile); };
+  return (
+    <div style={{ background: "#111", borderRadius: 12, border: "1px solid #1e1e1e", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%", minWidth: 0 }}>
+      <div onClick={open} style={{ position: "relative", aspectRatio: "1 / 1", background: "#111", cursor: "pointer" }}>
+        <img src={tile.image} alt={tile.name} loading={index < 6 ? "eager" : "lazy"} decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+        {sale ? (
+          <div style={{ position: "absolute", top: 6, right: 6, background: "#dc2626", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 20 }}>-{sale.percent}%</div>
+        ) : tile.isNew ? (
+          <div style={{ position: "absolute", top: 6, right: 6, background: "#16a34a", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 20 }}>NEW</div>
+        ) : null}
+      </div>
+      <div style={{ padding: "8px 9px 10px", display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+        {!warehouseMode && tile.subtitle && (
+          <div style={{ color: "#c9a84c", fontSize: 9, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tile.subtitle}</div>
+        )}
+        {!warehouseMode && (
+          <div onClick={open} style={{ color: "#fff", fontSize: 14, fontFamily: "serif", fontWeight: 700, lineHeight: 1.25, margin: "2px 0 4px", cursor: "pointer", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", wordBreak: "break-word" }}>{tile.name}</div>
+        )}
+        {tile.size ? <div style={{ color: "#666", fontSize: 10 }}>📐 {tile.size}</div> : null}
+        <StockBar stock={tile.stock} reserve={tile.reserve || 0} totalStock={tile.totalStock || 0} unit={tile.unit || "м²"} expectedDate={tile.expectedDate} onIncoming={onIncoming} />
+        <div style={{ marginTop: "auto", paddingTop: 4 }}>
+          {sale ? (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, flexWrap: "wrap" }}>
+              <span style={{ color: "#f44336", fontSize: 17, fontWeight: 800 }}>{sale.salePrice.toLocaleString()}</span>
+              <span style={{ color: "#f44336", fontSize: 10 }}>грн/{tile.unit}</span>
+              <span style={{ color: "#555", fontSize: 10, textDecoration: "line-through" }}>{tile.price.toLocaleString()}</span>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+              <span style={{ color: "#fff", fontSize: 17, fontWeight: 800 }}>{tile.price.toLocaleString()}</span>
+              <span style={{ color: "#c9a84c", fontSize: 10 }}>грн/{tile.unit}</span>
+            </div>
+          )}
+          <button onClick={(e) => { e.stopPropagation(); tile.isPanno && onPanno ? onPanno(tile) : onOrder(tile); }}
+            style={{ marginTop: 6, width: "100%", padding: "8px 0", borderRadius: 8, background: tile.isPanno ? "linear-gradient(135deg, #c9a84c, #b8860b)" : "transparent", border: tile.isPanno ? "none" : "1px solid #c9a84c55", color: tile.isPanno ? "#000" : "#c9a84c", cursor: "pointer", fontSize: 11, fontWeight: 800 }}>
+            {tile.isPanno ? "🎨 Підібрати" : "🛒 Замовити"}
+          </button>
         </div>
       </div>
     </div>
@@ -2862,6 +2922,7 @@ function SiteFooter({ onOpenPage }) {
 }
 
 function TileCatalog() {
+  const compactGrid = useCompactGrid();
   const { collections, pannos, loading } = useCollections();
   const [activeFilters, setActiveFilters] = useState([]);
   const [ordering, setOrdering] = useState(null);
@@ -3117,15 +3178,17 @@ function TileCatalog() {
       </div>
 
       {/* Grid */}
-      <div style={{ padding: "8px 24px 40px", display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+      <div style={compactGrid
+        ? { padding: "8px 10px 40px", display: "grid", gap: 10, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }
+        : { padding: "8px 24px 40px", display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
         {loading && filtered.length === 0 && (
           <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 40 }}>
             <div style={{ color: "#c9a84c", fontSize: 13, animation: "pulse 1.5s infinite" }}>⟳ Завантаження колекцій...</div>
           </div>
         )}
         {filtered.map((tile, idx) => (
-          <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${idx * 0.08}s` }}>
-            <TileCard tile={tile} index={idx} onOrder={setOrdering} onView3D={(t) => {
+          <div key={tile.id} ref={el => cardRefs.current[tile.id] = el} style={{ minWidth: 0, animation: `fadeIn 0.4s ease both`, animationDelay: targetTileId.current ? "0s" : `${Math.min(idx, 12) * 0.05}s` }}>
+            <TileCard tile={tile} index={idx} compact={compactGrid} onOrder={setOrdering} onView3D={(t) => {
               setViewing3D(t);
               window.history.pushState({}, "", "/tile/" + encodeURIComponent(t.article || String(t.id)));
             }} onCalc={setCalcTile} onPanno={tile.isPanno ? setPannoModal : null} onAskChat={setChatPhoneModal} warehouseMode={warehouseMode} onIncoming={() => setIncomingModal(tile)} />
